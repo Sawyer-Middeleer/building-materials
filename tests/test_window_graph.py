@@ -86,6 +86,20 @@ class WindowGraphTest(unittest.TestCase):
         self.assertEqual(citation["evidence"][0]["locator"]["page"], 2)
         self.assertEqual(citation["evidence"][0]["locator"]["column"], "SHGC")
 
+        gaps = self.output("gaps")
+        self.assertGreater(gaps["summary"]["total"], 0)
+        gap_codes = {(g["code"], g.get("nodeId")) for g in gaps["gaps"]}
+        self.assertIn(("part-missing-material", "window-frame"), gap_codes)
+        self.assertIn(("property-unknown", "window-assembly"), gap_codes)
+        self.assertIn(("source-not-archived", "flat-glass-structure"), gap_codes)
+
+        with TemporaryDirectory() as directory:
+            db_path = Path(directory) / "materials.db"
+            exported = self.output("export-db", db_path)
+            self.assertEqual(exported["nodes"], 48)
+            self.assertEqual(exported["statements"], 79)
+            self.assertTrue(db_path.is_file())
+
     def test_source_versions_keep_the_original_citation_openable(self):
         with TemporaryDirectory() as directory:
             workspace = Path(directory)
@@ -142,13 +156,19 @@ class WindowGraphTest(unittest.TestCase):
         try:
             base = f"http://127.0.0.1:{server.server_port}"
             with urlopen(f"{base}/", timeout=5) as res:
-                self.assertIn("Building Materials Graph Explorer", res.read().decode("utf-8"))
+                self.assertIn("Building Materials", res.read().decode("utf-8"))
             with urlopen(f"{base}/api/parts/window-assembly", timeout=5) as res:
                 parts = json.loads(res.read().decode("utf-8"))
                 self.assertEqual(parts["root"], "window-assembly")
             with urlopen(f"{base}/api/compare/igu-gray-air/igu-gray-argon", timeout=5) as res:
                 cmp_data = json.loads(res.read().decode("utf-8"))
                 self.assertEqual([n["id"] for n in cmp_data["materials"]["onlyRight"]], ["argon-fill"])
+            with urlopen(f"{base}/api/gaps", timeout=5) as res:
+                gaps_data = json.loads(res.read().decode("utf-8"))
+                self.assertGreater(gaps_data["summary"]["total"], 0)
+            with urlopen(f"{base}/api/schema", timeout=5) as res:
+                schema_data = json.loads(res.read().decode("utf-8"))
+                self.assertIn("CREATE TABLE IF NOT EXISTS nodes", schema_data["sql"])
             with urlopen(f"{base}/api/cite/igu-gray-shgc", timeout=5) as res:
                 cited = json.loads(res.read().decode("utf-8"))
                 self.assertEqual(cited["evidence"][0]["locator"]["page"], 2)

@@ -3,361 +3,307 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Building Materials Graph Explorer</title>
+<title>Building Materials</title>
 <style>
   :root {
-    --bg: #f6f5f0;
+    --bg: #f8f7f4;
     --surface: #ffffff;
-    --surface-muted: #f0eee7;
-    --border: #e2dfd5;
-    --border-strong: #cbc6b8;
-    --ink: #1a1917;
-    --ink-muted: #5e5b53;
-    --ink-subtle: #8b877d;
+    --subtle: #f2f0ea;
+    --border: #e6e3da;
+    --border-strong: #d0ccc0;
+    --ink: #181816;
+    --muted: #646159;
+    --faint: #928e84;
     --accent: #1d4ed8;
-    --accent-soft: #eff6ff;
+    --accent-bg: #eff6ff;
+    --teal: #0f766e;
+    --teal-bg: #f0fdfa;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --rose: #be123c;
+    --rose-bg: #fff1f2;
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.45; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.5; }
   button, input, select { font: inherit; color: inherit; }
 
-  .app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; overflow: hidden; }
+  .app { display: grid; grid-template-rows: 50px 1fr; height: 100vh; overflow: hidden; }
 
-  /* Top Bar */
+  /* Top Navigation */
   .topbar {
-    display: flex; align-items: center; gap: 10px; padding: 0 16px;
-    background: var(--surface); border-bottom: 1px solid var(--border); z-index: 10;
+    display: flex; align-items: center; gap: 20px; padding: 0 20px;
+    background: var(--surface); border-bottom: 1px solid var(--border); z-index: 20;
   }
-  .brand { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
-  .brand h1 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
-  .brand .stats { font-family: var(--mono); font-size: 11px; color: var(--ink-subtle); }
+  .brand { font-weight: 650; font-size: 14px; letter-spacing: -0.01em; white-space: nowrap; }
+  .nav { display: flex; gap: 4px; }
+  .nav-btn {
+    border: none; background: transparent; padding: 6px 12px; border-radius: 6px;
+    font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .nav-btn:hover { background: var(--subtle); color: var(--ink); }
+  .nav-btn.active { background: var(--ink); color: #fff; }
+  .nav-count {
+    font-family: var(--mono); font-size: 10.5px; padding: 0 6px; border-radius: 999px;
+    background: var(--amber-bg); color: var(--amber); font-weight: 600;
+  }
+  .nav-btn.active .nav-count { background: rgba(255,255,255,0.2); color: #fff; }
 
-  .presets { display: flex; gap: 6px; margin-left: 6px; flex-wrap: nowrap; overflow-x: auto; }
-  .preset-btn {
-    border: 1px solid var(--border); background: var(--bg); padding: 4px 10px; border-radius: 999px;
-    font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.12s;
+  /* Quick Jump Search */
+  .jump-wrap { margin-left: auto; position: relative; width: 250px; }
+  .jump-wrap input {
+    width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); font-size: 12.5px; outline: none;
   }
-  .preset-btn:hover { border-color: var(--border-strong); background: var(--surface-muted); }
-  .preset-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .jump-wrap input:focus { border-color: var(--ink); background: var(--surface); }
+  .jump-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 320px; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08); display: none; z-index: 30; padding: 4px;
+  }
+  .jump-menu.open { display: block; }
+  .jump-item {
+    display: flex; flex-direction: column; width: 100%; text-align: left; border: none;
+    background: transparent; padding: 6px 8px; border-radius: 5px; cursor: pointer;
+  }
+  .jump-item:hover { background: var(--subtle); }
+  .jump-item-label { font-size: 12.5px; font-weight: 500; }
+  .jump-item-sub { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 
-  .search-wrap { margin-left: auto; position: relative; width: 220px; flex-shrink: 0; }
-  .search-wrap input {
-    width: 100%; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
-    background: var(--bg); font-size: 12px; outline: none;
-  }
-  .search-wrap input:focus { border-color: var(--ink); background: var(--surface); }
+  /* Main 2-Pane Layout */
+  .main { display: grid; grid-template-columns: 1fr 350px; min-height: 0; }
+  .stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 
-  /* Main 3-Pane Workspace */
-  .workspace { display: grid; grid-template-columns: 256px 1fr 365px; min-height: 0; }
-
-  /* Left Sidebar */
-  .sidebar {
-    background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; min-height: 0;
+  /* Sub-toolbar (quiet single line) */
+  .subbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 18px; border-bottom: 1px solid var(--border); background: var(--bg);
+    min-height: 44px; flex-shrink: 0;
   }
-  .kind-filters {
-    display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 12px; border-bottom: 1px solid var(--border);
+  .subbar-group { display: flex; align-items: center; gap: 8px; }
+  .select-clean {
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); font-size: 12.5px; cursor: pointer;
   }
-  .kind-chip {
-    font-size: 11px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border);
-    background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  .seg { display: inline-flex; background: var(--subtle); padding: 2px; border-radius: 6px; border: 1px solid var(--border); }
+  .seg-btn {
+    border: none; background: transparent; padding: 3px 9px; border-radius: 4px;
+    font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap; font-weight: 500;
   }
-  .kind-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .kind-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-
-  .node-list { overflow-y: auto; padding: 6px; flex: 1; }
-  .node-group-title {
-    font-size: 10px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--ink-subtle); padding: 8px 8px 4px;
-  }
-  .node-item {
-    display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 6px;
-    cursor: pointer; border: 1px solid transparent;
-  }
-  .node-item:hover { background: var(--bg); }
-  .node-item.selected { background: var(--accent-soft); border-color: #bfdbfe; }
-  .node-item-top { display: flex; align-items: center; gap: 6px; }
-  .node-item-label { font-weight: 500; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .node-item-id { font-family: var(--mono); font-size: 10.5px; color: var(--ink-subtle); padding-left: 13px; }
-
-  /* Center Canvas */
-  .canvas-pane { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
-  .canvas-toolbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 8px 12px; background: rgba(246, 245, 240, 0.94); border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(6px); z-index: 5; flex-wrap: wrap;
-  }
-  .mode-tabs { display: inline-flex; background: var(--surface-muted); padding: 2px; border-radius: 7px; border: 1px solid var(--border); flex-shrink: 0; }
-  .mode-tab {
-    border: none; background: transparent; padding: 4px 9px; border-radius: 5px;
-    font-size: 12px; cursor: pointer; color: var(--ink-muted); font-weight: 500; white-space: nowrap;
-  }
-  .mode-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
-
-  .canvas-meta { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--ink-muted); white-space: nowrap; }
-  .toggle-label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; white-space: nowrap; }
-  .zoom-controls { display: inline-flex; gap: 4px; }
-  .icon-btn {
+  .seg-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .btn-sm {
     border: 1px solid var(--border); background: var(--surface); border-radius: 5px;
-    padding: 3px 8px; font-size: 12px; cursor: pointer;
+    padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap;
   }
-  .icon-btn:hover { border-color: var(--border-strong); }
+  .btn-sm:hover { border-color: var(--border-strong); color: var(--ink); }
+  .meta-txt { font-family: var(--mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
 
-  .svg-wrap { flex: 1; position: relative; overflow: hidden; cursor: grab; }
+  /* Graph Canvas */
+  .svg-wrap { flex: 1; position: relative; overflow: hidden; cursor: grab; background: var(--bg); }
   .svg-wrap:active { cursor: grabbing; }
   svg#graph { width: 100%; height: 100%; display: block; }
-
-  .legend {
-    position: absolute; left: 12px; bottom: 12px; background: rgba(255,255,255,0.92);
-    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
-    display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--ink-muted);
-    backdrop-filter: blur(4px); pointer-events: none;
+  .hint {
+    position: absolute; left: 16px; bottom: 12px; font-size: 11px; color: var(--faint);
+    pointer-events: none;
   }
-
-  /* Compare Panel */
-  .compare-wrap {
-    flex: 1; overflow-y: auto; padding: 18px 20px; display: none; flex-direction: column; gap: 16px;
-  }
-  .compare-wrap.visible { display: flex; }
-  .compare-pickers {
-    display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
-  }
-  .compare-pickers select {
-    width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); font-size: 12.5px;
-  }
-  .compare-vs { font-family: var(--mono); font-size: 11px; color: var(--ink-subtle); font-weight: 600; text-transform: uppercase; }
-  .compare-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
-  }
-  .compare-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  .compare-table th, .compare-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .compare-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-subtle); font-weight: 650; }
-  .compare-table tr.diff-row td { background: #fffbeb; }
-  .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .diff-col { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-  .diff-col-title { font-size: 11px; font-weight: 650; color: var(--ink-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .diff-chip {
-    display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left;
-    padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface);
-    margin-bottom: 6px; cursor: pointer;
-  }
-  .diff-chip:hover { border-color: var(--accent); background: var(--accent-soft); }
-  .diff-chip-label { font-size: 12px; font-weight: 550; }
-  .diff-chip-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-subtle); }
-
-  /* SVG Elements */
-  .edge-path { fill: none; stroke: #0f766e; stroke-width: 1.7; transition: stroke 0.12s, stroke-width 0.12s; cursor: pointer; }
-  .edge-path:hover, .edge-path.selected { stroke: #1d4ed8; stroke-width: 2.6; }
+  .edge-path { fill: none; stroke: #94a3b8; stroke-width: 1.5; transition: stroke 0.12s; cursor: pointer; }
+  .edge-path:hover, .edge-path.selected { stroke: var(--accent); stroke-width: 2.4; }
   .edge-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
-  .edge-label-bg { fill: #f6f5f0; opacity: 0.92; rx: 3; }
-  .edge-label { font-family: var(--mono); font-size: 9.5px; fill: #475569; pointer-events: none; text-anchor: middle; }
-  .edge-label.selected { fill: #1d4ed8; font-weight: 600; }
+  .edge-label-bg { fill: var(--bg); opacity: 0.92; rx: 3; }
+  .edge-label { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); pointer-events: none; text-anchor: middle; }
+  .edge-label.selected { fill: var(--accent); font-weight: 600; }
   .edge-group.dim-label .edge-label-bg, .edge-group.dim-label .edge-label { opacity: 0; transition: opacity 0.12s; }
-  .edge-group.dim-label:hover .edge-label-bg, .edge-group.dim-label:hover .edge-label { opacity: 0.95; }
+  .edge-group.dim-label:hover .edge-label-bg, .edge-group.dim-label:hover .edge-label { opacity: 0.96; }
 
   .g-node { cursor: pointer; }
-  .g-node rect { rx: 8; ry: 8; stroke-width: 1.4; transition: filter 0.12s; }
-  .g-node:hover rect { filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08)); }
-  .g-node.selected rect { stroke-width: 2.5; stroke: #1d4ed8 !important; filter: drop-shadow(0 0 0 3px rgba(29,78,216,0.18)); }
-  .g-node.root rect { stroke-width: 2.2; }
+  .g-node rect { rx: 8; ry: 8; stroke-width: 1.3; transition: filter 0.12s; }
+  .g-node:hover rect { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.07)); }
+  .g-node.selected rect { stroke-width: 2.2; stroke: var(--accent) !important; }
   .g-node-kind { font-family: var(--mono); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .g-node-title { font-size: 11.5px; font-weight: 600; fill: #1a1917; }
-  .g-node-sub { font-family: var(--mono); font-size: 9.5px; fill: #64748b; }
+  .g-node-title { font-size: 11.5px; font-weight: 600; fill: var(--ink); }
+  .g-node-sub { font-family: var(--mono); font-size: 9.5px; fill: var(--faint); }
 
-  /* Right Inspector */
+  /* Content Scroll Area (Compare, Tables, Gaps) */
+  .scroll-view { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .container { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  /* Cards & Tables */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .panel-head {
+    padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex;
+    align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .panel-title { font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .data-table th {
+    text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 650; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--faint); border-bottom: 1px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 1;
+  }
+  .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tbody tr { cursor: pointer; }
+  .data-table tbody tr:hover td { background: var(--bg); }
+  .data-table tbody tr.row-selected td { background: var(--accent-bg); }
+  .data-table tr.diff-row td { background: var(--amber-bg); }
+  .mono { font-family: var(--mono); font-size: 11.5px; }
+
+  .code-block {
+    margin: 0; padding: 16px 18px; font-family: var(--mono); font-size: 12px; line-height: 1.55;
+    overflow-x: auto; background: #faf9f6; color: var(--ink);
+  }
+
+  /* Compare */
+  .pickers { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+  .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px; }
+  .diff-col-title { font-size: 11px; font-weight: 650; color: var(--muted); margin-bottom: 8px; }
+  .diff-item {
+    display: block; width: 100%; text-align: left; padding: 6px 8px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg); margin-bottom: 6px; cursor: pointer;
+  }
+  .diff-item:hover { border-color: var(--accent); background: var(--accent-bg); }
+
+  /* Gaps */
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .stat-card {
+    text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer;
+  }
+  .stat-card:hover { border-color: var(--border-strong); }
+  .stat-card.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .stat-num { font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .stat-card.active .stat-lbl { color: rgba(255,255,255,0.75); }
+
+  /* Badges */
+  .tag {
+    display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 999px;
+    font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+    white-space: nowrap;
+  }
+  .tag-teal { background: var(--teal-bg); border-color: #99f6e4; color: var(--teal); }
+  .tag-amber { background: var(--amber-bg); border-color: #fde68a; color: var(--amber); }
+  .tag-rose { background: var(--rose-bg); border-color: #fecdd3; color: var(--rose); }
+
+  /* Right Inspector (clean & quiet) */
   .inspector {
     background: var(--surface); border-left: 1px solid var(--border);
-    overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 16px;
+    overflow-y: auto; padding: 18px 18px 28px; display: flex; flex-direction: column; gap: 18px;
   }
-  .insp-header { display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .pill-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-  .pill {
-    display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px;
-    font-size: 10.5px; font-family: var(--mono); font-weight: 500; border: 1px solid var(--border); background: var(--bg);
+  .insp-head { display: flex; flex-direction: column; gap: 5px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .insp-title { margin: 2px 0 0; font-size: 16px; font-weight: 650; line-height: 1.25; }
+  .insp-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .insp-section-title {
+    font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--faint); margin: 0 0 8px; display: flex; justify-content: space-between;
   }
-  .pill.basis-simulated, .pill.basis-measured, .pill.basis-manufacturer-declared, .pill.basis-specification, .pill.basis-typical-reference, .pill.basis-inferred {
-    background: #ecfdf5; border-color: #a7f3d0; color: #065f46;
+  .fact-row {
+    padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px;
   }
-  .pill.capture-saved { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
-  .pill.capture-link-only { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+  .fact-row:last-child { border-bottom: none; }
+  .fact-line { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .fact-val { font-family: var(--mono); font-weight: 700; color: var(--teal); }
+  .fact-val.unknown { color: var(--amber); font-style: italic; font-weight: 600; }
 
-  .insp-title { margin: 0; font-size: 16px; font-weight: 650; line-height: 1.25; }
-  .insp-id { font-family: var(--mono); font-size: 11.5px; color: var(--ink-subtle); }
-  .insp-desc { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-muted); }
+  .link-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+  }
+  .link-row:last-child { border-bottom: none; }
+  .link-main { min-width: 0; }
+  .link-btn {
+    border: none; background: none; padding: 0; color: var(--accent); font-weight: 500;
+    cursor: pointer; text-align: left; font-size: 12.5px;
+  }
+  .link-btn:hover { text-decoration: underline; }
+  .cite-link {
+    border: none; background: none; padding: 0; font-family: var(--mono); font-size: 10.5px;
+    color: var(--faint); cursor: pointer; flex-shrink: 0;
+  }
+  .cite-link:hover { color: var(--ink); text-decoration: underline; }
 
-  .action-row { display: flex; gap: 6px; margin-top: 4px; }
-  .action-btn {
-    flex: 1; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border);
-    background: var(--bg); font-size: 11.5px; font-weight: 500; cursor: pointer; text-align: center;
+  .cite-card {
+    background: #f8fbff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px;
+    display: flex; flex-direction: column; gap: 6px;
   }
-  .action-btn:hover { background: var(--surface-muted); border-color: var(--border-strong); }
-
-  .section-title {
-    font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--ink-subtle); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: center;
+  .cite-kv { display: grid; grid-template-columns: 72px 1fr; gap: 2px 8px; font-size: 11.5px; }
+  .open-btn {
+    display: inline-block; text-align: center; padding: 6px 10px; border-radius: 6px;
+    background: var(--ink); color: #fff; text-decoration: none; font-size: 12px; font-weight: 500; margin-top: 2px;
   }
-
-  .card {
-    border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; background: var(--bg);
-    display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px;
-  }
-  .card.active-cite { border-color: var(--accent); background: var(--accent-soft); }
-  .fact-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .fact-prop { font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink); }
-  .fact-val { font-family: var(--mono); font-size: 13px; font-weight: 700; color: #0f766e; }
-  .fact-val.unknown { color: #b45309; font-style: italic; font-weight: 600; }
-  .fact-meta { font-size: 11.5px; color: var(--ink-muted); }
-
-  .rel-row {
-    display: flex; flex-direction: column; gap: 3px; padding: 7px 9px;
-    border: 1px solid var(--border); border-radius: 7px; margin-bottom: 6px; background: var(--surface);
-  }
-  .rel-row.active-cite { border-color: var(--accent); background: var(--accent-soft); }
-  .rel-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .rel-pred { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-muted); }
-  .rel-link {
-    background: none; border: none; padding: 0; text-align: left; cursor: pointer;
-    color: var(--accent); font-weight: 550; font-size: 12.5px;
-  }
-  .rel-link:hover { text-decoration: underline; }
-  .rel-qual { font-family: var(--mono); font-size: 10.5px; color: var(--ink-subtle); }
-
-  .cite-btn {
-    border: 1px solid var(--border); background: var(--surface); border-radius: 5px;
-    padding: 1px 7px; font-size: 10.5px; font-family: var(--mono); cursor: pointer; color: var(--ink-muted);
-  }
-  .cite-btn:hover { border-color: var(--ink); color: var(--ink); }
-
-  .evidence-box {
-    border: 1px solid #bfdbfe; background: #f8fbff; border-radius: 8px; padding: 11px 12px;
-    display: flex; flex-direction: column; gap: 7px;
-  }
-  .evidence-kv { display: grid; grid-template-columns: 78px 1fr; gap: 3px 8px; font-size: 11.5px; }
-  .evidence-k { font-family: var(--mono); color: var(--ink-subtle); font-size: 10.5px; }
-  .evidence-v { word-break: break-word; }
-  .open-source {
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-    padding: 6px 10px; border-radius: 6px; background: var(--ink); color: #fff;
-    text-decoration: none; font-size: 12px; font-weight: 500; margin-top: 2px;
-  }
-  .open-source:hover { background: #333; }
-  .empty { color: var(--ink-subtle); font-size: 12px; font-style: italic; }
+  .empty { color: var(--faint); font-size: 12px; font-style: italic; }
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">
-      <h1>Building Materials</h1>
-      <span class="stats" id="graphStats">loading...</span>
-    </div>
-    <div class="presets" id="presets">
-      <button class="preset-btn active" data-preset="parts:window-assembly">Window → Atoms</button>
-      <button class="preset-btn" data-preset="trace:igu-gray-argon">IGU Value Chain</button>
-      <button class="preset-btn" data-preset="used-by:vitro-solarban-70">Where is Solarban 70 used?</button>
-      <button class="preset-btn" data-preset="compare:igu-gray-air|igu-gray-argon">Compare Air vs. Argon</button>
-      <button class="preset-btn" data-preset="full:">Full Graph</button>
-    </div>
-    <div class="search-wrap">
-      <input id="searchInput" type="search" placeholder="Filter nodes by label, ID, kind..." autocomplete="off">
+    <div class="brand">Building Materials</div>
+    <nav class="nav" id="mainNav">
+      <button class="nav-btn active" data-tab="graph">Graph</button>
+      <button class="nav-btn" data-tab="compare">Compare</button>
+      <button class="nav-btn" data-tab="tables">Tables</button>
+      <button class="nav-btn" data-tab="gaps">Gaps <span class="nav-count" id="gapsBadge">–</span></button>
+    </nav>
+    <div class="jump-wrap">
+      <input id="jumpInput" type="search" placeholder="Jump to node..." autocomplete="off">
+      <div class="jump-menu" id="jumpMenu"></div>
     </div>
   </header>
 
-  <main class="workspace">
-    <aside class="sidebar">
-      <div class="kind-filters" id="kindFilters"></div>
-      <div class="node-list" id="nodeList"></div>
-    </aside>
-
-    <section class="canvas-pane">
-      <div class="canvas-toolbar">
-        <div class="mode-tabs" id="modeTabs">
-          <button class="mode-tab active" data-mode="parts">Parts</button>
-          <button class="mode-tab" data-mode="trace">Trace</button>
-          <button class="mode-tab" data-mode="used-by">Used By</button>
-          <button class="mode-tab" data-mode="compare">Compare</button>
-          <button class="mode-tab" data-mode="full">Full</button>
-        </div>
-        <div class="canvas-meta" id="graphControls">
-          <span id="viewSummary"></span>
-          <label class="toggle-label"><input type="checkbox" id="toggleSources"> Sources</label>
-          <div class="zoom-controls">
-            <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
-            <button class="icon-btn" id="zoomFit" title="Fit to view">Fit</button>
-            <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="svg-wrap" id="svgWrap">
-        <svg id="graph" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <marker id="arrow-verified" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#0f766e"></path>
-            </marker>
-            <marker id="arrow-selected" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#1d4ed8"></path>
-            </marker>
-          </defs>
-          <g id="viewport">
-            <g id="edgesLayer"></g>
-            <g id="nodesLayer"></g>
-          </g>
-        </svg>
-        <div class="legend">
-          <span>Drag nodes · Scroll to zoom · Double-click node to re-root · Click edge to cite</span>
-        </div>
-      </div>
-
-      <div class="compare-wrap" id="compareWrap"></div>
-    </section>
-
+  <main class="main">
+    <section class="stage" id="stage"></section>
     <aside class="inspector" id="inspector">
-      <div class="empty">Select a node or edge to inspect claims and citations.</div>
+      <div class="empty">Select any node or statement to inspect details and citations.</div>
     </aside>
   </main>
 </div>
 
 <script>
 const KIND_STYLE = {
-  referenceDesign: { color: "#1d4ed8", fill: "#eff6ff", border: "#93c5fd", label: "Design" },
+  referenceDesign: { color: "#1d4ed8", fill: "#eff6ff", border: "#bfdbfe", label: "Design" },
   productModel:    { color: "#4f46e5", fill: "#eef2ff", border: "#c7d2fe", label: "Model" },
-  productVariant:  { color: "#6d28d9", fill: "#f5f3ff", border: "#c4b5fd", label: "Variant" },
-  material:        { color: "#0f766e", fill: "#f0fdfa", border: "#5eead4", label: "Material" },
-  structureModel:  { color: "#047857", fill: "#ecfdf5", border: "#6ee7b7", label: "Structure" },
-  chemicalEntity:  { color: "#0e7490", fill: "#ecfeff", border: "#67e8f9", label: "Chemical" },
-  process:         { color: "#c2410c", fill: "#fff7ed", border: "#fdba74", label: "Process" },
-  requirement:     { color: "#be123c", fill: "#fff1f2", border: "#fda4af", label: "Requirement" },
-  actor:           { color: "#7e22ce", fill: "#faf5ff", border: "#d8b4fe", label: "Actor" },
+  productVariant:  { color: "#6d28d9", fill: "#f5f3ff", border: "#ddd6fe", label: "Variant" },
+  material:        { color: "#0f766e", fill: "#f0fdfa", border: "#99f6e4", label: "Material" },
+  structureModel:  { color: "#047857", fill: "#ecfdf5", border: "#a7f3d0", label: "Structure" },
+  chemicalEntity:  { color: "#0e7490", fill: "#ecfeff", border: "#a5f3fc", label: "Chemical" },
+  process:         { color: "#c2410c", fill: "#fff7ed", border: "#fed7aa", label: "Process" },
+  requirement:     { color: "#be123c", fill: "#fff1f2", border: "#fecdd3", label: "Requirement" },
+  actor:           { color: "#7e22ce", fill: "#faf5ff", border: "#e9d5ff", label: "Actor" },
   source:          { color: "#57534e", fill: "#f5f5f4", border: "#d6d3d1", label: "Source" },
 };
 
 const STAGE_COL = {
   extraction: 0, research: 0,
   design: 1, specification: 1,
-  fabrication: 2,
-  testing: 3,
+  fabrication: 2, testing: 3,
   distribution: 4, installation: 4,
 };
 
+const PRESETS = [
+  { key: "parts:window-assembly", label: "Window → Atoms" },
+  { key: "trace:igu-gray-argon", label: "IGU Value Chain" },
+  { key: "used-by:vitro-solarban-70", label: "Where Solarban 70 is used" },
+  { key: "full:", label: "Full Graph" },
+];
+
 const state = {
+  tab: "graph",
   full: { nodes: [], statements: [], byId: new Map(), out: new Map(), inc: new Map() },
-  view: { mode: "parts", root: "window-assembly", nodes: [], statements: [] },
+  graph: { mode: "parts", root: "window-assembly", nodes: [], statements: [], showSources: false },
   compare: { left: "igu-gray-air", right: "igu-gray-argon", data: null },
+  tables: { sub: "nodes", filter: "", kind: "", sql: "" },
+  gaps: { data: null, category: "all" },
   selectedNodeId: "window-assembly",
   selectedStatementId: null,
   citation: null,
-  activeKind: null,
-  search: "",
-  showSources: false,
   positions: new Map(),
   transform: { x: 40, y: 40, k: 1 },
 };
 
 const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const trunc = (s, n = 25) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
 async function api(path) {
   const res = await fetch(path);
@@ -366,226 +312,196 @@ async function api(path) {
   return data;
 }
 
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-function truncate(s, max = 26) {
-  return s.length > max ? s.slice(0, max - 1) + "…" : s;
-}
-
-function formatQualifiers(q) {
-  if (!q) return "";
-  const parts = [];
-  if (q.role) parts.push(`role: ${q.role}`);
-  if (q.position) parts.push(`pos: ${q.position}`);
-  if (q.sequence !== undefined) parts.push(`#${q.sequence}`);
-  if (q.quantity) parts.push(formatQuantity(q.quantity));
-  return parts.join(" · ");
-}
-
-function formatQuantity(q) {
+function fmtQty(q) {
   if (!q) return "";
   const unit = q.unit === "1" ? "" : ` ${q.unit}`;
   const val = q.value !== undefined ? `${q.value}` : `${q.min}–${q.max}`;
   return `${val}${unit}${q.basis ? ` (${q.basis})` : ""}`;
 }
 
-function formatFactValue(f) {
+function fmtFact(f) {
   if (!f) return "—";
-  if (f.quantity) return formatQuantity(f.quantity);
+  if (f.quantity) return fmtQty(f.quantity);
   if (f.state) return f.state;
   return String(f.value);
 }
 
-function edgeShortLabel(st) {
-  const q = st.qualifiers;
-  if (q?.position) return `${st.predicate} · ${q.position}`;
-  if (q?.role) return `${st.predicate} · ${q.role}`;
-  return st.predicate;
+function fmtQual(q) {
+  if (!q) return "";
+  return [q.role, q.position, q.sequence !== undefined ? `#${q.sequence}` : ""].filter(Boolean).join(" · ");
 }
 
-/* ---------- Data Loading ---------- */
+/* ---------- Boot & Data ---------- */
 
-async function loadFullGraph() {
-  const data = await api("/api/graph");
-  state.full.nodes = data.nodes;
-  state.full.statements = data.statements;
-  state.full.byId = new Map(data.nodes.map((n) => [n.id, n]));
-  state.full.out = new Map(data.nodes.map((n) => [n.id, []]));
-  state.full.inc = new Map(data.nodes.map((n) => [n.id, []]));
-  for (const st of data.statements) {
+async function loadInitial() {
+  const [graphData, gapsData, schemaData] = await Promise.all([
+    api("/api/graph"),
+    api("/api/gaps"),
+    api("/api/schema"),
+  ]);
+  state.full.nodes = graphData.nodes;
+  state.full.statements = graphData.statements;
+  state.full.byId = new Map(graphData.nodes.map((n) => [n.id, n]));
+  state.full.out = new Map(graphData.nodes.map((n) => [n.id, []]));
+  state.full.inc = new Map(graphData.nodes.map((n) => [n.id, []]));
+  for (const st of graphData.statements) {
     state.full.out.get(st.subject)?.push(st);
     if (st.target) state.full.inc.get(st.target)?.push(st);
   }
-  $("graphStats").textContent = `${data.nodes.length} nodes · ${data.statements.length} statements`;
-  renderKindFilters();
-  renderNodeList();
+  state.gaps.data = gapsData;
+  state.tables.sql = schemaData.sql;
+  $("gapsBadge").textContent = gapsData.summary.total;
+  await loadGraphSub("parts", "window-assembly");
 }
 
-async function setView(mode, rootArg) {
-  state.view.mode = mode;
-  state.selectedStatementId = null;
-  state.citation = null;
-
-  if (mode === "compare") {
-    if (rootArg && rootArg.includes("|")) {
-      const [l, r] = rootArg.split("|");
-      state.compare.left = l;
-      state.compare.right = r;
-    }
-    $("svgWrap").style.display = "none";
-    $("graphControls").style.display = "none";
-    $("compareWrap").classList.add("visible");
-    state.compare.data = await api(`/api/compare/${encodeURIComponent(state.compare.left)}/${encodeURIComponent(state.compare.right)}`);
-    state.selectedNodeId = state.compare.left;
-    updateToolbarUI();
-    renderCompare();
-    renderNodeList();
-    renderInspector();
-    return;
-  }
-
-  $("svgWrap").style.display = "block";
-  $("graphControls").style.display = "flex";
-  $("compareWrap").classList.remove("visible");
-
+async function loadGraphSub(mode, rootId) {
+  state.graph.mode = mode;
   if (mode === "full") {
-    state.view.root = null;
-    state.view.nodes = state.full.nodes;
-    state.view.statements = state.full.statements;
+    state.graph.root = null;
+    state.graph.nodes = state.full.nodes;
+    state.graph.statements = state.full.statements;
   } else {
-    const target = rootArg || state.selectedNodeId || "window-assembly";
+    const target = rootId || state.selectedNodeId || "window-assembly";
     const data = await api(`/api/${mode}/${encodeURIComponent(target)}`);
-    state.view.root = data.root;
-    state.view.nodes = data.nodes;
-    state.view.statements = data.statements;
+    state.graph.root = data.root;
+    state.graph.nodes = data.nodes;
+    state.graph.statements = data.statements;
     state.selectedNodeId = target;
   }
-  updateToolbarUI();
-  computeLayout();
-  renderGraph();
-  fitToView();
-  renderNodeList();
+  state.tab = "graph";
+  renderAll();
+}
+
+async function loadCompare(leftId, rightId) {
+  state.compare.left = leftId || state.compare.left;
+  state.compare.right = rightId || state.compare.right;
+  state.compare.data = await api(`/api/compare/${encodeURIComponent(state.compare.left)}/${encodeURIComponent(state.compare.right)}`);
+  state.tab = "compare";
+  state.selectedNodeId = state.compare.left;
+  renderAll();
+}
+
+function setTab(tab) {
+  state.tab = tab;
+  if (tab === "compare" && !state.compare.data) {
+    loadCompare(state.compare.left, state.compare.right);
+    return;
+  }
+  renderAll();
+}
+
+function selectNode(nodeId) {
+  state.selectedNodeId = nodeId;
+  state.selectedStatementId = null;
+  state.citation = null;
+  renderInspector();
+  if (state.tab === "graph") renderSvg();
+}
+
+async function inspectStatement(st) {
+  state.selectedStatementId = st.id;
+  if (st.subject) state.selectedNodeId = st.subject;
+  state.citation = null;
+  renderInspector();
+  if (state.tab === "graph") renderSvg();
+  try {
+    state.citation = await api(`/api/cite/${encodeURIComponent(st.id)}`);
+  } catch (err) {
+    state.citation = { error: err.message };
+  }
   renderInspector();
 }
 
-/* ---------- Compare View ---------- */
-
-function renderCompare() {
-  const wrap = $("compareWrap");
-  const d = state.compare.data;
-  if (!d) return;
-
-  const comparable = state.full.nodes.filter((n) => ["productVariant", "referenceDesign", "productModel"].includes(n.kind));
-  const options = (sel) => comparable.map((n) =>
-    `<option value="${esc(n.id)}" ${n.id === sel ? "selected" : ""}>${esc(n.label)} (${esc(n.kind)})</option>`
-  ).join("");
-
-  const factRows = d.facts.length ? d.facts.map((row) => {
-    const lv = formatFactValue(row.left);
-    const rv = formatFactValue(row.right);
-    const diff = lv !== rv;
-    const cell = (stmt) => {
-      if (!stmt) return `<span class="empty">—</span>`;
-      const inherited = stmt.subject !== d.left.id && stmt.subject !== d.right.id;
-      return `<div><strong>${esc(formatFactValue(stmt))}</strong></div>
-        <div style="display:flex;gap:5px;align-items:center;margin-top:3px;flex-wrap:wrap">
-          <span class="pill basis-${esc(stmt.basis)}">${esc(stmt.basis)}</span>
-          ${inherited ? `<span class="pill">via ${esc(stmt.subject)}</span>` : ""}
-          <button class="cite-btn" data-cite="${esc(stmt.id)}">Cite</button>
-        </div>`;
-    };
-    return `<tr class="${diff ? "diff-row" : ""}">
-      <td><div class="fact-prop">${esc(row.property)}</div>${row.scope ? `<div class="rel-qual">${esc(row.scope)}</div>` : ""}</td>
-      <td>${cell(row.left)}</td>
-      <td>${cell(row.right)}</td>
-    </tr>`;
-  }).join("") : `<tr><td colspan="3" class="empty">No comparable property claims.</td></tr>`;
-
-  const diffSection = (title, group) => {
-    const col = (label, list) => `
-      <div class="diff-col">
-        <div class="diff-col-title">${esc(label)} (${list.length})</div>
-        ${list.length ? list.map((n) => `
-          <button class="diff-chip" data-jump="${esc(n.id)}">
-            <span class="diff-chip-label">${esc(n.label)}</span>
-            <span class="diff-chip-sub">${esc(n.id)}${n.stage ? ` · ${esc(n.stage)}` : ""}</span>
-          </button>`).join("") : `<div class="empty">None</div>`}
-      </div>`;
-    return `
-      <div class="compare-card">
-        <h3 class="section-title">${esc(title)}</h3>
-        <div class="diff-grid">
-          ${col(`Only ${truncate(d.left.label, 22)}`, group.onlyLeft)}
-          ${col("Shared", group.shared)}
-          ${col(`Only ${truncate(d.right.label, 22)}`, group.onlyRight)}
-        </div>
-      </div>`;
-  };
-
-  wrap.innerHTML = `
-    <div class="compare-pickers">
-      <select id="cmpLeft">${options(d.left.id)}</select>
-      <span class="compare-vs">vs</span>
-      <select id="cmpRight">${options(d.right.id)}</select>
-    </div>
-    <div class="compare-card">
-      <h3 class="section-title">Properties & Performance</h3>
-      <table class="compare-table">
-        <thead>
-          <tr><th>Property</th><th>${esc(d.left.label)}</th><th>${esc(d.right.label)}</th></tr>
-        </thead>
-        <tbody>${factRows}</tbody>
-      </table>
-    </div>
-    ${diffSection("Materials", d.materials)}
-    ${diffSection("Value-Chain Processes", d.processes)}
-    ${diffSection("Assembly Parts", d.parts)}
-  `;
-
-  $("cmpLeft").onchange = (e) => setView("compare", `${e.target.value}|${state.compare.right}`);
-  $("cmpRight").onchange = (e) => setView("compare", `${state.compare.left}|${e.target.value}`);
-  wrap.querySelectorAll("[data-jump]").forEach((b) => { b.onclick = () => selectNode(b.dataset.jump); });
-  wrap.querySelectorAll("[data-cite]").forEach((b) => {
-    b.onclick = () => {
-      const targetSt = state.full.statements.find((s) => s.id === b.dataset.cite);
-      if (targetSt) inspectStatement(targetSt);
-    };
-  });
+function renderAll() {
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === state.tab));
+  if (state.tab === "graph") renderGraphTab();
+  else if (state.tab === "compare") renderCompareTab();
+  else if (state.tab === "tables") renderTablesTab();
+  else if (state.tab === "gaps") renderGapsTab();
+  renderInspector();
 }
 
-/* ---------- Layered Layout ---------- */
+/* ---------- Tab 1: Graph ---------- */
 
 function visibleSubgraph() {
-  const nodes = state.view.nodes.filter((n) => state.showSources || n.kind !== "source");
-  const nodeIds = new Set(nodes.map((n) => n.id));
-  const edges = state.view.statements.filter(
-    (s) => s.predicate && nodeIds.has(s.subject) && nodeIds.has(s.target)
-  );
+  const nodes = state.graph.nodes.filter((n) => state.graph.showSources || n.kind !== "source");
+  const ids = new Set(nodes.map((n) => n.id));
+  const edges = state.graph.statements.filter((s) => s.predicate && ids.has(s.subject) && ids.has(s.target));
   return { nodes, edges };
+}
+
+function renderGraphTab() {
+  const stage = $("stage");
+  const curPreset = `${state.graph.mode}:${state.graph.root || ""}`;
+  stage.innerHTML = `
+    <div class="subbar">
+      <div class="subbar-group">
+        <select class="select-clean" id="presetSelect">
+          ${PRESETS.map((p) => `<option value="${esc(p.key)}" ${p.key === curPreset ? "selected" : ""}>${esc(p.label)}</option>`).join("")}
+          ${PRESETS.some((p) => p.key === curPreset) ? "" : `<option value="${esc(curPreset)}" selected>Custom: ${esc(state.graph.root || "Full")}</option>`}
+        </select>
+        <div class="seg" id="graphModes">
+          ${["parts", "trace", "used-by", "full"].map((m) =>
+            `<button class="seg-btn ${state.graph.mode === m ? "active" : ""}" data-mode="${m}">${m === "used-by" ? "Used By" : m[0].toUpperCase() + m.slice(1)}</button>`
+          ).join("")}
+        </div>
+      </div>
+      <div class="subbar-group">
+        <span class="meta-txt" id="graphMeta"></span>
+        <button class="btn-sm" id="zoomOut">−</button>
+        <button class="btn-sm" id="zoomFit">Fit</button>
+        <button class="btn-sm" id="zoomIn">+</button>
+      </div>
+    </div>
+    <div class="svg-wrap" id="svgWrap">
+      <svg id="graph" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#94a3b8"></path>
+          </marker>
+          <marker id="arr-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#1d4ed8"></path>
+          </marker>
+        </defs>
+        <g id="viewport"><g id="edgesLayer"></g><g id="nodesLayer"></g></g>
+      </svg>
+      <div class="hint">Drag nodes · Scroll to zoom · Double-click node to re-root · Click edge to cite</div>
+    </div>
+  `;
+
+  $("presetSelect").onchange = (e) => {
+    const idx = e.target.value.indexOf(":");
+    loadGraphSub(e.target.value.slice(0, idx), e.target.value.slice(idx + 1) || null);
+  };
+  $("graphModes").querySelectorAll(".seg-btn").forEach((b) => {
+    b.onclick = () => loadGraphSub(b.dataset.mode, state.selectedNodeId);
+  });
+  $("zoomFit").onclick = fitToView;
+  $("zoomIn").onclick = () => { state.transform.k = Math.min(2.4, state.transform.k * 1.2); applyTransform(); };
+  $("zoomOut").onclick = () => { state.transform.k = Math.max(0.25, state.transform.k / 1.2); applyTransform(); };
+
+  bindPanZoom();
+  computeLayout();
+  renderSvg();
+  fitToView();
 }
 
 function computeLayout() {
   const { nodes, edges } = visibleSubgraph();
   const colOf = new Map();
 
-  if ((state.view.mode === "parts" || state.view.mode === "used-by") && state.view.root) {
+  if ((state.graph.mode === "parts" || state.graph.mode === "used-by") && state.graph.root) {
     const adj = new Map(nodes.map((n) => [n.id, []]));
     for (const e of edges) {
-      if (state.view.mode === "used-by") adj.get(e.target)?.push(e.subject);
+      if (state.graph.mode === "used-by") adj.get(e.target)?.push(e.subject);
       else adj.get(e.subject)?.push(e.target);
     }
-    const queue = [state.view.root];
-    colOf.set(state.view.root, 0);
-    while (queue.length) {
-      const cur = queue.shift();
-      const d = colOf.get(cur);
+    const q = [state.graph.root];
+    colOf.set(state.graph.root, 0);
+    while (q.length) {
+      const cur = q.shift(), d = colOf.get(cur);
       for (const nxt of adj.get(cur) || []) {
-        if (!colOf.has(nxt)) {
-          colOf.set(nxt, d + 1);
-          queue.push(nxt);
-        }
+        if (!colOf.has(nxt)) { colOf.set(nxt, d + 1); q.push(nxt); }
       }
     }
     for (const n of nodes) if (!colOf.has(n.id)) colOf.set(n.id, 1);
@@ -608,186 +524,132 @@ function computeLayout() {
     buckets.get(c).push(n);
   }
   const cols = [...buckets.keys()].sort((a, b) => a - b);
-  const NODE_W = 196, NODE_H = 54, COL_GAP = 100, ROW_GAP = 22;
-
+  const W = 192, H = 52, CG = 96, RG = 20;
   const maxRows = Math.max(1, ...cols.map((c) => buckets.get(c).length));
-  const totalHeight = maxRows * (NODE_H + ROW_GAP);
+  const totalH = maxRows * (H + RG);
 
   state.positions.clear();
   cols.forEach((c, ci) => {
     const list = buckets.get(c).sort((a, b) => a.kind.localeCompare(b.kind) || a.label.localeCompare(b.label));
-    const colH = list.length * (NODE_H + ROW_GAP) - ROW_GAP;
-    const startY = (totalHeight - colH) / 2;
-    list.forEach((n, ri) => {
-      state.positions.set(n.id, {
-        x: ci * (NODE_W + COL_GAP),
-        y: startY + ri * (NODE_H + ROW_GAP),
-        w: NODE_W,
-        h: NODE_H,
-      });
-    });
+    const colH = list.length * (H + RG) - RG;
+    const y0 = (totalH - colH) / 2;
+    list.forEach((n, ri) => state.positions.set(n.id, { x: ci * (W + CG), y: y0 + ri * (H + RG), w: W, h: H }));
   });
 }
 
-/* ---------- SVG Rendering ---------- */
-
-function renderGraph() {
+function renderSvg() {
+  const edgesLayer = $("edgesLayer"), nodesLayer = $("nodesLayer");
+  if (!edgesLayer || !nodesLayer) return;
   const { nodes, edges } = visibleSubgraph();
-  const edgesLayer = $("edgesLayer");
-  const nodesLayer = $("nodesLayer");
   edgesLayer.innerHTML = "";
   nodesLayer.innerHTML = "";
+  $("graphMeta").textContent = `${nodes.length} nodes · ${edges.length} links`;
 
-  $("viewSummary").textContent = `${nodes.length} nodes · ${edges.length} links`;
-
-  const dense = edges.length > 22;
+  const dense = edges.length > 20;
   for (const e of edges) {
-    const p1 = state.positions.get(e.subject);
-    const p2 = state.positions.get(e.target);
+    const p1 = state.positions.get(e.subject), p2 = state.positions.get(e.target);
     if (!p1 || !p2) continue;
+    const forward = p2.x >= p1.x;
+    const x1 = forward ? p1.x + p1.w : p1.x, y1 = p1.y + p1.h / 2;
+    const x2 = forward ? p2.x : p2.x + p2.w, y2 = p2.y + p2.h / 2;
+    const dx = Math.max(38, Math.abs(x2 - x1) * 0.45);
+    const d = `M ${x1} ${y1} C ${forward ? x1 + dx : x1 - dx} ${y1}, ${forward ? x2 - dx : x2 + dx} ${y2}, ${x2} ${y2}`;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const isSel = state.selectedStatementId === e.id;
+    const isInc = e.subject === state.selectedNodeId || e.target === state.selectedNodeId;
 
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    const { d, mx, my } = edgeGeometry(p1, p2);
-    const isSel = state.selectedStatementId === e.id;
-    const isIncident = e.subject === state.selectedNodeId || e.target === state.selectedNodeId;
-    g.setAttribute("class", `edge-group ${dense && !isSel && !isIncident ? "dim-label" : ""}`);
+    g.setAttribute("class", `edge-group ${dense && !isSel && !isInc ? "dim-label" : ""}`);
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
     path.setAttribute("class", `edge-path ${isSel ? "selected" : ""}`);
-    path.setAttribute("marker-end", isSel ? "url(#arrow-selected)" : "url(#arrow-verified)");
+    path.setAttribute("marker-end", isSel ? "url(#arr-sel)" : "url(#arr)");
 
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("class", "edge-hit");
-    hit.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      inspectStatement(e);
-    });
+    hit.onclick = (ev) => { ev.stopPropagation(); inspectStatement(e); };
 
-    const lblText = edgeShortLabel(e);
+    const lbl = e.qualifiers?.position ? `${e.predicate} · ${e.qualifiers.position}` : e.predicate;
+    const bw = Math.max(38, lbl.length * 5.6 + 10);
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    const bw = Math.max(40, lblText.length * 5.6 + 10);
-    bg.setAttribute("x", mx - bw / 2);
-    bg.setAttribute("y", my - 8);
-    bg.setAttribute("width", bw);
-    bg.setAttribute("height", 15);
+    bg.setAttribute("x", mx - bw / 2); bg.setAttribute("y", my - 8); bg.setAttribute("width", bw); bg.setAttribute("height", 15);
     bg.setAttribute("class", "edge-label-bg");
 
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", mx);
-    text.setAttribute("y", my + 2.5);
-    text.setAttribute("class", `edge-label ${isSel ? "selected" : ""}`);
-    text.textContent = lblText;
+    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    txt.setAttribute("x", mx); txt.setAttribute("y", my + 2.5);
+    txt.setAttribute("class", `edge-label ${isSel ? "selected" : ""}`);
+    txt.textContent = lbl;
 
-    g.append(path, hit, bg, text);
+    g.append(path, hit, bg, txt);
     edgesLayer.appendChild(g);
   }
 
   for (const n of nodes) {
     const pos = state.positions.get(n.id);
     if (!pos) continue;
-    const style = KIND_STYLE[n.kind] || KIND_STYLE.source;
+    const st = KIND_STYLE[n.kind] || KIND_STYLE.source;
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    const isSel = state.selectedNodeId === n.id;
-    const isRoot = state.view.root === n.id;
-    g.setAttribute("class", `g-node ${isSel ? "selected" : ""} ${isRoot ? "root" : ""}`);
+    g.setAttribute("class", `g-node ${state.selectedNodeId === n.id ? "selected" : ""}`);
     g.setAttribute("transform", `translate(${pos.x},${pos.y})`);
 
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute("width", pos.w);
-    rect.setAttribute("height", pos.h);
-    rect.setAttribute("fill", style.fill);
-    rect.setAttribute("stroke", style.border);
+    rect.setAttribute("width", pos.w); rect.setAttribute("height", pos.h);
+    rect.setAttribute("fill", st.fill); rect.setAttribute("stroke", st.border);
 
-    const kindTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    kindTxt.setAttribute("x", 10);
-    kindTxt.setAttribute("y", 15);
-    kindTxt.setAttribute("fill", style.color);
-    kindTxt.setAttribute("class", "g-node-kind");
-    kindTxt.textContent = n.stage ? `${style.label} · ${n.stage}` : style.label;
+    const kTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    kTxt.setAttribute("x", 10); kTxt.setAttribute("y", 15); kTxt.setAttribute("fill", st.color);
+    kTxt.setAttribute("class", "g-node-kind");
+    kTxt.textContent = n.stage ? `${st.label} · ${n.stage}` : st.label;
 
-    const titleTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    titleTxt.setAttribute("x", 10);
-    titleTxt.setAttribute("y", 32);
-    titleTxt.setAttribute("class", "g-node-title");
-    titleTxt.textContent = truncate(n.label, 25);
+    const tTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tTxt.setAttribute("x", 10); tTxt.setAttribute("y", 31); tTxt.setAttribute("class", "g-node-title");
+    tTxt.textContent = trunc(n.label, 24);
 
-    const idTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    idTxt.setAttribute("x", 10);
-    idTxt.setAttribute("y", 46);
-    idTxt.setAttribute("class", "g-node-sub");
-    idTxt.textContent = truncate(n.id, 28);
+    const iTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    iTxt.setAttribute("x", 10); iTxt.setAttribute("y", 44); iTxt.setAttribute("class", "g-node-sub");
+    iTxt.textContent = trunc(n.id, 27);
 
-    g.append(rect, kindTxt, titleTxt, idTxt);
-    attachNodeDrag(g, n);
+    g.append(rect, kTxt, tTxt, iTxt);
+    attachDrag(g, n);
     nodesLayer.appendChild(g);
   }
   applyTransform();
 }
 
-function edgeGeometry(p1, p2) {
-  const forward = p2.x >= p1.x;
-  const x1 = forward ? p1.x + p1.w : p1.x;
-  const y1 = p1.y + p1.h / 2;
-  const x2 = forward ? p2.x : p2.x + p2.w;
-  const y2 = p2.y + p2.h / 2;
-  const dx = Math.max(40, Math.abs(x2 - x1) * 0.45);
-  const c1x = forward ? x1 + dx : x1 - dx;
-  const c2x = forward ? x2 - dx : x2 + dx;
-  const d = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
-  return { d, mx: (x1 + x2) / 2, my: (y1 + y2) / 2 };
-}
-
 function applyTransform() {
-  const { x, y, k } = state.transform;
-  $("viewport").setAttribute("transform", `translate(${x},${y}) scale(${k})`);
+  const vp = $("viewport");
+  if (vp) vp.setAttribute("transform", `translate(${state.transform.x},${state.transform.y}) scale(${state.transform.k})`);
 }
 
 function fitToView() {
-  const wrap = $("svgWrap").getBoundingClientRect();
-  if (!state.positions.size || !wrap.width || !wrap.height) return;
+  const wrap = $("svgWrap")?.getBoundingClientRect();
+  if (!wrap || !state.positions.size || !wrap.width || !wrap.height) return;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const p of state.positions.values()) {
-    minX = Math.min(minX, p.x);
-    minY = Math.min(minY, p.y);
-    maxX = Math.max(maxX, p.x + p.w);
-    maxY = Math.max(maxY, p.y + p.h);
+    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+    maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
   }
-  const pad = 48;
-  const gw = Math.max(1, maxX - minX);
-  const gh = Math.max(1, maxY - minY);
+  const pad = 44, gw = Math.max(1, maxX - minX), gh = Math.max(1, maxY - minY);
   const k = Math.min(1.15, Math.min((wrap.width - pad * 2) / gw, (wrap.height - pad * 2) / gh));
-  state.transform = {
-    k,
-    x: (wrap.width - gw * k) / 2 - minX * k,
-    y: (wrap.height - gh * k) / 2 - minY * k,
-  };
+  state.transform = { k, x: (wrap.width - gw * k) / 2 - minX * k, y: (wrap.height - gh * k) / 2 - minY * k };
   applyTransform();
 }
 
-/* ---------- Dragging, Panning & Zooming ---------- */
-
-function attachNodeDrag(el, node) {
-  let startX, startY, origX, origY, moved = false;
+function attachDrag(el, node) {
+  let sx, sy, ox, oy, moved = false;
   el.addEventListener("pointerdown", (ev) => {
     ev.stopPropagation();
     el.setPointerCapture(ev.pointerId);
     const pos = state.positions.get(node.id);
-    startX = ev.clientX;
-    startY = ev.clientY;
-    origX = pos.x;
-    origY = pos.y;
-    moved = false;
-
+    sx = ev.clientX; sy = ev.clientY; ox = pos.x; oy = pos.y; moved = false;
     const onMove = (e) => {
-      const dx = (e.clientX - startX) / state.transform.k;
-      const dy = (e.clientY - startY) / state.transform.k;
+      const dx = (e.clientX - sx) / state.transform.k, dy = (e.clientY - sy) / state.transform.k;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
       if (!moved) return;
-      pos.x = origX + dx;
-      pos.y = origY + dy;
-      renderGraph();
+      pos.x = ox + dx; pos.y = oy + dy;
+      renderSvg();
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
@@ -797,318 +659,362 @@ function attachNodeDrag(el, node) {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
   });
-
-  el.addEventListener("dblclick", (ev) => {
-    ev.stopPropagation();
-    const mode = state.view.mode === "full" ? "trace" : state.view.mode;
-    setView(mode, node.id);
-  });
+  el.ondblclick = (ev) => { ev.stopPropagation(); loadGraphSub(state.graph.mode === "full" ? "trace" : state.graph.mode, node.id); };
 }
 
-(function initPanZoom() {
+function bindPanZoom() {
   const wrap = $("svgWrap");
-  let panning = false, sx = 0, sy = 0, ox = 0, oy = 0;
-  wrap.addEventListener("pointerdown", (ev) => {
-    panning = true; sx = ev.clientX; sy = ev.clientY; ox = state.transform.x; oy = state.transform.y;
-  });
-  window.addEventListener("pointermove", (ev) => {
-    if (!panning) return;
+  let pan = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  wrap.onpointerdown = (ev) => { pan = true; sx = ev.clientX; sy = ev.clientY; ox = state.transform.x; oy = state.transform.y; };
+  window.onpointermove = (ev) => {
+    if (!pan) return;
     state.transform.x = ox + (ev.clientX - sx);
     state.transform.y = oy + (ev.clientY - sy);
     applyTransform();
-  });
-  window.addEventListener("pointerup", () => { panning = false; });
-
+  };
+  window.onpointerup = () => { pan = false; };
   wrap.addEventListener("wheel", (ev) => {
     ev.preventDefault();
     const rect = wrap.getBoundingClientRect();
-    const mx = ev.clientX - rect.left;
-    const my = ev.clientY - rect.top;
-    const factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
-    const nextK = Math.max(0.25, Math.min(2.5, state.transform.k * factor));
-    const ratio = nextK / state.transform.k;
-    state.transform.x = mx - (mx - state.transform.x) * ratio;
-    state.transform.y = my - (my - state.transform.y) * ratio;
+    const mx = ev.clientX - rect.left, my = ev.clientY - rect.top;
+    const nextK = Math.max(0.25, Math.min(2.4, state.transform.k * (ev.deltaY < 0 ? 1.12 : 1 / 1.12)));
+    const r = nextK / state.transform.k;
+    state.transform.x = mx - (mx - state.transform.x) * r;
+    state.transform.y = my - (my - state.transform.y) * r;
     state.transform.k = nextK;
     applyTransform();
   }, { passive: false });
-})();
-
-/* ---------- Sidebar & Inspector ---------- */
-
-function renderKindFilters() {
-  const counts = new Map();
-  for (const n of state.full.nodes) counts.set(n.kind, (counts.get(n.kind) || 0) + 1);
-  const el = $("kindFilters");
-  el.innerHTML = `<button class="kind-chip ${state.activeKind === null ? "active" : ""}" data-kind="">All (${state.full.nodes.length})</button>` +
-    [...counts.entries()].map(([k, count]) => {
-      const st = KIND_STYLE[k] || KIND_STYLE.source;
-      return `<button class="kind-chip ${state.activeKind === k ? "active" : ""}" data-kind="${k}">
-        <span class="kind-dot" style="background:${st.color}"></span>${st.label} (${count})
-      </button>`;
-    }).join("");
-  el.querySelectorAll(".kind-chip").forEach((btn) => {
-    btn.onclick = () => {
-      state.activeKind = btn.dataset.kind || null;
-      renderKindFilters();
-      renderNodeList();
-    };
-  });
 }
 
-function renderNodeList() {
-  const q = state.search.trim().toLowerCase();
-  const filtered = state.full.nodes.filter((n) => {
-    if (state.activeKind && n.kind !== state.activeKind) return false;
-    if (!q) return true;
-    return n.label.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)
-      || n.kind.toLowerCase().includes(q) || (n.stage || "").toLowerCase().includes(q);
-  });
+/* ---------- Tab 2: Compare ---------- */
 
-  const groups = new Map();
-  for (const n of filtered) {
-    if (!groups.has(n.kind)) groups.set(n.kind, []);
-    groups.get(n.kind).push(n);
-  }
+function renderCompareTab() {
+  const d = state.compare.data;
+  if (!d) return;
+  const comparable = state.full.nodes.filter((n) => ["productVariant", "referenceDesign", "productModel"].includes(n.kind));
+  const opts = (sel) => comparable.map((n) => `<option value="${esc(n.id)}" ${n.id === sel ? "selected" : ""}>${esc(n.label)}</option>`).join("");
 
-  const el = $("nodeList");
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty" style="padding:12px">No matching nodes.</div>`;
-    return;
-  }
-
-  el.innerHTML = [...groups.entries()].map(([kind, list]) => {
-    const st = KIND_STYLE[kind] || KIND_STYLE.source;
-    return `<div class="node-group-title">${st.label}</div>` +
-      list.map((n) => `
-        <div class="node-item ${state.selectedNodeId === n.id ? "selected" : ""}" data-id="${esc(n.id)}">
-          <div class="node-item-top">
-            <span class="kind-dot" style="background:${st.color}"></span>
-            <span class="node-item-label">${esc(n.label)}</span>
-          </div>
-          <div class="node-item-id">${esc(n.id)}${n.stage ? ` · ${esc(n.stage)}` : ""}</div>
-        </div>
-      `).join("");
+  const factRows = d.facts.map((row) => {
+    const lv = fmtFact(row.left), rv = fmtFact(row.right);
+    const cell = (stmt) => !stmt ? `<span class="empty">—</span>` :
+      `<strong>${esc(fmtFact(stmt))}</strong> <button class="cite-link" data-cite="${esc(stmt.id)}">[cite]</button>
+       <div class="meta-txt">${esc(stmt.basis)}${stmt.subject !== d.left.id && stmt.subject !== d.right.id ? ` · via ${esc(stmt.subject)}` : ""}</div>`;
+    return `<tr class="${lv !== rv ? "diff-row" : ""}">
+      <td><div class="mono">${esc(row.property)}</div><div class="meta-txt">${esc(row.scope || "")}</div></td>
+      <td>${cell(row.left)}</td>
+      <td>${cell(row.right)}</td>
+    </tr>`;
   }).join("");
 
-  el.querySelectorAll(".node-item").forEach((row) => {
-    row.onclick = () => selectNode(row.dataset.id);
-    row.ondblclick = () => setView(state.view.mode === "full" || state.view.mode === "compare" ? "trace" : state.view.mode, row.dataset.id);
+  const diffCard = (title, grp) => {
+    const col = (lbl, list) => `<div>
+      <div class="diff-col-title">${esc(lbl)} (${list.length})</div>
+      ${list.length ? list.map((n) => `<button class="diff-item" data-jump="${esc(n.id)}">
+        <div style="font-weight:550;font-size:12px">${esc(n.label)}</div>
+        <div class="meta-txt">${esc(n.id)}${n.stage ? ` · ${esc(n.stage)}` : ""}</div>
+      </button>`).join("") : `<div class="empty">None</div>`}
+    </div>`;
+    return `<div class="panel">
+      <div class="panel-head"><h3 class="panel-title">${esc(title)}</h3></div>
+      <div class="diff-grid">
+        ${col(`Only ${trunc(d.left.label, 20)}`, grp.onlyLeft)}
+        ${col("Shared", grp.shared)}
+        ${col(`Only ${trunc(d.right.label, 20)}`, grp.onlyRight)}
+      </div>
+    </div>`;
+  };
+
+  $("stage").innerHTML = `
+    <div class="scroll-view"><div class="container">
+      <div class="panel"><div class="panel-head pickers">
+        <select class="select-clean" id="cmpL">${opts(d.left.id)}</select>
+        <span class="meta-txt">VS</span>
+        <select class="select-clean" id="cmpR">${opts(d.right.id)}</select>
+      </div></div>
+      <div class="panel">
+        <div class="panel-head"><h3 class="panel-title">Properties & Performance</h3></div>
+        <table class="data-table">
+          <thead><tr><th>Property</th><th>${esc(d.left.label)}</th><th>${esc(d.right.label)}</th></tr></thead>
+          <tbody>${factRows || `<tr><td colspan="3" class="empty">No properties to compare.</td></tr>`}</tbody>
+        </table>
+      </div>
+      ${diffCard("Materials", d.materials)}
+      ${diffCard("Value-Chain Processes", d.processes)}
+      ${diffCard("Assembly Parts", d.parts)}
+    </div></div>`;
+
+  $("cmpL").onchange = (e) => loadCompare(e.target.value, state.compare.right);
+  $("cmpR").onchange = (e) => loadCompare(state.compare.left, e.target.value);
+  $("stage").querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => selectNode(b.dataset.jump));
+  $("stage").querySelectorAll("[data-cite]").forEach((b) => b.onclick = () => {
+    const st = state.full.statements.find((s) => s.id === b.dataset.cite);
+    if (st) inspectStatement(st);
   });
 }
 
-function selectNode(nodeId) {
-  state.selectedNodeId = nodeId;
-  state.selectedStatementId = null;
-  state.citation = null;
-  renderNodeList();
-  if (state.view.mode !== "compare") renderGraph();
-  renderInspector();
+/* ---------- Tab 3: Tables & DB Schema ---------- */
+
+function renderTablesTab() {
+  const sub = state.tables.sub;
+  const q = state.tables.filter.trim().toLowerCase();
+  const kindFilter = state.tables.kind;
+
+  let bodyHtml = "";
+  if (sub === "schema") {
+    bodyHtml = `<div class="panel">
+      <div class="panel-head">
+        <h3 class="panel-title">schema.sql — SQLite Relational Schema</h3>
+        <span class="meta-txt">Export via: python -m building_materials export-db</span>
+      </div>
+      <pre class="code-block">${esc(state.tables.sql)}</pre>
+    </div>`;
+  } else if (sub === "nodes") {
+    const rows = state.full.nodes.filter((n) =>
+      (!kindFilter || n.kind === kindFilter) &&
+      (!q || n.id.toLowerCase().includes(q) || n.label.toLowerCase().includes(q) || n.kind.toLowerCase().includes(q))
+    );
+    bodyHtml = `<div class="panel"><table class="data-table">
+      <thead><tr><th>id</th><th>kind</th><th>label</th><th>stage / scale / rev</th></tr></thead>
+      <tbody>${rows.map((n) => `<tr class="${state.selectedNodeId === n.id ? "row-selected" : ""}" data-node="${esc(n.id)}">
+        <td class="mono">${esc(n.id)}</td>
+        <td><span class="tag">${esc(n.kind)}</span></td>
+        <td>${esc(n.label)}</td>
+        <td class="mono">${esc([n.stage, n.scale, n.revision ? `rev ${n.revision}` : ""].filter(Boolean).join(" · ") || "—")}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>`;
+  } else if (sub === "statements") {
+    const rows = state.full.statements.filter((s) =>
+      (!q || s.id.toLowerCase().includes(q) || s.subject.toLowerCase().includes(q) || (s.predicate || s.property || "").toLowerCase().includes(q) || (s.target || "").toLowerCase().includes(q))
+    );
+    bodyHtml = `<div class="panel"><table class="data-table">
+      <thead><tr><th>id</th><th>subject</th><th>predicate / property</th><th>target / value</th><th>basis</th></tr></thead>
+      <tbody>${rows.map((s) => `<tr class="${state.selectedStatementId === s.id ? "row-selected" : ""}" data-stmt="${esc(s.id)}">
+        <td class="mono">${esc(s.id)}</td>
+        <td class="mono">${esc(s.subject)}</td>
+        <td class="mono">${esc(s.predicate || s.property)}</td>
+        <td class="mono">${esc(s.target || fmtFact(s))}${s.qualifiers ? ` <span class="meta-txt">(${esc(fmtQual(s.qualifiers))})</span>` : ""}</td>
+        <td><span class="tag tag-teal">${esc(s.basis)}</span></td>
+      </tr>`).join("")}</tbody>
+    </table></div>`;
+  } else if (sub === "sources") {
+    const rows = state.full.nodes.filter((n) => n.kind === "source");
+    bodyHtml = `<div class="panel"><table class="data-table">
+      <thead><tr><th>id</th><th>label</th><th>issuer</th><th>media_type</th><th>sha256</th></tr></thead>
+      <tbody>${rows.map((n) => `<tr class="${state.selectedNodeId === n.id ? "row-selected" : ""}" data-node="${esc(n.id)}">
+        <td class="mono">${esc(n.id)}</td>
+        <td>${esc(n.label)}</td>
+        <td>${esc(n.source.issuer || "—")}</td>
+        <td class="mono">${esc(n.source.mediaType)}</td>
+        <td class="mono">${n.source.sha256 ? esc(n.source.sha256.slice(0, 12)) + "…" : `<span class="tag tag-amber">link-only</span>`}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>`;
+  }
+
+  const kinds = [...new Set(state.full.nodes.map((n) => n.kind))];
+  $("stage").innerHTML = `
+    <div class="subbar">
+      <div class="seg" id="tableSubs">
+        ${[["nodes", `nodes (${state.full.nodes.length})`], ["statements", `statements (${state.full.statements.length})`], ["sources", `sources (${state.full.nodes.filter((n) => n.kind === "source").length})`], ["schema", "schema.sql"]].map(([k, lbl]) =>
+          `<button class="seg-btn ${sub === k ? "active" : ""}" data-sub="${k}">${esc(lbl)}</button>`
+        ).join("")}
+      </div>
+      <div class="subbar-group">
+        ${sub === "nodes" ? `<select class="select-clean" id="tableKind"><option value="">All kinds</option>${kinds.map((k) => `<option value="${k}" ${kindFilter === k ? "selected" : ""}>${k}</option>`).join("")}</select>` : ""}
+        ${sub !== "schema" ? `<input class="select-clean" id="tableFilter" type="search" value="${esc(state.tables.filter)}" placeholder="Filter rows...">` : ""}
+      </div>
+    </div>
+    <div class="scroll-view"><div class="container">${bodyHtml}</div></div>
+  `;
+
+  $("tableSubs").querySelectorAll(".seg-btn").forEach((b) => b.onclick = () => { state.tables.sub = b.dataset.sub; renderTablesTab(); });
+  if ($("tableKind")) $("tableKind").onchange = (e) => { state.tables.kind = e.target.value; renderTablesTab(); };
+  if ($("tableFilter")) $("tableFilter").oninput = (e) => { state.tables.filter = e.target.value; renderTablesTab(); };
+  $("stage").querySelectorAll("[data-node]").forEach((tr) => tr.onclick = () => { selectNode(tr.dataset.node); renderTablesTab(); });
+  $("stage").querySelectorAll("[data-stmt]").forEach((tr) => tr.onclick = () => {
+    const st = state.full.statements.find((s) => s.id === tr.dataset.stmt);
+    if (st) { inspectStatement(st); renderTablesTab(); }
+  });
 }
 
-async function inspectStatement(st) {
-  state.selectedStatementId = st.id;
-  if (st.subject && state.selectedNodeId !== st.subject) {
-    state.selectedNodeId = st.subject;
-  }
-  if (state.view.mode !== "compare") renderGraph();
-  renderInspector();
-  try {
-    state.citation = await api(`/api/cite/${encodeURIComponent(st.id)}`);
-    renderInspector();
-  } catch (err) {
-    state.citation = { error: err.message };
-    renderInspector();
-  }
+/* ---------- Tab 4: Gaps ---------- */
+
+function renderGapsTab() {
+  const g = state.gaps.data;
+  if (!g) return;
+  const cat = state.gaps.category;
+  const rows = cat === "all" ? g.gaps : g.gaps.filter((x) => x.category === cat);
+
+  const stat = (key, label, count) => `
+    <button class="stat-card ${cat === key ? "active" : ""}" data-cat="${key}">
+      <div class="stat-num">${count}</div>
+      <div class="stat-lbl">${label}</div>
+    </button>`;
+
+  const catTag = (c) => c === "evidence" ? "tag-amber" : c === "properties" ? "tag-rose" : "";
+
+  $("stage").innerHTML = `
+    <div class="scroll-view"><div class="container">
+      <div class="stat-row">
+        ${stat("all", "All Gaps", g.summary.total)}
+        ${stat("composition", "Composition", g.summary.composition)}
+        ${stat("valueChain", "Value Chain", g.summary.valueChain)}
+        ${stat("properties", "Properties", g.summary.properties)}
+        ${stat("evidence", "Evidence", g.summary.evidence)}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3 class="panel-title">Open Data Gaps (${rows.length})</h3><span class="meta-txt">Click a row to inspect or explore</span></div>
+        <table class="data-table">
+          <thead><tr><th>Category</th><th>Node</th><th>Gap</th><th></th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map((item) => `<tr data-gap-node="${esc(item.nodeId || "")}">
+              <td><span class="tag ${catTag(item.category)}">${esc(item.category)}</span></td>
+              <td>${item.nodeId ? `<div style="font-weight:550">${esc(item.label)}</div><div class="meta-txt">${esc(item.nodeId)} · ${esc(item.kind)}</div>` : `<span class="meta-txt">graph-level</span>`}</td>
+              <td>${esc(item.message)}</td>
+              <td style="text-align:right;white-space:nowrap">${item.nodeId ? `<button class="btn-sm" data-open-graph="${esc(item.nodeId)}">Graph →</button>` : ""}</td>
+            </tr>`).join("") : `<tr><td colspan="4" class="empty">No gaps in this category.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  `;
+
+  $("stage").querySelectorAll("[data-cat]").forEach((b) => b.onclick = () => { state.gaps.category = b.dataset.cat; renderGapsTab(); });
+  $("stage").querySelectorAll("[data-gap-node]").forEach((tr) => tr.onclick = () => { if (tr.dataset.gapNode) selectNode(tr.dataset.gapNode); });
+  $("stage").querySelectorAll("[data-open-graph]").forEach((b) => b.onclick = (e) => {
+    e.stopPropagation();
+    loadGraphSub("trace", b.dataset.openGraph);
+  });
 }
+
+/* ---------- Right Inspector ---------- */
 
 function renderInspector() {
   const el = $("inspector");
   const node = state.full.byId.get(state.selectedNodeId);
   if (!node) {
-    el.innerHTML = `<div class="empty">Select a node to inspect.</div>`;
+    el.innerHTML = `<div class="empty">Select any node or statement to inspect.</div>`;
     return;
   }
 
-  const st = KIND_STYLE[node.kind] || KIND_STYLE.source;
   const outAll = state.full.out.get(node.id) || [];
   const facts = outAll.filter((r) => "property" in r);
   const outgoing = outAll.filter((r) => "predicate" in r);
   const incoming = state.full.inc.get(node.id) || [];
+  const nodeGaps = (state.gaps.data?.gaps || []).filter((g) => g.nodeId === node.id);
 
-  const metaPills = [
-    `<span class="pill" style="background:${st.fill};border-color:${st.border};color:${st.color}">${esc(node.kind)}</span>`,
-    node.stage ? `<span class="pill">stage: ${esc(node.stage)}</span>` : "",
-    node.scale ? `<span class="pill">scale: ${esc(node.scale)}</span>` : "",
-    node.revision ? `<span class="pill">rev: ${esc(node.revision)}</span>` : "",
-  ].filter(Boolean).join("");
-
-  const sourceBlock = node.source ? `
-    <div class="evidence-box">
-      <div class="section-title" style="margin:0">Source metadata</div>
-      <div class="evidence-kv">
-        <span class="evidence-k">issuer</span><span class="evidence-v">${esc(node.source.issuer || "—")}</span>
-        <span class="evidence-k">mediaType</span><span class="evidence-v">${esc(node.source.mediaType)}</span>
-        <span class="evidence-k">origin</span><span class="evidence-v"><a href="${esc(node.source.origin)}" target="_blank" rel="noopener">${esc(node.source.origin)}</a></span>
-        ${node.source.sha256 ? `<span class="evidence-k">sha256</span><span class="evidence-v" style="font-family:var(--mono)">${esc(node.source.sha256.slice(0, 16))}…</span>` : ""}
-      </div>
-    </div>` : "";
-
-  const citationBlock = renderCitationBlock();
-
-  const factsHtml = facts.length ? facts.map((f) => {
-    const valHtml = f.quantity
-      ? `<span class="fact-val">${esc(formatQuantity(f.quantity))}</span>`
-      : f.state
-        ? `<span class="fact-val unknown">${esc(f.state)}</span>`
-        : `<span class="fact-val">${esc(String(f.value))}</span>`;
-    return `
-      <div class="card ${state.selectedStatementId === f.id ? "active-cite" : ""}">
-        <div class="fact-top">
-          <span class="fact-prop">${esc(f.property)}</span>
-          ${valHtml}
+  const citeHtml = (() => {
+    if (!state.selectedStatementId) return "";
+    if (!state.citation) return `<div class="cite-card"><span class="empty">Loading citation…</span></div>`;
+    if (state.citation.error) return `<div class="cite-card"><span class="empty">${esc(state.citation.error)}</span></div>`;
+    return state.citation.evidence.map((ev) => `
+      <div class="cite-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="mono" style="font-weight:600">${esc(state.citation.statement.id)}</span>
+          <span class="tag ${ev.capture === "saved" ? "tag-teal" : "tag-amber"}">${esc(ev.capture)}</span>
         </div>
-        ${f.scope || f.method ? `<div class="fact-meta">${[f.scope && `scope: ${f.scope}`, f.method && `method: ${f.method}`].filter(Boolean).map(esc).join(" · ")}</div>` : ""}
-        ${f.conditions ? `<div class="fact-meta">${esc(f.conditions)}</div>` : ""}
-        <div class="pill-row" style="justify-content:space-between;margin-top:2px">
-          <span class="pill basis-${esc(f.basis)}">${esc(f.basis)}</span>
-          <button class="cite-btn" data-cite="${esc(f.id)}">Cite</button>
+        <div style="font-weight:600;font-size:12.5px">${esc(ev.source.label)}</div>
+        <div class="cite-kv">
+          ${Object.entries(ev.locator || {}).map(([k, v]) => `<span class="meta-txt">${esc(k)}</span><span>${esc(v)}</span>`).join("")}
         </div>
-      </div>`;
-  }).join("") : `<div class="empty">No direct property claims on this node.</div>`;
+        <a class="open-btn" href="${esc(ev.webHref || ev.href)}" target="_blank" rel="noopener">
+          Open ${ev.capture === "saved" ? "archived snapshot" : "source URL"} ↗
+        </a>
+      </div>`).join("");
+  })();
 
-  const relItem = (r, direction) => {
-    const otherId = direction === "out" ? r.target : r.subject;
+  const linkRow = (r, dir) => {
+    const otherId = dir === "out" ? r.target : r.subject;
     const other = state.full.byId.get(otherId);
-    const qual = formatQualifiers(r.qualifiers);
-    return `
-      <div class="rel-row ${state.selectedStatementId === r.id ? "active-cite" : ""}">
-        <div class="rel-top">
-          <span class="rel-pred">${direction === "out" ? "→" : "←"} ${esc(r.predicate)}</span>
-          <div style="display:flex;gap:4px;align-items:center">
-            <span class="pill basis-${esc(r.basis)}">${esc(r.basis)}</span>
-            <button class="cite-btn" data-cite="${esc(r.id)}">Cite</button>
-          </div>
-        </div>
-        <button class="rel-link" data-jump="${esc(otherId)}">${esc(other?.label || otherId)}</button>
-        ${qual ? `<div class="rel-qual">${esc(qual)}</div>` : ""}
-      </div>`;
+    const qual = fmtQual(r.qualifiers);
+    return `<div class="link-row">
+      <div class="link-main">
+        <div class="meta-txt">${dir === "out" ? "→" : "←"} ${esc(r.predicate)}${qual ? ` · ${esc(qual)}` : ""}</div>
+        <button class="link-btn" data-jump="${esc(otherId)}">${esc(other?.label || otherId)}</button>
+      </div>
+      <button class="cite-link" data-cite="${esc(r.id)}">cite</button>
+    </div>`;
   };
 
   el.innerHTML = `
-    <div class="insp-header">
-      <div class="pill-row">${metaPills}</div>
+    <div class="insp-head">
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <span class="tag">${esc(node.kind)}</span>
+        ${node.stage ? `<span class="tag">${esc(node.stage)}</span>` : ""}
+        ${node.scale ? `<span class="tag">${esc(node.scale)}</span>` : ""}
+        ${nodeGaps.length ? `<span class="tag tag-amber">${nodeGaps.length} gap${nodeGaps.length > 1 ? "s" : ""}</span>` : ""}
+      </div>
       <h2 class="insp-title">${esc(node.label)}</h2>
-      <div class="insp-id">${esc(node.id)}</div>
-      ${node.description ? `<p class="insp-desc">${esc(node.description)}</p>` : ""}
-      <div class="action-row">
-        <button class="action-btn" data-root="parts">Walk Parts</button>
-        <button class="action-btn" data-root="trace">Trace Chain</button>
-        <button class="action-btn" data-root="used-by">Where Used</button>
+      <div class="meta-txt">${esc(node.id)}</div>
+      ${node.description ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(node.description)}</div>` : ""}
+      <div class="insp-actions">
+        <button class="btn-sm" data-root="parts">Parts</button>
+        <button class="btn-sm" data-root="trace">Trace</button>
+        <button class="btn-sm" data-root="used-by">Used By</button>
       </div>
     </div>
-    ${citationBlock}
-    ${sourceBlock}
+    ${citeHtml}
+    ${nodeGaps.length ? `<div>
+      <div class="insp-section-title"><span>Gaps on this node</span><span>${nodeGaps.length}</span></div>
+      ${nodeGaps.map((g) => `<div style="font-size:12px;color:var(--amber);padding:3px 0">• ${esc(g.message)}</div>`).join("")}
+    </div>` : ""}
+    ${facts.length ? `<div>
+      <div class="insp-section-title"><span>Direct Facts</span><span>${facts.length}</span></div>
+      ${facts.map((f) => `<div class="fact-row">
+        <div class="fact-line">
+          <span class="mono">${esc(f.property)}</span>
+          <span class="fact-val ${f.state ? "unknown" : ""}">${esc(fmtFact(f))}</span>
+        </div>
+        <div class="fact-line">
+          <span class="meta-txt">${esc([f.basis, f.scope].filter(Boolean).join(" · "))}</span>
+          <button class="cite-link" data-cite="${esc(f.id)}">cite</button>
+        </div>
+        ${f.conditions ? `<div style="font-size:11.5px;color:var(--muted)">${esc(f.conditions)}</div>` : ""}
+      </div>`).join("")}
+    </div>` : ""}
     <div>
-      <h3 class="section-title"><span>Direct Facts</span><span>${facts.length}</span></h3>
-      ${factsHtml}
+      <div class="insp-section-title"><span>Outgoing</span><span>${outgoing.length}</span></div>
+      ${outgoing.length ? outgoing.map((r) => linkRow(r, "out")).join("") : `<div class="empty">None</div>`}
     </div>
     <div>
-      <h3 class="section-title"><span>Outgoing Links</span><span>${outgoing.length}</span></h3>
-      ${outgoing.length ? outgoing.map((r) => relItem(r, "out")).join("") : `<div class="empty">None</div>`}
-    </div>
-    <div>
-      <h3 class="section-title"><span>Incoming Links</span><span>${incoming.length}</span></h3>
-      ${incoming.length ? incoming.map((r) => relItem(r, "in")).join("") : `<div class="empty">None</div>`}
+      <div class="insp-section-title"><span>Incoming</span><span>${incoming.length}</span></div>
+      ${incoming.length ? incoming.map((r) => linkRow(r, "in")).join("") : `<div class="empty">None</div>`}
     </div>
   `;
 
-  el.querySelectorAll("[data-root]").forEach((btn) => {
-    btn.onclick = () => setView(btn.dataset.root, node.id);
-  });
-  el.querySelectorAll("[data-jump]").forEach((btn) => {
-    btn.onclick = () => selectNode(btn.dataset.jump);
-  });
-  el.querySelectorAll("[data-cite]").forEach((btn) => {
-    btn.onclick = () => {
-      const targetSt = state.full.statements.find((s) => s.id === btn.dataset.cite);
-      if (targetSt) inspectStatement(targetSt);
-    };
+  el.querySelectorAll("[data-root]").forEach((b) => b.onclick = () => loadGraphSub(b.dataset.root, node.id));
+  el.querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => selectNode(b.dataset.jump));
+  el.querySelectorAll("[data-cite]").forEach((b) => b.onclick = () => {
+    const st = state.full.statements.find((s) => s.id === b.dataset.cite);
+    if (st) inspectStatement(st);
   });
 }
 
-function renderCitationBlock() {
-  if (!state.selectedStatementId) return "";
-  if (!state.citation) return `<div class="evidence-box"><span class="empty">Loading citation…</span></div>`;
-  if (state.citation.error) return `<div class="evidence-box"><span class="empty">${esc(state.citation.error)}</span></div>`;
+/* ---------- Navigation & Quick Jump ---------- */
 
-  const st = state.citation.statement;
-  return state.citation.evidence.map((ev) => {
-    const locRows = Object.entries(ev.locator || {}).map(([k, v]) =>
-      `<span class="evidence-k">${esc(k)}</span><span class="evidence-v">${esc(v)}</span>`
-    ).join("");
-    const src = ev.source;
-    return `
-      <div class="evidence-box">
-        <div class="pill-row" style="justify-content:space-between">
-          <span class="pill" style="font-weight:600">Citation · ${esc(st.id)}</span>
-          <span class="pill capture-${esc(ev.capture)}">${esc(ev.capture)}</span>
-        </div>
-        <div style="font-weight:600;font-size:12.5px">${esc(src.label)}</div>
-        <div class="evidence-kv">
-          <span class="evidence-k">issuer</span><span class="evidence-v">${esc(src.source.issuer || "—")}</span>
-          ${src.revision ? `<span class="evidence-k">revision</span><span class="evidence-v">${esc(src.revision)}</span>` : ""}
-          ${locRows}
-          ${src.source.sha256 ? `<span class="evidence-k">sha256</span><span class="evidence-v" style="font-family:var(--mono)">${esc(src.source.sha256.slice(0, 16))}…</span>` : ""}
-        </div>
-        <a class="open-source" href="${esc(ev.webHref || ev.href)}" target="_blank" rel="noopener">
-          Open ${ev.capture === "saved" ? "archived snapshot" : "source URL"} ↗
-        </a>
-      </div>`;
-  }).join("");
+$("mainNav").querySelectorAll(".nav-btn").forEach((b) => b.onclick = () => setTab(b.dataset.tab));
+
+const jumpInput = $("jumpInput"), jumpMenu = $("jumpMenu");
+function renderJump() {
+  const q = jumpInput.value.trim().toLowerCase();
+  const matches = state.full.nodes.filter((n) =>
+    !q || n.label.toLowerCase().includes(q) || n.id.toLowerCase().includes(q) || n.kind.toLowerCase().includes(q)
+  ).slice(0, 12);
+  jumpMenu.innerHTML = matches.length ? matches.map((n) => `
+    <button class="jump-item" data-jid="${esc(n.id)}">
+      <span class="jump-item-label">${esc(n.label)}</span>
+      <span class="jump-item-sub">${esc(n.id)} · ${esc(n.kind)}</span>
+    </button>`).join("") : `<div class="empty" style="padding:8px">No matches</div>`;
+  jumpMenu.querySelectorAll("[data-jid]").forEach((b) => b.onclick = () => {
+    selectNode(b.dataset.jid);
+    jumpMenu.classList.remove("open");
+    jumpInput.value = "";
+  });
 }
+jumpInput.onfocus = () => { renderJump(); jumpMenu.classList.add("open"); };
+jumpInput.oninput = () => { renderJump(); jumpMenu.classList.add("open"); };
+document.addEventListener("click", (e) => { if (!e.target.closest(".jump-wrap")) jumpMenu.classList.remove("open"); });
 
-function updateToolbarUI() {
-  document.querySelectorAll(".mode-tab").forEach((t) => t.classList.toggle("active", t.dataset.mode === state.view.mode));
-  const key = state.view.mode === "compare"
-    ? `compare:${state.compare.left}|${state.compare.right}`
-    : `${state.view.mode}:${state.view.root || ""}`;
-  document.querySelectorAll(".preset-btn").forEach((b) => b.classList.toggle("active", b.dataset.preset === key));
-}
-
-/* ---------- Wire Controls ---------- */
-
-document.querySelectorAll(".preset-btn").forEach((btn) => {
-  btn.onclick = () => {
-    const idx = btn.dataset.preset.indexOf(":");
-    setView(btn.dataset.preset.slice(0, idx), btn.dataset.preset.slice(idx + 1) || null);
-  };
-});
-
-document.querySelectorAll(".mode-tab").forEach((tab) => {
-  tab.onclick = () => setView(tab.dataset.mode, tab.dataset.mode === "compare" ? `${state.compare.left}|${state.compare.right}` : state.selectedNodeId);
-});
-
-$("searchInput").addEventListener("input", (e) => {
-  state.search = e.target.value;
-  renderNodeList();
-});
-
-$("toggleSources").addEventListener("change", (e) => {
-  state.showSources = e.target.checked;
-  computeLayout();
-  renderGraph();
-  fitToView();
-});
-
-$("zoomFit").onclick = fitToView;
-$("zoomIn").onclick = () => { state.transform.k = Math.min(2.5, state.transform.k * 1.2); applyTransform(); };
-$("zoomOut").onclick = () => { state.transform.k = Math.max(0.25, state.transform.k / 1.2); applyTransform(); };
-
-(async function boot() {
-  await loadFullGraph();
-  await setView("parts", "window-assembly");
-})();
+loadInitial();
 </script>
 </body>
 </html>

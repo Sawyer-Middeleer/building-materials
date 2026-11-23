@@ -10,6 +10,7 @@ import json
 import mimetypes
 import os
 from pathlib import Path
+import sqlite3
 import sys
 from tempfile import NamedTemporaryFile
 from urllib.parse import unquote, urlsplit, urlunsplit
@@ -210,6 +211,166 @@ class Graph:
             "processes": diff_nodes(left_trace, right_trace, lambda n: n["kind"] == "process"),
         }
 
+    def gaps(self, assets, node_id=None):
+        if node_id is not None:
+            self.node(node_id)
+            p_nodes = {n["id"] for n in self.walk(node_id, trace=False)["nodes"]}
+            t_nodes = {n["id"] for n in self.walk(node_id, trace=True)["nodes"]}
+            scope_ids = p_nodes | t_nodes
+        else:
+            scope_ids = set(self.nodes)
+
+        items = []
+
+        def add(category, code, message, node=None, statement=None):
+            entry = {"category": category, "code": code, "message": message}
+            if node:
+                entry["nodeId"] = node["id"]
+                entry["label"] = node["label"]
+                entry["kind"] = node["kind"]
+            if statement:
+                entry["statementId"] = statement["id"]
+            items.append(entry)
+
+        stages_present = set()
+        for nid in sorted(scope_ids):
+            node = self.nodes[nid]
+            out = self.outgoing[nid]
+            inc = self.incoming[nid]
+            kind = node["kind"]
+
+            if kind == "referenceDesign":
+                has_parts = any(r.get("predicate") == "hasPart" for r in out)
+                realized = any(r.get("predicate") == "realizesDesign" for r in inc)
+                has_mat = any(r.get("predicate") == "madeOf" for r in out)
+                if not has_parts and not realized and not has_mat:
+                    add("composition", "part-missing-material", "Leaf part has no madeOf material", node=node)
+                if not has_parts and not realized and not any(r.get("predicate") == "produces" for r in inc):
+                    add("valueChain", "part-missing-process", "Leaf part has no upstream producing process", node=node)
+            elif kind == "material":
+                if not any(r.get("predicate") in {"hasComposition", "hasStructure"} for r in out):
+                    add("composition", "material-missing-chemistry", "Material has no composition or structure model", node=node)
+                if not any(r.get("predicate") == "produces" for r in inc):
+                    add("valueChain", "material-missing-process", "Material has no upstream producing or extraction process", node=node)
+            elif kind in {"productModel", "productVariant"}:
+                if not any(r.get("predicate") == "produces" for r in inc):
+                    add("valueChain", "product-missing-process", "Product has no upstream producing process", node=node)
+            elif kind == "process":
+                stages_present.add(node["stage"])
+                if not any(r.get("predicate") == "performedBy" for r in out):
+                    add("valueChain", "process-missing-actor", "Process has no performedBy actor", node=node)
+            elif kind == "source":
+                meta = node["source"]
+                digest = meta.get("sha256")
+                snapshot = asset_path(assets, digest, meta["mediaType"]) if digest else None
+                if not (snapshot and snapshot.is_file()):
+                    add("evidence", "source-not-archived", "Source is link-only (no verified local archive)", node=node)
+
+            for row in out:
+                if "property" in row and row.get("state") in {"unknown", "withheld"}:
+                    scope_str = f" ({row['scope']})" if row.get("scope") else ""
+                    add(
+                        "properties",
+                        f"property-{row['state']}",
+                        f"{row['property']}{scope_str} is {row['state']}",
+                        node=node,
+                        statement=row,
+                    )
+
+        for stage in ("extraction", "fabrication", "distribution", "installation"):
+            if stage not in stages_present:
+                add("valueChain", "missing-stage", f"No '{stage}' stage processes represented")
+
+        counts = defaultdict(int)
+        for item in items:
+            counts[item["category"]] += 1
+        return {
+            "scope": node_id or "graph",
+            "summary": {
+                "total": len(items),
+                "composition": counts["composition"],
+                "valueChain": counts["valueChain"],
+                "properties": counts["properties"],
+                "evidence": counts["evidence"],
+            },
+            "gaps": items,
+        }
+
+    def export_db(self, db_path):
+        target = Path(db_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            target.unlink()
+        schema_sql = (ROOT / "schema.sql").read_text(encoding="utf-8")
+        conn = sqlite3.connect(target)
+        try:
+            conn.executescript(schema_sql)
+            citation_count = 0
+            with conn:
+                for node in self.nodes.values():
+                    conn.execute(
+                        "INSERT INTO nodes (id, kind, label, description, revision, scale, stage) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (node["id"], node["kind"], node["label"], node.get("description"),
+                         node.get("revision"), node.get("scale"), node.get("stage")),
+                    )
+                    if src := node.get("source"):
+                        conn.execute(
+                            "INSERT INTO sources (node_id, origin, media_type, issuer, issued_on, retrieved_at, retrieved_on, sha256) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                            (node["id"], src["origin"], src["mediaType"], src.get("issuer"),
+                             src.get("issuedOn"), src.get("retrievedAt"), src.get("retrievedOn"), src.get("sha256")),
+                        )
+                    for ident in node.get("identifiers", ()):
+                        conn.execute(
+                            "INSERT INTO node_identifiers (node_id, namespace, value) VALUES (?, ?, ?)",
+                            (node["id"], ident["namespace"], ident["value"]),
+                        )
+                for row in self.statements.values():
+                    qty = row.get("quantity") or {}
+                    qual = row.get("qualifiers") or {}
+                    val = row.get("value")
+                    conn.execute(
+                        """INSERT INTO statements (
+                            id, subject_id, predicate, target_id, property, value_text,
+                            quantity_value, quantity_min, quantity_max, quantity_unit, quantity_basis,
+                            state, scope, method, conditions, basis, qual_role, qual_position, qual_sequence
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (
+                            row["id"], row["subject"], row.get("predicate"), row.get("target"),
+                            row.get("property"), None if val is None else str(val),
+                            qty.get("value"), qty.get("min"), qty.get("max"), qty.get("unit"), qty.get("basis"),
+                            row.get("state"), row.get("scope"), row.get("method"), row.get("conditions"),
+                            row["basis"], qual.get("role"), qual.get("position"), qual.get("sequence"),
+                        ),
+                    )
+                    for ev in row["evidence"]:
+                        loc = ev["locator"]
+                        conn.execute(
+                            """INSERT INTO citations (
+                                statement_id, source_id, page, section, table_name,
+                                row_name, column_name, figure, anchor, quote
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (
+                                row["id"], ev["source"], loc.get("page"), loc.get("section"),
+                                loc.get("table"), loc.get("row"), loc.get("column"),
+                                loc.get("figure"), loc.get("anchor"), loc.get("quote"),
+                            ),
+                        )
+                        citation_count += 1
+                for row in self.statements.values():
+                    for dep in row.get("derivedFrom", ()):
+                        conn.execute(
+                            "INSERT INTO statement_derivations (statement_id, derived_from) VALUES (?, ?)",
+                            (row["id"], dep),
+                        )
+            return {
+                "db": str(target.resolve()),
+                "nodes": len(self.nodes),
+                "statements": len(self.statements),
+                "citations": citation_count,
+            }
+        finally:
+            conn.close()
+
     def used_by(self, node_id):
         self.node(node_id)
         pending = deque([node_id])
@@ -399,6 +560,14 @@ def make_server(graph, assets, host="127.0.0.1", port=8000):
                     "statements": list(graph.statements.values()),
                 })
                 return
+            if path == "/api/gaps":
+                self._json(200, graph.gaps(assets))
+                return
+            if path == "/api/schema":
+                schema_path = ROOT / "schema.sql"
+                text = schema_path.read_text(encoding="utf-8") if schema_path.is_file() else ""
+                self._json(200, {"sql": text})
+                return
             if path.startswith("/assets/"):
                 name = path[len("/assets/"):]
                 if not name or "/" in name or "\\" in name or name != Path(name).name:
@@ -429,6 +598,8 @@ def make_server(graph, assets, host="127.0.0.1", port=8000):
                         self._json(200, graph.used_by(item_id))
                     elif kind == "facts":
                         self._json(200, graph.facts(item_id))
+                    elif kind == "gaps":
+                        self._json(200, graph.gaps(assets, item_id))
                     elif kind == "cite":
                         cited = graph.cite(item_id, assets)
                         for entry in cited["evidence"]:
@@ -468,6 +639,10 @@ def parser():
     cmp_cmd = commands.add_parser("compare", help="Compare composition, properties, and value chains of two nodes")
     cmp_cmd.add_argument("left_id")
     cmp_cmd.add_argument("right_id")
+    gaps_cmd = commands.add_parser("gaps", help="Report composition, value-chain, property, and evidence gaps")
+    gaps_cmd.add_argument("node_id", nargs="?", default=None)
+    db_cmd = commands.add_parser("export-db", help="Materialize the graph into a SQLite database using schema.sql")
+    db_cmd.add_argument("output", type=Path, nargs="?", default=DEFAULT_ASSETS / "materials.db")
     commands.add_parser("cite", help="Resolve a statement to its source and exact locator").add_argument("statement_id")
     source = commands.add_parser("import-source", help="Archive a local file or public PDF/web URL")
     source.add_argument("location")
@@ -511,6 +686,10 @@ def main():
                 result = graph.used_by(args.node_id)
             elif args.command == "compare":
                 result = graph.compare(args.left_id, args.right_id)
+            elif args.command == "gaps":
+                result = graph.gaps(args.assets, args.node_id)
+            elif args.command == "export-db":
+                result = graph.export_db(args.output)
             elif args.command == "cite":
                 result = graph.cite(args.statement_id, args.assets)
             else:

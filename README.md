@@ -20,6 +20,8 @@ python -m building_materials parts window-assembly
 python -m building_materials trace igu-gray-argon
 python -m building_materials used-by vitro-solarban-70
 python -m building_materials compare igu-gray-air igu-gray-argon
+python -m building_materials gaps
+python -m building_materials export-db
 python -m building_materials facts igu-gray-reference
 python -m building_materials cite igu-gray-shgc
 python -m building_materials serve --open
@@ -42,4 +44,4 @@ python -m unittest discover -s tests -v
 
 ## Schema and Design
 
-See [specs/graph-data-schema.md](specs/graph-data-schema.md) and [graph.schema.json](graph.schema.json).
+See [specs/graph-data-schema.md](specs/graph-data-schema.md), [graph.schema.json](graph.schema.json), and [schema.sql](schema.sql).
