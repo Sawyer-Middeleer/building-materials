@@ -5,6 +5,7 @@ from collections import defaultdict, deque
 from datetime import UTC, datetime
 import graphlib
 import hashlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import mimetypes
 import os
@@ -13,6 +14,7 @@ import sys
 from tempfile import NamedTemporaryFile
 from urllib.parse import unquote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
+import webbrowser
 
 from jsonschema import Draft202012Validator, ValidationError
 
@@ -21,21 +23,34 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_GRAPH = ROOT / "fixtures" / "window.json"
 DEFAULT_ASSETS = ROOT / ".materials"
 MAX_ASSET_BYTES = 32 * 1024 * 1024
-COMPOSITION = {"hasPart", "madeOf", "hasComposition", "hasStructure", "includesChemical"}
-TRACE_FORWARD = {
-    "hasPart", "fillsOpening", "specifies", "isInstanceOf", "isVariantOf", "realizesDesign",
-    "usesConfiguration", "usesProduct", "uses", "produces", "performedBy", "selects",
-    "evaluates", "followsProcess", "informedBy", "supersedes",
+COMPOSITION = {
+    "hasPart", "madeOf", "hasComposition", "hasStructure", "includesChemical",
+    "realizesDesign", "usesConfiguration",
 }
-TRACE_REVERSE = {"produces", "appliesTo", "fillsOpening"}
+USED_BY = {
+    "hasPart", "madeOf", "hasComposition", "hasStructure", "includesChemical",
+    "realizesDesign", "isVariantOf", "usesConfiguration", "usesProduct", "uses",
+}
+TRACE_FORWARD = {
+    "hasPart", "realizesDesign", "isVariantOf", "usesConfiguration", "usesProduct",
+    "manufacturedBy", "uses", "produces", "performedBy", "supersedes",
+}
+TRACE_REVERSE = {"produces", "appliesTo"}
 LINK_KINDS = {
-    "madeOf": ({"physicalItem", "referenceDesign"}, {"material"}),
+    "hasPart": ({"referenceDesign", "productVariant"}, {"referenceDesign", "productVariant"}),
+    "madeOf": ({"referenceDesign", "productVariant"}, {"material"}),
     "hasStructure": ({"material"}, {"structureModel"}),
     "hasComposition": ({"material"}, {"material", "chemicalEntity"}),
     "includesChemical": ({"structureModel"}, {"chemicalEntity"}),
-    "realizesDesign": ({"productVariant"}, {"referenceDesign"}),
+    "realizesDesign": ({"productModel", "productVariant"}, {"referenceDesign"}),
     "isVariantOf": ({"productVariant"}, {"productModel"}),
-    "isInstanceOf": ({"physicalItem"}, {"productVariant", "referenceDesign"}),
+    "usesConfiguration": ({"referenceDesign", "productVariant"}, {"referenceDesign", "productVariant"}),
+    "usesProduct": ({"referenceDesign", "productVariant"}, {"productModel"}),
+    "manufacturedBy": ({"productModel"}, {"actor"}),
+    "uses": ({"process"}, None),
+    "produces": ({"process"}, None),
+    "performedBy": ({"process"}, {"actor"}),
+    "appliesTo": ({"requirement"}, {"referenceDesign", "productModel", "productVariant"}),
 }
 
 
@@ -68,7 +83,6 @@ class Graph:
         self.outgoing = defaultdict(list)
         self.incoming = defaultdict(list)
         parts = graphlib.TopologicalSorter()
-        placements = []
         derivations = graphlib.TopologicalSorter()
         for row in self.statements.values():
             subject = self.node(row["subject"])
@@ -77,20 +91,13 @@ class Graph:
                 target = self.node(target_id)
                 self.incoming[target_id].append(row)
                 kinds = LINK_KINDS.get(row["predicate"])
-                if kinds and (subject["kind"] not in kinds[0] or target["kind"] not in kinds[1]):
+                if kinds and (
+                    subject["kind"] not in kinds[0]
+                    or (kinds[1] is not None and target["kind"] not in kinds[1])
+                ):
                     raise ValueError(f"{row['id']}: invalid endpoint kinds for {row['predicate']}")
                 if row["predicate"] == "hasPart":
-                    if subject["kind"] != target["kind"] or subject["kind"] not in {
-                        "physicalItem", "referenceDesign"
-                    }:
-                        raise ValueError(f"{row['id']}: hasPart must connect items or designs of the same kind")
                     parts.add(subject["id"], target_id)
-                if row["predicate"] == "fillsOpening":
-                    installation = self.node(row.get("qualifiers", {}).get("activity"))
-                    if (subject["kind"] != "physicalItem" or target["kind"] != "physicalItem"
-                            or installation.get("stage") != "installation"):
-                        raise ValueError(f"{row['id']}: fillsOpening requires physical items and an installation activity")
-                    placements.append(row)
             for quantity in (row.get("quantity"), row.get("qualifiers", {}).get("quantity")):
                 if quantity and "min" in quantity and quantity["min"] > quantity["max"]:
                     raise ValueError(f"{row['id']}: quantity minimum exceeds maximum")
@@ -104,14 +111,7 @@ class Graph:
                 if dependency not in self.statements:
                     raise ValueError(f"{row['id']}: unknown derived-from statement {dependency}")
                 derivations.add(row["id"], dependency)
-        for row in placements:
-            activity = row["qualifiers"]["activity"]
-            installation_inputs = {
-                link["target"] for link in self.outgoing[activity] if link.get("predicate") == "uses"
-            }
-            if not {row["subject"], row["target"]} <= installation_inputs:
-                raise ValueError(f"{row['id']}: installation must identify the window and its opening")
-        for sorter, name in [(parts, "physical composition"), (derivations, "claim derivation")]:
+        for sorter, name in [(parts, "composition"), (derivations, "claim derivation")]:
             try:
                 tuple(sorter.static_order())
             except graphlib.CycleError as error:
@@ -128,32 +128,13 @@ class Graph:
             "statements": [row for row in self.outgoing[node_id] if "property" in row],
         }
 
-    def _physical_scope(self, node_id):
-        scope = set()
-        pending = [node_id]
-        while pending:
-            current = pending.pop()
-            if current in scope or self.nodes[current]["kind"] != "physicalItem":
-                continue
-            scope.add(current)
-            incoming = self.incoming[current]
-            installed = [edge["subject"] for edge in incoming if edge["predicate"] == "fillsOpening"]
-            pending.extend(installed)
-            # The opening is the installation boundary. Its host wall isn't part of the window trace.
-            if not installed:
-                pending.extend(edge["subject"] for edge in incoming if edge["predicate"] == "hasPart")
-            pending.extend(edge["target"] for edge in self.outgoing[current]
-                           if edge.get("predicate") in {"hasPart", "fillsOpening"})
-        return scope
-
     def walk(self, node_id, *, trace):
         self.node(node_id)
-        downstream = self._physical_scope(node_id) if trace else set()
         pending = deque([node_id])
         seen = set()
         selected = set()
         forward = TRACE_FORWARD if trace else COMPOSITION
-        reverse = TRACE_REVERSE if trace else {"fillsOpening"}
+        reverse = TRACE_REVERSE if trace else set()
         while pending:
             current = pending.popleft()
             if current in seen:
@@ -167,14 +148,85 @@ class Graph:
                     selected.add(row["id"])
             for row in self.incoming[current]:
                 if row["predicate"] in reverse or (
-                    row["predicate"] == "uses" and current in downstream
+                    trace and row["predicate"] == "uses" and current == node_id
                 ):
                     selected.add(row["id"])
                     pending.append(row["subject"])
 
         statements = [row for row_id, row in self.statements.items() if row_id in selected]
         seen.update(evidence["source"] for row in statements for evidence in row["evidence"])
-        return {"root": node_id, "nodes": [node for node_id, node in self.nodes.items() if node_id in seen],
+        return {"root": node_id, "nodes": [node for nid, node in self.nodes.items() if nid in seen],
+                "statements": statements}
+
+    def compare(self, left_id, right_id):
+        left = self.node(left_id)
+        right = self.node(right_id)
+        left_parts = self.walk(left_id, trace=False)
+        right_parts = self.walk(right_id, trace=False)
+        left_trace = self.walk(left_id, trace=True)
+        right_trace = self.walk(right_id, trace=True)
+
+        def diff_nodes(left_walk, right_walk, predicate_fn):
+            lmap = {n["id"]: n for n in left_walk["nodes"] if predicate_fn(n)}
+            rmap = {n["id"]: n for n in right_walk["nodes"] if predicate_fn(n)}
+            return {
+                "shared": [lmap[nid] for nid in lmap if nid in rmap],
+                "onlyLeft": [lmap[nid] for nid in lmap if nid not in rmap],
+                "onlyRight": [rmap[nid] for nid in rmap if nid not in lmap],
+            }
+
+        def collect_facts(root_id):
+            subjects = [root_id] + [
+                row["target"] for row in self.outgoing[root_id] if row.get("predicate") == "realizesDesign"
+            ]
+            by_key = {}
+            for sid in subjects:
+                for row in self.outgoing[sid]:
+                    if "property" in row:
+                        key = (row["property"], row.get("scope") or "")
+                        by_key.setdefault(key, row)
+            return by_key
+
+        lfacts = collect_facts(left_id)
+        rfacts = collect_facts(right_id)
+        fact_keys = list(dict.fromkeys([*lfacts.keys(), *rfacts.keys()]))
+        facts = [
+            {"property": prop, "scope": scope or None, "left": lfacts.get((prop, scope)), "right": rfacts.get((prop, scope))}
+            for prop, scope in fact_keys
+        ]
+        part_ids_l = {s["target"] for s in left_parts["statements"] if s.get("predicate") == "hasPart"}
+        part_ids_r = {s["target"] for s in right_parts["statements"] if s.get("predicate") == "hasPart"}
+        parts_diff = {
+            "shared": [self.nodes[nid] for nid in part_ids_l if nid in part_ids_r],
+            "onlyLeft": [self.nodes[nid] for nid in part_ids_l if nid not in part_ids_r],
+            "onlyRight": [self.nodes[nid] for nid in part_ids_r if nid not in part_ids_l],
+        }
+        return {
+            "left": left,
+            "right": right,
+            "facts": facts,
+            "materials": diff_nodes(left_parts, right_parts, lambda n: n["kind"] == "material"),
+            "parts": parts_diff,
+            "processes": diff_nodes(left_trace, right_trace, lambda n: n["kind"] == "process"),
+        }
+
+    def used_by(self, node_id):
+        self.node(node_id)
+        pending = deque([node_id])
+        seen = set()
+        selected = set()
+        while pending:
+            current = pending.popleft()
+            if current in seen:
+                continue
+            seen.add(current)
+            for row in self.incoming[current]:
+                if row["predicate"] in USED_BY:
+                    selected.add(row["id"])
+                    pending.append(row["subject"])
+        statements = [row for row_id, row in self.statements.items() if row_id in selected]
+        seen.update(evidence["source"] for row in statements for evidence in row["evidence"])
+        return {"root": node_id, "nodes": [node for nid, node in self.nodes.items() if nid in seen],
                 "statements": statements}
 
     def cite(self, statement_id, assets):
@@ -205,7 +257,15 @@ class Graph:
 
 
 def asset_path(assets, digest, media_type):
-    suffix = {"application/pdf": ".pdf", "text/html": ".html"}.get(media_type, "")
+    known = {
+        "application/pdf": ".pdf",
+        "text/html": ".html",
+        "image/png": ".png",
+        "image/jpeg": ".jpg",
+        "image/webp": ".webp",
+        "application/json": ".json",
+    }
+    suffix = known.get(media_type) or mimetypes.guess_extension(media_type) or ""
     return assets / "blobs" / f"{digest}{suffix}"
 
 
@@ -309,6 +369,89 @@ def import_source(args):
     return {"source": read_json(manifest), "savedPath": str(snapshot.resolve())}
 
 
+def make_server(graph, assets, host="127.0.0.1", port=8000):
+    blobs_dir = (assets / "blobs").resolve()
+    viewer_path = ROOT / "viewer.html"
+
+    class Handler(BaseHTTPRequestHandler):
+        def _send(self, status, body, content_type):
+            self.send_response(status)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _json(self, status, payload):
+            self._send(status, json.dumps(payload).encode("utf-8"), "application/json; charset=utf-8")
+
+        def do_GET(self):
+            path = unquote(urlsplit(self.path).path)
+            if path in {"/", "/index.html"}:
+                if not viewer_path.is_file():
+                    self._send(404, b"viewer.html not found", "text/plain; charset=utf-8")
+                    return
+                self._send(200, viewer_path.read_bytes(), "text/html; charset=utf-8")
+                return
+            if path == "/api/graph":
+                self._json(200, {
+                    "nodes": list(graph.nodes.values()),
+                    "statements": list(graph.statements.values()),
+                })
+                return
+            if path.startswith("/assets/"):
+                name = path[len("/assets/"):]
+                if not name or "/" in name or "\\" in name or name != Path(name).name:
+                    self._send(404, b"Not found", "text/plain; charset=utf-8")
+                    return
+                target = (blobs_dir / name).resolve()
+                if target.parent != blobs_dir or not target.is_file():
+                    self._send(404, b"Not found", "text/plain; charset=utf-8")
+                    return
+                mime = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+                self._send(200, target.read_bytes(), mime)
+                return
+            parts = path.strip("/").split("/")
+            if len(parts) == 4 and parts[0] == "api" and parts[1] == "compare":
+                try:
+                    self._json(200, graph.compare(parts[2], parts[3]))
+                except ValueError as error:
+                    self._json(404, {"error": str(error)})
+                return
+            if len(parts) == 3 and parts[0] == "api":
+                kind, item_id = parts[1], parts[2]
+                try:
+                    if kind == "parts":
+                        self._json(200, graph.walk(item_id, trace=False))
+                    elif kind == "trace":
+                        self._json(200, graph.walk(item_id, trace=True))
+                    elif kind == "used-by":
+                        self._json(200, graph.used_by(item_id))
+                    elif kind == "facts":
+                        self._json(200, graph.facts(item_id))
+                    elif kind == "cite":
+                        cited = graph.cite(item_id, assets)
+                        for entry in cited["evidence"]:
+                            if entry["capture"] == "saved":
+                                frag = urlsplit(entry["href"]).fragment
+                                web = f"/assets/{Path(entry['savedPath']).name}"
+                                entry["webHref"] = f"{web}#{frag}" if frag else web
+                            else:
+                                entry["webHref"] = entry["href"]
+                        self._json(200, cited)
+                    else:
+                        self._json(404, {"error": f"Unknown endpoint: {path}"})
+                except ValueError as error:
+                    self._json(404, {"error": str(error)})
+                return
+            self._send(404, b"Not found", "text/plain; charset=utf-8")
+
+        def log_message(self, format, *args):
+            pass
+
+    return ThreadingHTTPServer((host, port), Handler)
+
+
 def parser():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Graph JSON, defaults to the window fixture")
@@ -316,11 +459,15 @@ def parser():
     commands = cli.add_subparsers(dest="command", required=True)
     commands.add_parser("validate", help="Check the graph and source manifests")
     for command, help_text in [
-        ("parts", "Walk composition from an opening or component"),
-        ("trace", "Walk the value chain from an opening, component, or activity"),
+        ("parts", "Walk composition from a design, product variant, or material"),
+        ("trace", "Walk the value chain from a design, product, or process"),
+        ("used-by", "Find where a product model, variant, material, or part is used"),
         ("facts", "List claims made directly about a node"),
     ]:
         commands.add_parser(command, help=help_text).add_argument("node_id")
+    cmp_cmd = commands.add_parser("compare", help="Compare composition, properties, and value chains of two nodes")
+    cmp_cmd.add_argument("left_id")
+    cmp_cmd.add_argument("right_id")
     commands.add_parser("cite", help="Resolve a statement to its source and exact locator").add_argument("statement_id")
     source = commands.add_parser("import-source", help="Archive a local file or public PDF/web URL")
     source.add_argument("location")
@@ -329,6 +476,10 @@ def parser():
     source.add_argument("--issuer")
     source.add_argument("--revision")
     source.add_argument("--expect-sha256", help="Archive only if the content matches this SHA-256")
+    serve = commands.add_parser("serve", help="Run a local web UI to explore the graph")
+    serve.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    serve.add_argument("--port", type=int, default=8000, help="Bind port (default: 8000)")
+    serve.add_argument("--open", action="store_true", help="Open the UI in the default browser")
     return cli
 
 
@@ -339,10 +490,27 @@ def main():
             result = import_source(args)
         else:
             graph = Graph(args.graph, args.assets)
+            if args.command == "serve":
+                server = make_server(graph, args.assets, host=args.host, port=args.port)
+                url = f"http://{args.host}:{server.server_port}/"
+                print(f"Serving Building Materials UI at {url}", flush=True)
+                if args.open:
+                    webbrowser.open(url)
+                try:
+                    server.serve_forever()
+                except KeyboardInterrupt:
+                    pass
+                finally:
+                    server.server_close()
+                return 0
             if args.command == "validate":
                 result = {"valid": True, "nodes": len(graph.nodes), "statements": len(graph.statements)}
             elif args.command == "facts":
                 result = graph.facts(args.node_id)
+            elif args.command == "used-by":
+                result = graph.used_by(args.node_id)
+            elif args.command == "compare":
+                result = graph.compare(args.left_id, args.right_id)
             elif args.command == "cite":
                 result = graph.cite(args.statement_id, args.assets)
             else:

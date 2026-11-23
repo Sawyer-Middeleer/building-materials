@@ -3,7 +3,11 @@ from pathlib import Path
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import threading
 import unittest
+from urllib.request import urlopen
+
+import building_materials
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,69 +30,58 @@ class WindowGraphTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
-    def test_window_from_opening_to_atoms_and_back_to_fabrication(self):
+    def test_window_composition_value_chain_and_comparison(self):
         self.output("validate")
-        parts = self.output("parts", "opening-w01")
+        parts = self.output("parts", "window-assembly")
         part_links = {
             (row["subject"], row["predicate"], row.get("target"))
             for row in parts["statements"] if "predicate" in row
         }
         self.assertTrue({
-            ("window-w01", "fillsOpening", "opening-w01"),
-            ("window-w01", "hasPart", "glazing-unit-w01"),
-            ("glazing-unit-w01", "hasPart", "outer-pane-w01"),
-            ("outer-pane-w01", "madeOf", "low-e-coating"),
-            ("outer-pane-w01", "madeOf", "soda-lime-glass"),
+            ("window-assembly", "hasPart", "insulating-glass-unit"),
+            ("insulating-glass-unit", "hasPart", "outer-pane"),
+            ("outer-pane", "madeOf", "low-e-coating"),
+            ("outer-pane", "madeOf", "soda-lime-glass"),
             ("soda-lime-glass", "hasStructure", "amorphous-silicate-network"),
             ("amorphous-silicate-network", "includesChemical", "sodium-ion"),
         }.issubset(part_links))
 
-        trace = self.output("trace", "window-w01")
+        trace = self.output("trace", "igu-gray-argon")
         lineage = {
             (row["subject"], row["predicate"], row.get("target"))
             for row in trace["statements"] if "predicate" in row
         }
         self.assertTrue({
-            ("assemble-igu-w01", "produces", "glazing-unit-w01"),
-            ("assemble-igu-w01", "uses", "coated-pane-batch"),
-            ("substitution-w01", "evaluates", "igu-gray-air"),
-            ("substitution-w01", "selects", "igu-gray-argon"),
-            ("glazing-unit-w01", "isInstanceOf", "igu-gray-argon"),
-            ("ship-window-w01", "uses", "window-w01"),
-            ("install-window-w01", "uses", "window-w01"),
+            ("igu-assembly-argon", "produces", "igu-gray-argon"),
+            ("igu-assembly-argon", "uses", "argon-fill"),
+            ("sputter-coating", "produces", "vitro-solarban-70"),
+            ("float-glass-forming", "uses", "silica-sand"),
+            ("float-glass-forming", "produces", "soda-lime-glass"),
         }.issubset(lineage))
+        self.assertNotIn("igu-gray-air", {node["id"] for node in trace["nodes"]})
 
-        with TemporaryDirectory() as directory:
-            graph = Path(directory) / "window.json"
-            fixture = json.loads((ROOT / "fixtures" / "window.json").read_text(encoding="utf-8"))
-            fixture["nodes"].extend([
-                {"id": "another-order", "kind": "activity", "stage": "fabrication", "label": "Other order"},
-                {"id": "another-window", "kind": "physicalItem", "label": "Other window"},
-            ])
-            for predicate, target in [("uses", "coated-pane-batch"), ("produces", "another-window")]:
-                fixture["statements"].append({
-                    "id": f"other-order-{predicate}", "subject": "another-order", "predicate": predicate,
-                    "target": target, "basis": "illustrative",
-                    "evidence": [{"source": "window-example", "locator": {"section": "Unrelated order"}}],
-                })
-            graph.write_text(json.dumps(fixture), encoding="utf-8")
-            scoped = self.output("--graph", graph, "trace", "glazing-unit-w01")
-            scoped_nodes = {node["id"] for node in scoped["nodes"]}
-            self.assertIn("install-window-w01", scoped_nodes)
-            self.assertNotIn("another-window", scoped_nodes)
-            self.assertNotIn("another-order", scoped_nodes)
+        used = self.output("used-by", "vitro-solarban-70")
+        used_nodes = {node["id"] for node in used["nodes"]}
+        self.assertTrue({"igu-gray-air", "igu-gray-argon", "igu-assembly-argon"}.issubset(used_nodes))
+
+        compared = self.output("compare", "igu-gray-air", "igu-gray-argon")
+        self.assertEqual([n["id"] for n in compared["materials"]["onlyLeft"]], ["air-fill"])
+        self.assertEqual([n["id"] for n in compared["materials"]["onlyRight"]], ["argon-fill"])
+        self.assertEqual([n["id"] for n in compared["processes"]["onlyLeft"]], ["igu-assembly-air"])
+        self.assertEqual([n["id"] for n in compared["processes"]["onlyRight"]], ["igu-assembly-argon"])
+        u_row = next(row for row in compared["facts"] if row["property"] == "uFactor")
+        self.assertEqual(u_row["left"]["quantity"]["value"], 0.28)
+        self.assertEqual(u_row["right"]["quantity"]["value"], 0.24)
 
         facts = self.output("facts", "igu-gray-reference")["statements"]
         rating = next(row for row in facts if row["property"] == "solarHeatGainCoefficient")
         self.assertEqual(rating["quantity"], {"value": 0.19, "unit": "1"})
         self.assertEqual(rating["scope"], "center-of-glass")
         self.assertEqual(rating["basis"], "simulated")
-        self.assertNotIn("argon", rating["conditions"])
-        self.assertEqual(self.output("facts", "window-w01")["statements"], [])
-        for fill, expected in [("air", 0.28), ("argon", 0.24)]:
-            variant = self.output("facts", f"igu-gray-{fill}")["statements"]
-            self.assertEqual([(row["property"], row["quantity"]["value"]) for row in variant],
-                             [("uFactor", expected)])
+        self.assertEqual(
+            [(row["property"], row.get("scope"), row.get("state")) for row in self.output("facts", "window-assembly")["statements"]],
+            [("uFactor", "whole-window", "unknown")],
+        )
         citation = self.output("cite", rating["id"])
         self.assertEqual(citation["evidence"][0]["locator"]["page"], 2)
         self.assertEqual(citation["evidence"][0]["locator"]["column"], "SHGC")
@@ -133,3 +126,34 @@ class WindowGraphTest(unittest.TestCase):
             result = cli(*options, "--graph", graph, "validate")
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Invalid graph", result.stderr)
+
+            rating["quantity"]["unit"] = "1"
+            fixture["statements"][0]["predicate"] = "unknownPredicate"
+            graph.write_text(json.dumps(fixture), encoding="utf-8")
+            bad_pred = cli(*options, "--graph", graph, "validate")
+            self.assertNotEqual(bad_pred.returncode, 0)
+            self.assertIn("Invalid graph", bad_pred.stderr)
+
+    def test_web_ui_serves_viewer_and_graph_endpoints(self):
+        graph = building_materials.Graph(building_materials.DEFAULT_GRAPH, building_materials.DEFAULT_ASSETS)
+        server = building_materials.make_server(graph, building_materials.DEFAULT_ASSETS, port=0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = f"http://127.0.0.1:{server.server_port}"
+            with urlopen(f"{base}/", timeout=5) as res:
+                self.assertIn("Building Materials Graph Explorer", res.read().decode("utf-8"))
+            with urlopen(f"{base}/api/parts/window-assembly", timeout=5) as res:
+                parts = json.loads(res.read().decode("utf-8"))
+                self.assertEqual(parts["root"], "window-assembly")
+            with urlopen(f"{base}/api/compare/igu-gray-air/igu-gray-argon", timeout=5) as res:
+                cmp_data = json.loads(res.read().decode("utf-8"))
+                self.assertEqual([n["id"] for n in cmp_data["materials"]["onlyRight"]], ["argon-fill"])
+            with urlopen(f"{base}/api/cite/igu-gray-shgc", timeout=5) as res:
+                cited = json.loads(res.read().decode("utf-8"))
+                self.assertEqual(cited["evidence"][0]["locator"]["page"], 2)
+                self.assertIn("webHref", cited["evidence"][0])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)

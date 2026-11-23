@@ -60,32 +60,25 @@
             "referenceDesign",
             "productModel",
             "productVariant",
-            "physicalItem",
             "material",
             "structureModel",
             "chemicalEntity",
-            "processDefinition",
-            "activity",
+            "process",
             "requirement",
-            "decision",
             "actor",
             "source"
           ]
         },
         "stage": {
           "enum": [
+            "extraction",
             "research",
             "testing",
             "design",
             "specification",
-            "approval",
-            "ordering",
             "fabrication",
-            "packing",
-            "shipping",
-            "receiving",
-            "installation",
-            "verification"
+            "distribution",
+            "installation"
           ]
         },
         "identifiers": {
@@ -109,14 +102,6 @@
             }
           }
         },
-        "occurredAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "location": {
-          "type": "string",
-          "minLength": 1
-        },
         "source": {
           "$ref": "#/$defs/source"
         }
@@ -126,7 +111,7 @@
           "if": {
             "properties": {
               "kind": {
-                "const": "activity"
+                "const": "process"
               }
             }
           },
@@ -363,8 +348,23 @@
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "predicate": {
-          "type": "string",
-          "minLength": 1
+          "enum": [
+            "hasPart",
+            "madeOf",
+            "hasComposition",
+            "hasStructure",
+            "includesChemical",
+            "realizesDesign",
+            "isVariantOf",
+            "usesConfiguration",
+            "usesProduct",
+            "manufacturedBy",
+            "uses",
+            "produces",
+            "performedBy",
+            "appliesTo",
+            "supersedes"
+          ]
         },
         "target": {
           "type": "string",
@@ -406,10 +406,9 @@
             "measured",
             "simulated",
             "manufacturer-declared",
-            "project-recorded",
+            "specification",
             "typical-reference",
-            "inferred",
-            "illustrative"
+            "inferred"
           ]
         },
         "evidence": {
@@ -444,18 +443,6 @@
             "sequence": {
               "type": "integer",
               "minimum": 1
-            },
-            "activity": {
-              "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
-            },
-            "effectiveFrom": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "effectiveThrough": {
-              "type": "string",
-              "format": "date-time"
             },
             "quantity": {
               "$ref": "#/$defs/quantity"
