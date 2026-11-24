@@ -533,9 +533,36 @@ def import_source(args):
     return {"source": read_json(manifest), "savedPath": str(snapshot.resolve())}
 
 
-def make_server(graph, assets, host="127.0.0.1", port=8000):
+def load_guide(graph, graph_path, guide_path=None):
+    target = guide_path if guide_path is not None else graph_path.with_suffix(".guide.json")
+    if not target.is_file():
+        if guide_path is not None:
+            raise ValueError(f"Guide file not found: {guide_path}")
+        return {"schemaVersion": 1, "properties": {}, "nodes": {}}
+    data = read_json(target)
+    validator = Draft202012Validator(
+        read_json(ROOT / "guide.schema.json"),
+        format_checker=Draft202012Validator.FORMAT_CHECKER,
+    )
+    validator.validate(data)
+    unknown = [nid for nid in data["nodes"] if nid not in graph.nodes]
+    if unknown:
+        raise ValueError(f"Guide references unknown node IDs: {', '.join(unknown)}")
+    return data
+
+
+def explain_key(graph, guide, key):
+    if key in guide["nodes"]:
+        return {"kind": "node", "node": graph.nodes[key], "guide": guide["nodes"][key]}
+    if key in guide["properties"]:
+        return {"kind": "property", "property": key, "guide": guide["properties"][key]}
+    raise ValueError(f"No guide entry for: {key}")
+
+
+def make_server(graph, assets, host="127.0.0.1", port=8000, guide=None):
     blobs_dir = (assets / "blobs").resolve()
     viewer_path = ROOT / "viewer.html"
+    guide_data = guide if guide is not None else {"schemaVersion": 1, "properties": {}, "nodes": {}}
 
     class Handler(BaseHTTPRequestHandler):
         def _send(self, status, body, content_type):
@@ -571,6 +598,9 @@ def make_server(graph, assets, host="127.0.0.1", port=8000):
                 text = schema_path.read_text(encoding="utf-8") if schema_path.is_file() else ""
                 self._json(200, {"sql": text})
                 return
+            if path == "/api/guide":
+                self._json(200, guide_data)
+                return
             if path.startswith("/assets/"):
                 name = path[len("/assets/"):]
                 if not name or "/" in name or "\\" in name or name != Path(name).name:
@@ -603,6 +633,8 @@ def make_server(graph, assets, host="127.0.0.1", port=8000):
                         self._json(200, graph.facts(item_id))
                     elif kind == "gaps":
                         self._json(200, graph.gaps(assets, item_id))
+                    elif kind == "explain":
+                        self._json(200, explain_key(graph, guide_data, item_id))
                     elif kind == "cite":
                         cited = graph.cite(item_id, assets)
                         for entry in cited["evidence"]:
@@ -630,6 +662,7 @@ def parser():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Graph JSON, defaults to the window fixture")
     cli.add_argument("--assets", type=Path, default=DEFAULT_ASSETS, help="Source asset directory")
+    cli.add_argument("--guide", type=Path, default=None, help="Companion educational guide JSON (auto-discovers *.guide.json)")
     commands = cli.add_subparsers(dest="command", required=True)
     commands.add_parser("validate", help="Check the graph and source manifests")
     for command, help_text in [
@@ -647,6 +680,7 @@ def parser():
     db_cmd = commands.add_parser("export-db", help="Materialize the graph into a SQLite database using schema.sql")
     db_cmd.add_argument("output", type=Path, nargs="?", default=DEFAULT_ASSETS / "materials.db")
     commands.add_parser("cite", help="Resolve a statement to its source and exact locator").add_argument("statement_id")
+    commands.add_parser("explain", help="Show plain-English educational context for a node or property").add_argument("key")
     source = commands.add_parser("import-source", help="Archive a local file or public PDF/web URL")
     source.add_argument("location")
     source.add_argument("--url", help="Original HTTP(S) source URL, required for local files")
@@ -668,8 +702,9 @@ def main():
             result = import_source(args)
         else:
             graph = Graph(args.graph, args.assets)
+            guide = load_guide(graph, args.graph, args.guide)
             if args.command == "serve":
-                server = make_server(graph, args.assets, host=args.host, port=args.port)
+                server = make_server(graph, args.assets, host=args.host, port=args.port, guide=guide)
                 url = f"http://{args.host}:{server.server_port}/"
                 print(f"Serving Building Materials UI at {url}", flush=True)
                 if args.open:
@@ -682,7 +717,15 @@ def main():
                     server.server_close()
                 return 0
             if args.command == "validate":
-                result = {"valid": True, "nodes": len(graph.nodes), "statements": len(graph.statements)}
+                result = {
+                    "valid": True,
+                    "nodes": len(graph.nodes),
+                    "statements": len(graph.statements),
+                    "guideNodes": len(guide["nodes"]),
+                    "guideProperties": len(guide["properties"]),
+                }
+            elif args.command == "explain":
+                result = explain_key(graph, guide, args.key)
             elif args.command == "facts":
                 result = graph.facts(args.node_id)
             elif args.command == "used-by":

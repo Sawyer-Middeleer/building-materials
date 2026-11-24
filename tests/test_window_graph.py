@@ -105,6 +105,11 @@ class WindowGraphTest(unittest.TestCase):
         self.assertEqual(citation["evidence"][0]["locator"]["column"], "SHGC")
 
         validated = self.output("validate")
+        self.assertGreater(validated["guideNodes"], 0)
+        self.assertGreater(validated["guideProperties"], 0)
+        self.assertEqual(self.output("explain", "andersen")["guide"]["firm"]["founded"], 1903)
+        self.assertEqual(self.output("explain", "sodium-ion")["guide"]["chemistry"]["atomicNumber"], 11)
+        self.assertIn("U-Factor", self.output("explain", "uFactor")["guide"]["title"])
         gaps = self.output("gaps")
         self.assertEqual(gaps["summary"]["total"], 0)
 
@@ -165,7 +170,8 @@ class WindowGraphTest(unittest.TestCase):
 
     def test_web_ui_serves_viewer_and_graph_endpoints(self):
         graph = building_materials.Graph(building_materials.DEFAULT_GRAPH, building_materials.DEFAULT_ASSETS)
-        server = building_materials.make_server(graph, building_materials.DEFAULT_ASSETS, port=0)
+        guide = building_materials.load_guide(graph, building_materials.DEFAULT_GRAPH)
+        server = building_materials.make_server(graph, building_materials.DEFAULT_ASSETS, port=0, guide=guide)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
@@ -184,6 +190,10 @@ class WindowGraphTest(unittest.TestCase):
             with urlopen(f"{base}/api/schema", timeout=5) as res:
                 schema_data = json.loads(res.read().decode("utf-8"))
                 self.assertIn("CREATE TABLE IF NOT EXISTS nodes", schema_data["sql"])
+            with urlopen(f"{base}/api/guide", timeout=5) as res:
+                guide_data = json.loads(res.read().decode("utf-8"))
+                self.assertIn("uFactor", guide_data["properties"])
+                self.assertIn("andersen", guide_data["nodes"])
             with urlopen(f"{base}/api/cite/igu-gray-shgc", timeout=5) as res:
                 cited = json.loads(res.read().decode("utf-8"))
                 self.assertEqual(cited["evidence"][0]["locator"]["page"], 2)
