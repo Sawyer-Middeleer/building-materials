@@ -147,7 +147,7 @@ def make_server(
                         if not left or not right:
                             self._error(400, "bad_request", "Query parameters 'left' and 'right' are required")
                             return
-                        self._json(200, store.compare(left, right))
+                        self._json(200, store.compare(left, right, profile_id=_first(qs, "profile")))
                         return
 
                     if path == "/api/gaps":
@@ -207,7 +207,7 @@ def make_server(
                     self._error(404, "not_found", f"Unknown endpoint: {path}")
             except ValueError as exc:
                 msg = str(exc)
-                if msg.startswith("Query parameter") or msg.startswith("Invalid tier"):
+                if msg.startswith("Query parameter") or msg.startswith("Invalid tier") or msg.startswith("Profile "):
                     self._error(400, "bad_request", msg)
                 else:
                     self._error(404, "not_found", msg)

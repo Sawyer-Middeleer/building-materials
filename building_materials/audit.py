@@ -56,6 +56,10 @@ def run_audit(store: MaterialStore, assets: Path) -> dict:
             incoming[stmt["target"]].append(stmt)
         for ev in stmt["evidence"]:
             cited_sources.add(ev["source"])
+    for node in nodes.values():
+        for pval in (node.get("parameters") or {}).values():
+            for ev in pval.get("evidence", ()):
+                cited_sources.add(ev["source"])
 
     seen_source_keys: dict[tuple[str, str], str] = {}
     seen_norm_labels: dict[tuple[str, str], str] = {}
@@ -273,6 +277,25 @@ def run_audit(store: MaterialStore, assets: Path) -> dict:
                             source=sid,
                             page=pg,
                         )
+
+    for node in nodes.values():
+        for pkey, pval in (node.get("parameters") or {}).items():
+            for ev in pval.get("evidence", ()):
+                sid = ev["source"]
+                loc = ev["locator"]
+                reader = pdf_readers.get(sid)
+                if reader is None or "page" not in loc:
+                    continue
+                pg = loc["page"]
+                if pg < 1 or pg > len(reader.pages):
+                    record(
+                        errors,
+                        "pdf-page-out-of-bounds",
+                        f"Parameter '{pkey}' cited page {pg} exceeds PDF length ({len(reader.pages)} pages)",
+                        node=node,
+                        source=sid,
+                        page=pg,
+                    )
 
     return {
         "ok": len(errors) == 0,

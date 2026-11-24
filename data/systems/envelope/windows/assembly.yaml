@@ -16,6 +16,25 @@ entities:
         value: "08 50 00"
       - namespace: ifc
         value: IfcWindow
+    expectedProfile:
+      properties:
+        - uFactor
+        - solarHeatGainCoefficient
+        - visibleLightTransmittance
+        - airInfiltration
+        - structuralDesignPressure
+        - installedCostPerArea
+        - serviceLife
+      parameters:
+        - operationType
+        - nominalWidth
+        - nominalHeight
+        - jambDepth
+        - finishColor
+      interfaces:
+        - rough-opening
+        - drainage-plane
+        - interior-finish-return
     links:
       - predicate: hasPart
         target: envelope.openings.window.frame
@@ -28,26 +47,40 @@ entities:
       - predicate: hasPart
         target: envelope.openings.window.igu
         qualifiers: { role: glazing, sequence: 3 }
+      - predicate: hasPart
+        target: envelope.openings.window.weatherstripping
+        locator: { page: 21, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: air-water-seal, sequence: 4 }
+      - predicate: hasPart
+        target: envelope.openings.window.hardware
+        locator: { page: 11, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: operator-and-lock, sequence: 5 }
     guide:
-      summary: Complete fenestration assembly combining perimeter frame, operable sash, and factory-sealed 1-inch insulating glass unit.
+      summary: Complete fenestration assembly combining perimeter frame, operable sash, factory-sealed insulating glass unit, weatherstripping, and operating hardware.
 
   - id: envelope.openings.window.frame
     kind: referenceDesign
     label: Window perimeter frame
-    links:
-      - predicate: madeOf
-        target: material.aluminum-6063-t6
-        locator: { page: 9, section: "Section 08 50 00 – Windows" }
-        qualifiers: { role: primary frame extrusion }
+    guide:
+      summary: Structural outer perimeter frame anchored into the rough opening; material varies by product archetype (aluminum, composite, vinyl, wood-clad).
 
   - id: envelope.openings.window.sash
     kind: referenceDesign
     label: Operable window sash
-    links:
-      - predicate: madeOf
-        target: material.aluminum-6063-t6
-        locator: { page: 9, section: "Section 08 50 00 – Windows" }
-        qualifiers: { role: primary sash extrusion }
+    guide:
+      summary: Movable or fixed glazing-holding subframe inside the perimeter frame; material varies by product archetype.
+
+  - id: envelope.openings.window.weatherstripping
+    kind: referenceDesign
+    label: Perimeter sash weatherstripping
+    guide:
+      summary: Flexible compression or fin-seal gasket around the sash perimeter controlling drafts and water penetration; material varies by product line (EPDM, TPE, silicone, woven pile).
+
+  - id: envelope.openings.window.hardware
+    kind: referenceDesign
+    label: Operating hardware, balances & locks
+    guide:
+      summary: Sash balances, hinges, crank operators, and cam/multi-point locks governing operability and air-seal compression; material varies by product line (stainless steel, zinc alloy, nylon).
 
   - id: envelope.openings.window.igu
     kind: referenceDesign
@@ -107,12 +140,9 @@ entities:
 
   - id: envelope.openings.window.spacer
     kind: referenceDesign
-    label: IGU perimeter aluminum spacer
-    links:
-      - predicate: madeOf
-        target: material.aluminum-6063-t6
-        locator: { row: "6a. Spacer, 1/2 inch Aluminum" }
-        qualifiers: { role: continuous spacer }
+    label: IGU perimeter spacer bar
+    guide:
+      summary: Continuous perimeter spacer separating IGU glass lites and housing desiccant; material varies by system (aluminum, stainless steel, or warm-edge polymer).
 
   - id: envelope.openings.window.seal
     kind: referenceDesign

@@ -1,0 +1,35 @@
+entities:
+  - id: material.portland-cement-mortar
+    kind: material
+    label: Portland cement & hydrated lime masonry mortar (ASTM C270)
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.specmix.portland-lime-mortar
+          locator: { page: 1, section: "04 DIVISION MORTAR" }
+    links:
+      - predicate: hasComposition
+        target: chem.cao
+        qualifiers: { role: alkaline portland cement / hydrated lime binder }
+      - predicate: hasComposition
+        target: chem.sio2
+        qualifiers: { role: dried masonry sand aggregate }
+    guide:
+      summary: Alkaline hydraulic masonry mortar (pH ~12-13 when wet) used to bed brick and CMU veneers around window openings.
+
+  - id: process.fabrication.mortar-blending
+    kind: process
+    label: Dry preblended portland-lime masonry mortar batching
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.specmix.portland-lime-mortar
+          locator: { page: 1, section: "04 DIVISION MORTAR" }
+    links:
+      - predicate: performedBy
+        target: actor.mining-supplier
+        qualifiers: { role: cementitious materials producer }
+      - predicate: produces
+        target: material.portland-cement-mortar
+        qualifiers: { role: preblended masonry mortar }

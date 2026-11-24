@@ -33,6 +33,8 @@ NODE_FIELDS = {
     "stage",
     "identifiers",
     "source",
+    "parameters",
+    "expectedProfile",
 }
 ENTITY_CONTAINER_FIELDS = NODE_FIELDS | {
     "defaults",
@@ -522,6 +524,7 @@ def _apply_model_inheritance(
                 s["predicate"],
                 (s.get("qualifiers") or {}).get("role") or "",
                 (s.get("qualifiers") or {}).get("position") or "",
+                (s.get("qualifiers") or {}).get("interface") or "",
             )
             for s in existing
             if "predicate" in s
@@ -556,6 +559,7 @@ def _apply_model_inheritance(
                 link_tpl["predicate"],
                 qual.get("role") or "",
                 qual.get("position") or "",
+                qual.get("interface") or "",
             )
             if lkey in existing_link_keys:
                 continue
@@ -594,6 +598,26 @@ def _apply_model_inheritance(
     statements.extend(new_statements)
 
 
+def _lower_parameters(raw_params: dict, defaults: dict, prov: Provenance) -> dict:
+    """Normalize node.parameters entries and require resolved evidence on every parameter."""
+    if not isinstance(raw_params, dict) or not raw_params:
+        raise CompileError("'parameters' must be a non-empty mapping", prov)
+    lowered: dict = {}
+    for key, val in raw_params.items():
+        if isinstance(val, list):
+            item: dict = {"values": copy.deepcopy(val)}
+            ev = _resolve_evidence({}, defaults, prov)
+            item["evidence"] = ev
+            lowered[key] = item
+        elif isinstance(val, dict):
+            item = {k: copy.deepcopy(v) for k, v in val.items() if k not in {"evidence", "locator"}}
+            item["evidence"] = _resolve_evidence(val, defaults, prov)
+            lowered[key] = item
+        else:
+            raise CompileError(f"Parameter '{key}' must be a list or mapping", prov)
+    return lowered
+
+
 def compile_dir(data_dir: Path) -> CompiledBundle:
     """Recursively load and lower all YAML + CSV files under data_dir into a CompiledBundle."""
     if not data_dir.is_dir():
@@ -610,6 +634,8 @@ def compile_dir(data_dir: Path) -> CompiledBundle:
     statements: list[dict] = []
     guide_nodes: dict[str, dict] = {}
     guide_props: dict[str, dict] = {}
+    guide_params: dict[str, dict] = {}
+    guide_ifaces: dict[str, dict] = {}
     provenance: dict[str, Provenance] = {}
     model_variant_defaults: dict[str, dict] = {}
     seen_node_ids: set[str] = set()
@@ -625,15 +651,22 @@ def compile_dir(data_dir: Path) -> CompiledBundle:
         if not isinstance(doc, dict):
             raise CompileError("Top-level YAML document must be a mapping", file_prov)
 
-        if "propertyGuides" in doc:
-            pg = doc["propertyGuides"]
-            if not isinstance(pg, dict):
-                raise CompileError("'propertyGuides' must be a mapping", file_prov)
-            for prop_key, prop_val in pg.items():
-                if prop_key in guide_props:
-                    raise CompileError(f"Duplicate propertyGuide '{prop_key}'", file_prov)
-                guide_props[prop_key] = copy.deepcopy(prop_val)
-                provenance[f"propertyGuide:{prop_key}"] = file_prov
+        has_guide_block = False
+        for block_key, dest, prov_prefix in (
+            ("propertyGuides", guide_props, "propertyGuide"),
+            ("parameterGuides", guide_params, "parameterGuide"),
+            ("interfaceGuides", guide_ifaces, "interfaceGuide"),
+        ):
+            if block_key in doc:
+                has_guide_block = True
+                block = doc[block_key]
+                if not isinstance(block, dict):
+                    raise CompileError(f"'{block_key}' must be a mapping", file_prov)
+                for g_key, g_val in block.items():
+                    if g_key in dest:
+                        raise CompileError(f"Duplicate {prov_prefix} '{g_key}'", file_prov)
+                    dest[g_key] = copy.deepcopy(g_val)
+                    provenance[f"{prov_prefix}:{g_key}"] = file_prov
 
         file_defaults = _merge_defaults({}, doc.get("defaults"))
 
@@ -643,11 +676,11 @@ def compile_dir(data_dir: Path) -> CompiledBundle:
                 raise CompileError("'entities' must be a list", file_prov)
         elif "id" in doc:
             raw_entities = [doc]
-        elif "propertyGuides" in doc:
+        elif has_guide_block:
             raw_entities = []
         else:
             raise CompileError(
-                "YAML file must contain 'entities', a single entity with 'id', or 'propertyGuides'",
+                "YAML file must contain 'entities', a single entity with 'id', or guide registries",
                 file_prov,
             )
 
@@ -666,11 +699,12 @@ def compile_dir(data_dir: Path) -> CompiledBundle:
                 raise CompileError(f"Duplicate node ID '{node_id}'", file_prov)
             seen_node_ids.add(node_id)
 
-            node = {k: copy.deepcopy(entity[k]) for k in NODE_FIELDS if k in entity}
+            node = {k: copy.deepcopy(entity[k]) for k in NODE_FIELDS if k in entity and k != "parameters"}
+            entity_defaults = _merge_defaults(file_defaults, entity.get("defaults"))
+            if "parameters" in entity:
+                node["parameters"] = _lower_parameters(entity["parameters"], entity_defaults, file_prov)
             nodes.append(node)
             provenance[node_id] = file_prov
-
-            entity_defaults = _merge_defaults(file_defaults, entity.get("defaults"))
 
             for link in entity.get("links") or ():
                 stmt = _lower_statement(
@@ -744,7 +778,13 @@ def compile_dir(data_dir: Path) -> CompiledBundle:
     return CompiledBundle(
         nodes=nodes,
         statements=statements,
-        guide={"schemaVersion": 1, "properties": guide_props, "nodes": guide_nodes},
+        guide={
+            "schemaVersion": 1,
+            "properties": guide_props,
+            "nodes": guide_nodes,
+            "parameters": guide_params,
+            "interfaces": guide_ifaces,
+        },
         provenance=provenance,
         fingerprint=compute_data_fingerprint(data_dir),
     )

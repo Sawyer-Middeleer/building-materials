@@ -104,6 +104,70 @@
         },
         "source": {
           "$ref": "#/$defs/source"
+        },
+        "parameters": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["values", "evidence"],
+                "properties": {
+                  "values": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "type": ["string", "number"] }
+                  },
+                  "unit": { "type": "string", "minLength": 1 },
+                  "evidence": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "$ref": "#/$defs/citation" }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["min", "max", "evidence"],
+                "properties": {
+                  "min": { "type": "number" },
+                  "max": { "type": "number" },
+                  "step": { "type": "number", "exclusiveMinimum": 0 },
+                  "unit": { "type": "string", "minLength": 1 },
+                  "evidence": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "$ref": "#/$defs/citation" }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "properties": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "parameters": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "interfaces": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
         }
       },
       "allOf": [
@@ -146,6 +210,34 @@
               "required": [
                 "source"
               ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "parameters"
+            ]
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "productModel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "expectedProfile"
+            ]
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "referenceDesign"
+              }
             }
           }
         }
@@ -367,7 +459,9 @@
             "produces",
             "performedBy",
             "appliesTo",
-            "supersedes"
+            "supersedes",
+            "compatibleWith",
+            "incompatibleWith"
           ]
         },
         "target": {
@@ -464,6 +558,10 @@
               "minLength": 1
             },
             "position": {
+              "type": "string",
+              "minLength": 1
+            },
+            "interface": {
               "type": "string",
               "minLength": 1
             },

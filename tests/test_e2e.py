@@ -94,6 +94,28 @@ class BuildingMaterialsE2ETest(unittest.TestCase):
             self.assertEqual(u_row["right"]["quantity"]["value"], 0.24)
             self.assertEqual(u_row["right"]["siQuantity"]["unit"], "W/(m²·K)")
 
+            win_cmp = self.cli_json(
+                "--db", db_path, "compare",
+                "product.winco.4410s.single-hung",
+                "product.andersen.100.single-hung-smartsun",
+                "--profile", "req.iecc.cz5.fenestration",
+            )
+            self.assertIn("material.aluminum-6063-t6", [m["id"] for m in win_cmp["materials"]["onlyLeft"]])
+            self.assertIn("material.fibrex-composite", [m["id"] for m in win_cmp["materials"]["onlyRight"]])
+            wu = next(f for f in win_cmp["facts"] if f["property"] == "uFactor")
+            self.assertEqual(wu["leftBand"]["label"], "poor")
+            self.assertEqual(wu["rightBand"]["label"], "high-performance")
+            self.assertIsNotNone(wu["catalogStats"])
+            self.assertGreaterEqual(wu["catalogStats"]["count"], 8)
+            self.assertIn("operationType", win_cmp["parameters"]["right"])
+            self.assertTrue(
+                any(s["target"] == "material.portland-cement-mortar" for s in win_cmp["compatibility"]["left"]["incompatibleWith"])
+            )
+            prof_left_u = next(r for r in win_cmp["profileCheck"]["left"] if r["property"] == "uFactor")
+            prof_right_u = next(r for r in win_cmp["profileCheck"]["right"] if r["property"] == "uFactor")
+            self.assertEqual(prof_left_u["status"], "fail")
+            self.assertEqual(prof_right_u["status"], "pass")
+
             search_punct = self.cli_json("--db", db_path, "search", "08 50 00")
             self.assertGreaterEqual(search_punct["total"], 1)
 
@@ -249,6 +271,43 @@ label: Acme Glass Plant Inc.
             self.assertIn("7631-86-9", bad_cas.stderr)
             (data_dir / "dup-cas.yaml").unlink()
 
+            # Negative contracts: parameter missing evidence, unregistered parameter, and unregistered interface
+            (data_dir / "bad-param-ev.yaml").write_text(
+                "id: product.bad.paramev\nkind: productModel\nlabel: Bad Param Ev\nparameters:\n  operationType: [fixed]\n",
+                encoding="utf-8",
+            )
+            bad_pe = run_cli("--data", data_dir, "validate")
+            self.assertNotEqual(bad_pe.returncode, 0)
+            self.assertIn("missing 'evidence'", bad_pe.stderr.lower())
+            (data_dir / "bad-param-ev.yaml").unlink()
+
+            (data_dir / "bad-param.yaml").write_text(
+                "defaults:\n  evidence: [{source: source.acme.epd-2026, locator: {page: 1}}]\nid: product.bad.param\nkind: productModel\nlabel: Bad Param\nparameters:\n  bogusParam: [a]\n",
+                encoding="utf-8",
+            )
+            bad_p = run_cli("--data", data_dir, "validate")
+            self.assertNotEqual(bad_p.returncode, 0)
+            self.assertIn("unregistered parameter", bad_p.stderr.lower())
+            (data_dir / "bad-param.yaml").unlink()
+
+            (data_dir / "bad-iface.yaml").write_text(
+                """id: product.bad.iface
+kind: productModel
+label: Bad Interface
+links:
+  - predicate: compatibleWith
+    target: envelope.window.igu
+    basis: specification
+    evidence: [{source: source.acme.epd-2026, locator: {page: 1}}]
+    qualifiers: { interface: bogus-interface }
+""",
+                encoding="utf-8",
+            )
+            bad_i = run_cli("--data", data_dir, "validate")
+            self.assertNotEqual(bad_i.returncode, 0)
+            self.assertIn("unregistered qualifiers.interface", bad_i.stderr.lower())
+            (data_dir / "bad-iface.yaml").unlink()
+
             # Negative contracts: bad EPD scope
             (data_dir / "bad.yaml").write_text(
                 """id: product.bad
@@ -287,7 +346,7 @@ properties:
 
                 _, page = get_json("/api/nodes?kind=productVariant&limit=2&offset=0")
                 self.assertEqual(len(page["items"]), 2)
-                self.assertEqual(page["total"], 8)
+                self.assertGreaterEqual(page["total"], 18)
                 self.assertTrue(page["hasMore"])
 
                 _, stmts = get_json("/api/statements?property=uFactor&limit=5")
@@ -307,9 +366,19 @@ properties:
                     self.assertTrue(blob_resp.read(5).startswith(b"%PDF-"))
 
                 _, compared = get_json(
-                    "/api/compare?left=product.vitro.solarban-70.solargray-air&right=product.vitro.solarban-70.solargray-argon"
+                    "/api/compare?left=product.winco.4410s.single-hung&right=product.andersen.100.single-hung-smartsun&profile=req.iecc.cz5.fenestration"
                 )
-                self.assertEqual([m["id"] for m in compared["materials"]["onlyRight"]], ["material.argon-fill"])
+                self.assertIn("material.fibrex-composite", [m["id"] for m in compared["materials"]["onlyRight"]])
+                u_cmp = next(f for f in compared["facts"] if f["property"] == "uFactor")
+                self.assertEqual(u_cmp["leftBand"]["label"], "poor")
+                self.assertEqual(u_cmp["rightBand"]["label"], "high-performance")
+                self.assertIsNotNone(u_cmp["catalogStats"]["median"])
+                self.assertIn("operationType", compared["parameters"]["right"])
+                self.assertTrue(
+                    any(s["target"] == "material.portland-cement-mortar" for s in compared["compatibility"]["left"]["incompatibleWith"])
+                )
+                right_u_check = next(r for r in compared["profileCheck"]["right"] if r["property"] == "uFactor")
+                self.assertEqual(right_u_check["status"], "pass")
 
                 _, gaps = get_json("/api/gaps?tier=catalog")
                 self.assertEqual(gaps["tier"], "catalog")
@@ -319,6 +388,7 @@ properties:
                     ("/assets/../secret", 404),
                     ("/api/gaps?tier=bogus", 400),
                     ("/api/nodes?limit=9999", 400),
+                    ("/api/compare?left=product.winco.4410s.single-hung&right=product.andersen.100.single-hung-smartsun&profile=actor.winco", 400),
                 ]:
                     with self.assertRaises(HTTPError) as ctx:
                         urlopen(f"http://127.0.0.1:{port}{bad_path}", timeout=5)

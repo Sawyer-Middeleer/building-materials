@@ -1,0 +1,10 @@
+id: source.winco.4410s-construction
+kind: source
+label: Winco 4410S Series Construction and Fabrication
+revision: "2020"
+source:
+  origin: https://www.wincowindow.com/sites/default/files/2020-04/4410S%20Construction%20and%20Fabrication.pdf
+  mediaType: application/pdf
+  issuer: Winco Window
+  sha256: f96b2ee629fd14e691eeb9e2d67d342e375020cccede0003cb51ca318ce7c217
+  retrievedOn: "2026-11-23"

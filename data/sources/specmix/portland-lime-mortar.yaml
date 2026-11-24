@@ -1,0 +1,10 @@
+id: source.specmix.portland-lime-mortar
+kind: source
+label: SPEC MIX Portland Lime & Sand Masonry Mortar Product Data
+revision: "ASTM C270"
+source:
+  origin: https://www.specmix.com/wp-content/uploads/2020/03/SPEC-MIX-Portland-Lime-Sand-Mortar-Data-Sheet.pdf
+  mediaType: application/pdf
+  issuer: SPEC MIX (Quikrete)
+  sha256: ed63e6e3c545791ecbd60d7abe6fd37ff733159c8de0251bc235db85e845172d
+  retrievedOn: "2026-11-23"

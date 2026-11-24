@@ -1,0 +1,23 @@
+interfaceGuides:
+  rough-opening:
+    title: Rough-Opening Perimeter Interface
+    summary: Structural perimeter boundary where a fenestration unit anchors, shims, and seals to a wall opening (nailing fin, strap anchor, or receptor frame).
+    typicalMates:
+      - envelope.walls.wood-frame
+      - envelope.walls.masonry-veneer
+  drainage-plane:
+    title: Continuous Drainage Plane Interface
+    summary: Water-shedding boundary connecting sill pan flashing, weather-resistive barrier (WRB), and exterior cavity weeps.
+    typicalMates:
+      - envelope.openings.sill-flashing
+      - envelope.walls.masonry-veneer
+  interior-finish-return:
+    title: Interior Finish Return Interface
+    summary: Interior perimeter transition between window jamb extension, casing, and gypsum drywall return.
+    typicalMates:
+      - interiors.walls.gypsum-board
+  glazing-pocket:
+    title: Glazing Pocket Interface
+    summary: Sash rabbet, setting blocks, and glazing gasket/bead receiving an insulating glass unit (IGU).
+    typicalMates:
+      - envelope.openings.window.igu

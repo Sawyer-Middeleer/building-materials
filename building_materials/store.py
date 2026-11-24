@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import statistics
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlsplit, urlunsplit
 
@@ -42,14 +43,18 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
         citation_count = 0
         guide_nodes = bundle.guide.get("nodes") or {}
         guide_props = bundle.guide.get("properties") or {}
+        guide_params = bundle.guide.get("parameters") or {}
+        guide_ifaces = bundle.guide.get("interfaces") or {}
 
         with conn:
             for node in bundle.nodes:
                 nid = node["id"]
                 prov = bundle.provenance.get(nid)
                 conn.execute(
-                    """INSERT INTO nodes (id, kind, label, description, revision, scale, stage, source_file)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    """INSERT INTO nodes (
+                           id, kind, label, description, revision, scale, stage,
+                           parameters_json, expected_profile_json, source_file
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         nid,
                         node["kind"],
@@ -58,6 +63,8 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                         node.get("revision"),
                         node.get("scale"),
                         node.get("stage"),
+                        json.dumps(node["parameters"]) if "parameters" in node else None,
+                        json.dumps(node["expectedProfile"]) if "expectedProfile" in node else None,
                         prov.file if prov else None,
                     ),
                 )
@@ -122,8 +129,8 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                 conn.execute(
                     """INSERT INTO property_guides (
                            property, title, summary, better_direction,
-                           typical_range, why_it_matters, ucum_unit, external_refs_json
-                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                           typical_range, why_it_matters, ucum_unit, external_refs_json, bands_json
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         prop_key,
                         pg["title"],
@@ -133,6 +140,33 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                         pg.get("whyItMatters"),
                         pg.get("ucumUnit"),
                         json.dumps(pg["externalRefs"]) if "externalRefs" in pg else None,
+                        json.dumps(pg["bands"]) if "bands" in pg else None,
+                    ),
+                )
+
+            for param_key, pmg in guide_params.items():
+                conn.execute(
+                    """INSERT INTO parameter_guides (parameter, title, shape, role, unit, summary)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    (
+                        param_key,
+                        pmg.get("title"),
+                        pmg["shape"],
+                        pmg["role"],
+                        pmg.get("unit"),
+                        pmg["summary"],
+                    ),
+                )
+
+            for iface_key, ig in guide_ifaces.items():
+                conn.execute(
+                    """INSERT INTO interface_guides (interface, title, summary, typical_mates_json)
+                       VALUES (?, ?, ?, ?)""",
+                    (
+                        iface_key,
+                        ig.get("title"),
+                        ig["summary"],
+                        json.dumps(ig["typicalMates"]) if "typicalMates" in ig else None,
                     ),
                 )
 
@@ -160,7 +194,7 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                            si_value, si_min, si_max, si_unit,
                            state, scope, method, conditions,
                            geography, pcr, valid_until, plant_actor_id,
-                           basis, qual_role, qual_position, qual_sequence,
+                           basis, qual_role, qual_position, qual_interface, qual_sequence,
                            qual_qty_value, qual_qty_min, qual_qty_max, qual_qty_unit, qual_qty_basis,
                            inherited_from, source_file
                        ) VALUES (
@@ -170,7 +204,7 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                            ?, ?, ?, ?,
                            ?, ?, ?, ?,
                            ?, ?, ?, ?,
-                           ?, ?, ?, ?,
+                           ?, ?, ?, ?, ?,
                            ?, ?, ?, ?, ?,
                            ?, ?
                        )""",
@@ -202,6 +236,7 @@ def build_db(bundle: CompiledBundle, db_path: Path) -> dict:
                         stmt["basis"],
                         qual.get("role"),
                         qual.get("position"),
+                        qual.get("interface"),
                         qual.get("sequence"),
                         q_qty.get("value"),
                         q_qty.get("min"),
@@ -394,6 +429,10 @@ class MaterialStore:
             for col in ("description", "revision", "scale", "stage"):
                 if r[col] is not None:
                     node[col] = r[col]
+            if r["parameters_json"] is not None:
+                node["parameters"] = json.loads(r["parameters_json"])
+            if r["expected_profile_json"] is not None:
+                node["expectedProfile"] = json.loads(r["expected_profile_json"])
             if nid in idents_map:
                 node["identifiers"] = idents_map[nid]
             if nid in sources_map:
@@ -433,6 +472,8 @@ class MaterialStore:
                 g[key] = pr[col]
         if pr["external_refs_json"] is not None:
             g["externalRefs"] = json.loads(pr["external_refs_json"])
+        if pr["bands_json"] is not None:
+            g["bands"] = json.loads(pr["bands_json"])
         return g
 
     def _hydrate_statements(self, rows: list[sqlite3.Row]) -> list[dict]:
@@ -516,6 +557,8 @@ class MaterialStore:
                 qual["role"] = r["qual_role"]
             if r["qual_position"] is not None:
                 qual["position"] = r["qual_position"]
+            if r["qual_interface"] is not None:
+                qual["interface"] = r["qual_interface"]
             if r["qual_sequence"] is not None:
                 qual["sequence"] = r["qual_sequence"]
             if r["qual_qty_unit"] is not None:
@@ -767,7 +810,145 @@ class MaterialStore:
         seen.update(ev["source"] for s in stmts for ev in s["evidence"])
         return {"root": node_id, "nodes": self._all_nodes_by_id(seen), "statements": stmts}
 
-    def compare(self, left_id: str, right_id: str) -> dict:
+    def classify_band(self, property_name: str, si_value: float | None) -> dict | None:
+        if si_value is None:
+            return None
+        row = self.conn.execute(
+            "SELECT bands_json FROM property_guides WHERE property = ?", (property_name,)
+        ).fetchone()
+        if row is None or row["bands_json"] is None:
+            return None
+        for band in json.loads(row["bands_json"]):
+            low = band.get("min")
+            high = band.get("max")
+            if (low is None or si_value >= low) and (high is None or si_value < high):
+                return {"label": band["label"], "meaning": band["meaning"]}
+        return None
+
+    def catalog_stats(self, design_id: str, property_name: str, scope: str | None = None) -> dict | None:
+        clauses = [
+            "n.kind = 'productVariant'",
+            "rd.predicate = 'realizesDesign'",
+            "rd.target_id = ?",
+            "s.property = ?",
+            "s.si_value IS NOT NULL",
+        ]
+        params: list = [design_id, property_name]
+        if scope is not None:
+            clauses.append("s.scope = ?")
+            params.append(scope)
+        else:
+            clauses.append("s.scope IS NULL")
+        where_sql = " AND ".join(clauses)
+        rows = self.conn.execute(
+            f"""SELECT s.subject_id, s.si_value, s.si_unit
+                FROM statements s
+                JOIN nodes n ON n.id = s.subject_id
+                JOIN statements rd ON rd.subject_id = n.id
+                WHERE {where_sql}
+                ORDER BY s.subject_id, s.id""",
+            params,
+        ).fetchall()
+        by_variant: dict[str, tuple[float, str]] = {}
+        for r in rows:
+            by_variant.setdefault(r["subject_id"], (float(r["si_value"]), r["si_unit"]))
+        if len(by_variant) < 2:
+            return None
+        units = {u for _, u in by_variant.values()}
+        if len(units) != 1:
+            return None
+        vals = sorted(v for v, _ in by_variant.values())
+        unit = next(iter(units))
+        return {
+            "count": len(vals),
+            "unit": unit,
+            "min": round(min(vals), 6),
+            "median": round(float(statistics.median(vals)), 6),
+            "max": round(max(vals), 6),
+        }
+
+    def _parent_model_id(self, node_id: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT target_id FROM statements WHERE subject_id = ? AND predicate = 'isVariantOf' LIMIT 1",
+            (node_id,),
+        ).fetchone()
+        return row["target_id"] if row else None
+
+    def _collect_compatibility(self, node_id: str, parts_walk: dict) -> dict:
+        model_id = self._parent_model_id(node_id)
+        compat_subjects = [node_id] + ([model_id] if model_id else [])
+        ph = ",".join("?" * len(compat_subjects))
+        compat_rows = self.conn.execute(
+            f"SELECT * FROM statements WHERE subject_id IN ({ph}) AND predicate = 'compatibleWith' ORDER BY id",
+            compat_subjects,
+        ).fetchall()
+
+        mat_ids = [n["id"] for n in parts_walk["nodes"] if n["kind"] == "material"]
+        incompat_ids = list(dict.fromkeys([*compat_subjects, *mat_ids]))
+        ph2 = ",".join("?" * len(incompat_ids))
+        incompat_rows = self.conn.execute(
+            f"""SELECT * FROM statements
+                WHERE predicate = 'incompatibleWith'
+                  AND (subject_id IN ({ph2}) OR target_id IN ({ph2}))
+                ORDER BY id""",
+            [*incompat_ids, *incompat_ids],
+        ).fetchall()
+        return {
+            "compatibleWith": self._hydrate_statements(compat_rows),
+            "incompatibleWith": self._hydrate_statements(incompat_rows),
+        }
+
+    def _property_prefers_higher(self, prop: str) -> bool:
+        row = self.conn.execute(
+            "SELECT better_direction FROM property_guides WHERE property = ?", (prop,)
+        ).fetchone()
+        if row is None or not row["better_direction"]:
+            return False
+        return row["better_direction"].strip().lower().startswith("higher")
+
+    def _evaluate_profile(self, profile_id: str, lfacts: dict, rfacts: dict) -> dict:
+        profile_node = self.get_node(profile_id, include_guide=True)
+        if profile_node["kind"] != "requirement":
+            raise ValueError(f"Profile '{profile_id}' must be a requirement node (got {profile_node['kind']})")
+        req_stmts = self.facts(profile_id)["statements"]
+
+        def check_side(side_facts: dict) -> list[dict]:
+            results = []
+            for req in req_stmts:
+                prop = req["property"]
+                scope = req.get("scope") or ""
+                limit_si_obj = req.get("siQuantity") or {}
+                limit_si = limit_si_obj.get("value")
+                actual_stmt = side_facts.get((prop, scope))
+                actual_si = (actual_stmt.get("siQuantity") or {}).get("value") if actual_stmt else None
+                if actual_si is None:
+                    status = "unknown"
+                elif "min" in limit_si_obj and "max" in limit_si_obj:
+                    status = "pass" if limit_si_obj["min"] <= actual_si <= limit_si_obj["max"] else "fail"
+                elif limit_si is None:
+                    status = "unknown"
+                elif self._property_prefers_higher(prop):
+                    status = "pass" if actual_si >= limit_si else "fail"
+                else:
+                    status = "pass" if actual_si <= limit_si else "fail"
+                results.append({
+                    "property": prop,
+                    "scope": scope or None,
+                    "status": status,
+                    "limit": req.get("quantity"),
+                    "limitSi": req.get("siQuantity"),
+                    "actual": actual_stmt.get("quantity") if actual_stmt else None,
+                    "actualSi": actual_stmt.get("siQuantity") if actual_stmt else None,
+                })
+            return results
+
+        return {
+            "profile": profile_node,
+            "left": check_side(lfacts),
+            "right": check_side(rfacts),
+        }
+
+    def compare(self, left_id: str, right_id: str, *, profile_id: str | None = None) -> dict:
         left = self.get_node(left_id, include_guide=False)
         right = self.get_node(right_id, include_guide=False)
         left_parts = self.walk(left_id, trace=False)
@@ -784,33 +965,46 @@ class MaterialStore:
                 "onlyRight": [rmap[nid] for nid in rmap if nid not in lmap],
             }
 
-        def collect_facts(root_id: str) -> dict[tuple[str, str], dict]:
-            realizes = [
+        def realizes_ids(root_id: str) -> list[str]:
+            return [
                 r["target_id"]
                 for r in self.conn.execute(
                     "SELECT target_id FROM statements WHERE subject_id = ? AND predicate = 'realizesDesign'",
                     (root_id,),
                 )
             ]
+
+        l_designs = realizes_ids(left_id)
+        r_designs = realizes_ids(right_id)
+        shared_design = next((d for d in l_designs if d in r_designs), None)
+
+        def collect_facts(root_id: str, designs: list[str]) -> dict[tuple[str, str], dict]:
             by_key: dict[tuple[str, str], dict] = {}
-            for sid in [root_id, *realizes]:
+            for sid in [root_id, *designs]:
                 for stmt in self.facts(sid)["statements"]:
                     key = (stmt["property"], stmt.get("scope") or "")
                     by_key.setdefault(key, stmt)
             return by_key
 
-        lfacts = collect_facts(left_id)
-        rfacts = collect_facts(right_id)
+        lfacts = collect_facts(left_id, l_designs)
+        rfacts = collect_facts(right_id, r_designs)
         keys = list(dict.fromkeys([*lfacts.keys(), *rfacts.keys()]))
-        facts = [
-            {
+        facts = []
+        for prop, scope in keys:
+            lf = lfacts.get((prop, scope))
+            rf = rfacts.get((prop, scope))
+            l_si = (lf.get("siQuantity") or {}).get("value") if lf else None
+            r_si = (rf.get("siQuantity") or {}).get("value") if rf else None
+            entry: dict = {
                 "property": prop,
                 "scope": scope or None,
-                "left": lfacts.get((prop, scope)),
-                "right": rfacts.get((prop, scope)),
+                "left": lf,
+                "right": rf,
+                "leftBand": self.classify_band(prop, l_si),
+                "rightBand": self.classify_band(prop, r_si),
+                "catalogStats": self.catalog_stats(shared_design, prop, scope or None) if shared_design else None,
             }
-            for prop, scope in keys
-        ]
+            facts.append(entry)
 
         part_ids_l = {s["target"] for s in left_parts["statements"] if s.get("predicate") == "hasPart"}
         part_ids_r = {s["target"] for s in right_parts["statements"] if s.get("predicate") == "hasPart"}
@@ -820,14 +1014,34 @@ class MaterialStore:
             "onlyLeft": [all_part_nodes[nid] for nid in sorted(part_ids_l - part_ids_r)],
             "onlyRight": [all_part_nodes[nid] for nid in sorted(part_ids_r - part_ids_l)],
         }
-        return {
+
+        def model_params(node: dict) -> dict | None:
+            if "parameters" in node:
+                return node["parameters"]
+            mid = self._parent_model_id(node["id"])
+            if mid:
+                return self.get_node(mid, include_guide=False).get("parameters")
+            return None
+
+        result: dict = {
             "left": left,
             "right": right,
             "facts": facts,
+            "parameters": {
+                "left": model_params(left),
+                "right": model_params(right),
+            },
+            "compatibility": {
+                "left": self._collect_compatibility(left_id, left_parts),
+                "right": self._collect_compatibility(right_id, right_parts),
+            },
             "materials": diff_nodes(left_parts, right_parts, "material"),
             "parts": parts_diff,
             "processes": diff_nodes(left_trace, right_trace, "process"),
         }
+        if profile_id:
+            result["profileCheck"] = self._evaluate_profile(profile_id, lfacts, rfacts)
+        return result
 
     def explain(self, key: str) -> dict:
         nr = self.conn.execute("SELECT * FROM node_guides WHERE node_id = ?", (key,)).fetchone()
@@ -844,6 +1058,22 @@ class MaterialStore:
                 "property": key,
                 "guide": self._row_to_property_guide(pr),
             }
+        pmr = self.conn.execute("SELECT * FROM parameter_guides WHERE parameter = ?", (key,)).fetchone()
+        if pmr is not None:
+            g: dict = {"shape": pmr["shape"], "role": pmr["role"], "summary": pmr["summary"]}
+            if pmr["title"] is not None:
+                g["title"] = pmr["title"]
+            if pmr["unit"] is not None:
+                g["unit"] = pmr["unit"]
+            return {"kind": "parameter", "parameter": key, "guide": g}
+        ir = self.conn.execute("SELECT * FROM interface_guides WHERE interface = ?", (key,)).fetchone()
+        if ir is not None:
+            g = {"summary": ir["summary"]}
+            if ir["title"] is not None:
+                g["title"] = ir["title"]
+            if ir["typical_mates_json"] is not None:
+                g["typicalMates"] = json.loads(ir["typical_mates_json"])
+            return {"kind": "interface", "interface": key, "guide": g}
         raise ValueError(f"No guide entry for: {key}")
 
     def cite(self, statement_id: str, assets: Path) -> dict:
@@ -928,6 +1158,35 @@ class MaterialStore:
             if kind == "productModel":
                 if not any(r.get("predicate") == "manufacturedBy" for r in out):
                     add("valueChain", "model-missing-manufacturer", "productModel has no manufacturedBy actor", node=node)
+                for rd_link in out:
+                    if rd_link.get("predicate") != "realizesDesign":
+                        continue
+                    rd = all_nodes.get(rd_link["target"])
+                    ep = (rd or {}).get("expectedProfile") or {}
+                    model_params = node.get("parameters") or {}
+                    for expected_param in ep.get("parameters") or ():
+                        if expected_param not in model_params:
+                            add(
+                                "properties",
+                                "profile-missing-parameter",
+                                f"productModel is missing expected parameter '{expected_param}' for {rd['id']}",
+                                node=node,
+                            )
+                    if ep.get("properties"):
+                        child_variants = [
+                            r["subject"] for r in inc if r.get("predicate") == "isVariantOf"
+                        ]
+                        present_props = {r["property"] for r in out if "property" in r}
+                        for cv_id in child_variants:
+                            present_props.update(r["property"] for r in out_by[cv_id] if "property" in r)
+                        for expected_prop in ep["properties"]:
+                            if expected_prop not in present_props:
+                                add(
+                                    "properties",
+                                    "profile-missing-property",
+                                    f"productModel is missing expected property '{expected_prop}' for {rd['id']}",
+                                    node=node,
+                                )
             elif kind == "productVariant":
                 if not any(r.get("predicate") == "isVariantOf" for r in out):
                     add("composition", "variant-missing-model", "productVariant has no isVariantOf productModel", node=node)
@@ -965,7 +1224,22 @@ class MaterialStore:
                     for r in inc
                 )
                 has_parts = any(r.get("predicate") == "hasPart" for r in out)
+                # Material-neutral slots under a realized parent assembly are fulfilled by concrete productVariants.
                 realized = any(r.get("predicate") == "realizesDesign" for r in inc)
+                if not realized:
+                    anc_q = deque(r["subject"] for r in inc if r.get("predicate") == "hasPart")
+                    anc_seen: set[str] = set()
+                    while anc_q and not realized:
+                        aid = anc_q.popleft()
+                        if aid in anc_seen:
+                            continue
+                        anc_seen.add(aid)
+                        if any(r.get("predicate") == "realizesDesign" for r in inc_by[aid]):
+                            realized = True
+                            break
+                        for pr in inc_by[aid]:
+                            if pr.get("predicate") == "hasPart":
+                                anc_q.append(pr["subject"])
                 has_mat = any(r.get("predicate") == "madeOf" for r in out)
                 if not is_taxonomy_stub and not has_parts and not realized and not has_mat:
                     add("composition", "part-missing-material", "Leaf part has no madeOf material", node=node)

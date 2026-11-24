@@ -1,0 +1,40 @@
+propertyGuides:
+  structuralDesignPressure:
+    title: Structural Design Pressure (DP)
+    summary: Positive and negative wind-load pressure a window withstands without permanent damage.
+    betterDirection: Higher indicates stronger resistance to wind loads and tall-building pressures.
+    typicalRange: 15-35 psf (718-1676 Pa) residential; 50-100+ psf (2394-4788+ Pa) architectural/commercial.
+    whyItMatters: Explains why commercial/high-rise buildings use heavier aluminum frames despite higher U-factors.
+    ucumUnit: Pa
+    bands:
+      - { label: residential,   max: 1676,            meaning: "Standard single-family wind resistance (<35 psf / 1.68 kPa)." }
+      - { label: commercial,    min: 1676, max: 2873, meaning: "Heavy residential / light-to-mid commercial wind resistance (35-60 psf)." }
+      - { label: architectural, min: 2873,            meaning: "High-rise and coastal-grade structural wind resistance (>=60 psf / 2.87 kPa)." }
+
+  condensationResistanceFactor:
+    title: Condensation Resistance Factor (CRF)
+    summary: AAMA 1503 score (1-100) measuring how well interior surfaces resist winter condensation.
+    betterDirection: Higher means warmer interior frame/glass surfaces and less moisture/frost risk.
+    typicalRange: 45-58 (thermally broken aluminum), 60-75+ (wood, fiberglass, composite).
+    whyItMatters: Condensation causes sill rot and mold; thermal breaks exist largely to keep indoor metal warm.
+    ucumUnit: "1"
+    bands:
+      - { label: condensation-prone, max: 45,          meaning: "Cold interior frame likely to sweat or frost in freezing weather." }
+      - { label: moderate,           min: 45, max: 60, meaning: "Typical thermally broken aluminum; dry in moderate humidity." }
+      - { label: high-resistance,    min: 60,          meaning: "Warm interior surfaces; low winter condensation risk." }
+
+  airInfiltration:
+    title: Air Infiltration
+    summary: Air leakage rate through a closed window under standardized wind pressure.
+    betterDirection: Lower is tighter, less drafty, and more energy efficient.
+    typicalRange: 0.01-0.10 cfm/ft² [0.05-0.51 L/(s·m²)] tight; up to 0.30 cfm/ft² [1.52 L/(s·m²)] code ceiling.
+    ucumUnit: L/(s.m2)
+    bands:
+      - { label: very-tight, max: 0.51,            meaning: "Virtually draft-free compression or high-performance seals (<0.10 cfm/ft²)." }
+      - { label: code-pass,  min: 0.51, max: 1.53, meaning: "Meets energy-code air-leakage limit (0.10-0.30 cfm/ft²)." }
+      - { label: leaky,      min: 1.53,            meaning: "Exceeds code ceiling (>0.30 cfm/ft²); noticeable drafts bypass insulation." }
+
+  performanceClass:
+    title: AAMA / NAFS Performance Class
+    summary: Industry durability and structural tier—R (Residential), LC (Light Commercial), CW (Commercial), AW (Architectural Grade).
+    betterDirection: Higher class (R < LC < CW < AW) indicates heavier hardware, structural load, and water-penetration testing.

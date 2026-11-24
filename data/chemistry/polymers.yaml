@@ -9,3 +9,42 @@ entities:
   - id: chem.siloxane
     kind: chemicalEntity
     label: Polysiloxane elastomer
+
+  - id: chem.polyurethane
+    kind: chemicalEntity
+    label: Structural polyurethane polymer
+    identifiers:
+      - namespace: cas
+        value: "9009-54-5"
+    guide:
+      summary: Cross-linked thermoset urethane polymer formed by reacting polyols with isocyanates; low thermal conductivity makes it ideal for poured-and-debridged aluminum thermal breaks.
+      chemistry:
+        formula: "[-R-NH-CO-O-R'-O-CO-NH-]n"
+        category: Thermoset polymer
+        role: Structural thermal barrier
+
+  - id: chem.pvc
+    kind: chemicalEntity
+    label: Polyvinyl chloride thermoplastic
+    identifiers:
+      - namespace: cas
+        value: "9002-86-2"
+    guide:
+      summary: Rigid thermoplastic resin used as the polymer matrix in wood-plastic composite and vinyl window extrusions.
+      chemistry:
+        formula: "(C2H3Cl)n"
+        category: Thermoplastic polymer
+        role: Extrudable composite matrix
+
+  - id: chem.cellulose
+    kind: chemicalEntity
+    label: Wood cellulose fiber
+    identifiers:
+      - namespace: cas
+        value: "9004-34-6"
+    guide:
+      summary: Reclaimed lignocellulosic wood fiber reinforcing thermoplastic composite window frames for higher stiffness and lower thermal expansion than pure vinyl.
+      chemistry:
+        formula: "(C6H10O5)n"
+        category: Natural biopolymer
+        role: Stiffness & thermal-stability reinforcement

@@ -1,0 +1,3 @@
+sku,label,row,u_factor,crf,dp,air,perf_class
+fixed,Fixed (0.24 COG),Fixed,0.37,54,65,0.3,AW-65
+single-hung,Single-Hung (0.24 COG),Single Hung,0.50,52,65,0.02,AW-65

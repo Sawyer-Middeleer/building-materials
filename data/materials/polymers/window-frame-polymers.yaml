@@ -1,0 +1,107 @@
+entities:
+  - id: material.polyurethane-thermal-break
+    kind: material
+    label: High-density 2-part structural polyurethane thermal break
+    links:
+      - predicate: hasComposition
+        target: chem.polyurethane
+        basis: manufacturer-declared
+        qualifiers: { role: poured-and-debridged thermal barrier }
+        evidence:
+          - source: source.winco.4410s-construction
+            locator: { page: 1, section: THERMAL BREAK }
+    guide:
+      summary: Structural 2-part urethane poured into serrated aluminum channels and debridged to interrupt conductive heat flow through metal frames.
+
+  - id: material.fibrex-composite
+    kind: material
+    label: Fibrex reclaimed wood-fiber / thermoplastic composite
+    description: Proprietary Andersen wood-fiber/thermoplastic formulation; exact additive and stabilizer ratios are not publicly disclosed.
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.andersen.100-series-performance
+          locator: { page: 5, section: "100 Series Single Hung Window" }
+    links:
+      - predicate: hasComposition
+        target: chem.cellulose
+        qualifiers: { role: reclaimed wood-fiber reinforcement }
+      - predicate: hasComposition
+        target: chem.pvc
+        qualifiers: { role: thermoplastic polymer matrix }
+    guide:
+      summary: Extruded composite combining reclaimed wood fiber with thermoplastic polymer—far lower thermal conductivity than aluminum and stiffer than standard vinyl.
+
+  - id: process.fabrication.thermal-break-pouring
+    kind: process
+    label: Azon Azo-Brader mechanical conditioning & 2-part polyurethane thermal break pouring
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.winco.4410s-construction
+          locator: { page: 1, section: THERMAL BREAK }
+    links:
+      - predicate: performedBy
+        target: actor.winco
+        qualifiers: { role: thermal-break fabricator }
+      - predicate: uses
+        target: material.aluminum-6063-t6
+        qualifiers: { role: extruded aluminum channel }
+      - predicate: produces
+        target: material.polyurethane-thermal-break
+        qualifiers: { role: cured structural thermal break }
+
+  - id: material.upvc-frame
+    kind: material
+    label: Rigid unplasticized polyvinyl chloride (uPVC) window frame extrusion
+    links:
+      - predicate: hasComposition
+        target: chem.pvc
+        basis: typical-reference
+        qualifiers: { role: rigid thermoplastic base resin }
+        evidence:
+          - source: source.winco.4410s-construction
+            locator: { page: 1, section: WEATHER-STRIP }
+    guide:
+      summary: Multi-chamber extruded rigid vinyl (uPVC) used for economy and mid-range residential window frames; low thermal conductivity, low maintenance, lower stiffness than composite or aluminum.
+
+  - id: process.fabrication.upvc-extrusion
+    kind: process
+    label: Multi-chamber rigid uPVC profile extrusion
+    stage: fabrication
+    defaults:
+      basis: typical-reference
+      evidence:
+        - source: source.winco.4410s-construction
+          locator: { page: 1, section: WEATHER-STRIP }
+    links:
+      - predicate: performedBy
+        target: actor.igu-fabricator
+        qualifiers: { role: vinyl profile extruder }
+      - predicate: produces
+        target: material.upvc-frame
+        qualifiers: { role: extruded rigid uPVC profile }
+
+  - id: process.fabrication.fibrex-compounding
+    kind: process
+    label: Fibrex wood-fiber / thermoplastic compounding & profile extrusion
+    stage: fabrication
+    defaults:
+      basis: typical-reference
+      evidence:
+        - source: source.andersen.100-series-performance
+          locator: { page: 5, section: "100 Series Single Hung Window" }
+    links:
+      - predicate: performedBy
+        target: actor.andersen
+        qualifiers: { role: composite compounder and extruder }
+      - predicate: uses
+        target: chem.cellulose
+        qualifiers: { role: reclaimed wood-fiber feedstock }
+      - predicate: uses
+        target: chem.pvc
+        qualifiers: { role: thermoplastic resin feedstock }
+      - predicate: produces
+        target: material.fibrex-composite
+        qualifiers: { role: extruded composite frame profile }

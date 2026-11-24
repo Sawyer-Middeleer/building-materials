@@ -1,0 +1,10 @@
+id: source.standards.energystar-v7-windows
+kind: source
+label: ENERGY STAR Version 7.0 Residential Windows Criteria Table
+revision: "Version 7.0 (Oct 2023)"
+source:
+  origin: https://www.energystar.gov/sites/default/files/asset/document/ES_Windows_Table_Oct2023.pdf
+  mediaType: application/pdf
+  issuer: U.S. EPA ENERGY STAR
+  sha256: f8ac18315e456d77ea3f6086727835f0f2de1264ca228dc324704d87da81e456
+  retrievedOn: "2026-11-24"

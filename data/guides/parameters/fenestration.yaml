@@ -1,0 +1,16 @@
+parameterGuides:
+  operationType:
+    title: Operation Type
+    shape: enum
+    role: performance
+    summary: How an operable opening moves or seals (e.g., fixed, picture, casement, awning, single-hung, double-hung, gliding).
+  grilleStyle:
+    title: Grille / Muntin Style
+    shape: enum
+    role: aesthetic
+    summary: Optional divided-light bar configurations (none, finelight/between-glass, simulated divided light, full divided light).
+  glazingPackage:
+    title: Glazing Package
+    shape: enum
+    role: performance
+    summary: Available low-e coating, pane count, and cavity gas configurations affecting thermal and solar performance.

@@ -1,0 +1,16 @@
+parameterGuides:
+  finishColor:
+    title: Exterior Finish Color
+    shape: enum
+    role: aesthetic
+    summary: Factory-applied exterior finish or coating color options.
+  interiorFinish:
+    title: Interior Finish
+    shape: enum
+    role: aesthetic
+    summary: Factory-applied interior color or surface finish options.
+  hardwareFinish:
+    title: Hardware Finish
+    shape: enum
+    role: aesthetic
+    summary: Available lock, operator, and handle finish options.

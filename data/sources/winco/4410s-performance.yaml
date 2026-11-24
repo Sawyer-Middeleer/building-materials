@@ -1,0 +1,10 @@
+id: source.winco.4410s-performance
+kind: source
+label: Winco 4410S Series Performance Data
+revision: "2020"
+source:
+  origin: https://www.wincowindow.com/sites/default/files/2020-04/4410S%20Performance.pdf
+  mediaType: application/pdf
+  issuer: Winco Window
+  sha256: 444ec77febce8f02330253af5fb1ef9072a30c6c859e23388127c7f539c807e0
+  retrievedOn: "2026-11-23"

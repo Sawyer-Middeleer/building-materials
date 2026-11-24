@@ -100,6 +100,13 @@ SI_CONVERSIONS: dict[str, tuple[float, str]] = {
     "kg CO2e/m3": (1.0, "kg CO2e/m³"),
     "kg CO2e/m³": (1.0, "kg CO2e/m³"),
     "kg CO2e/kg": (1.0, "kg CO2e/kg"),
+    "USD/ft²": (10.76391, "USD/m²"),
+    "USD/ft2": (10.76391, "USD/m²"),
+    "USD/m²": (1.0, "USD/m²"),
+    "USD/m2": (1.0, "USD/m²"),
+    "yr": (1.0, "a"),
+    "years": (1.0, "a"),
+    "a": (1.0, "a"),
     "1": (1.0, "1"),
     "%": (0.01, "1"),
 }
@@ -173,6 +180,14 @@ LINK_KINDS = {
     "produces": ({"process"}, None),
     "performedBy": ({"process"}, {"actor"}),
     "appliesTo": ({"requirement"}, {"referenceDesign", "productModel", "productVariant"}),
+    "compatibleWith": (
+        {"referenceDesign", "productModel", "productVariant", "material"},
+        {"referenceDesign", "productModel", "productVariant", "material"},
+    ),
+    "incompatibleWith": (
+        {"material", "referenceDesign", "productModel", "productVariant"},
+        {"material", "referenceDesign", "productModel", "productVariant"},
+    ),
 }
 
 

@@ -1,0 +1,131 @@
+defaults:
+  basis: manufacturer-declared
+  evidence:
+    - source: source.winco.4410s-construction
+      locator: { page: 1, section: CONSTRUCTION }
+
+entities:
+  - id: product.winco.4410s
+    kind: productModel
+    label: Winco 4410S 4-inch Thermally Broken Aluminum Window
+    identifiers:
+      - { namespace: masterformat, value: "08 51 13" }
+      - { namespace: uniformat2, value: B2020 }
+    parameters:
+      operationType:
+        values: [fixed, single-hung]
+        evidence:
+          - source: source.winco.4410s-performance
+            locator: { page: 1, section: PERFORMANCE }
+      jambDepth:
+        values: [4.0]
+        unit: in
+        locator: { page: 1, section: MATERIAL }
+    links:
+      - predicate: manufacturedBy
+        target: actor.winco
+      - predicate: realizesDesign
+        target: envelope.openings.window
+      - predicate: compatibleWith
+        target: envelope.openings
+        qualifiers: { interface: rough-opening, role: commercial-frame }
+    properties:
+      - property: solarHeatGainCoefficient
+        scope: whole-window
+        state: unknown
+        conditions: "Depends on project-specified insulating glass unit; not fixed in frame datasheet."
+        evidence:
+          - source: source.winco.4410s-performance
+            locator: { page: 1, section: PERFORMANCE }
+      - property: visibleLightTransmittance
+        scope: whole-window
+        state: unknown
+        conditions: "Depends on project-specified insulating glass unit; not fixed in frame datasheet."
+        evidence:
+          - source: source.winco.4410s-performance
+            locator: { page: 1, section: PERFORMANCE }
+      - property: installedCostPerArea
+        scope: whole-window
+        state: unknown
+        conditions: "Project-quoted commercial architectural window; pricing not published in datasheet."
+        evidence:
+          - source: source.winco.4410s-performance
+            locator: { page: 1, section: PERFORMANCE }
+      - property: serviceLife
+        scope: whole-window
+        state: unknown
+        conditions: "10-year thermal break warranty (AAMA 505-98) documented; full service life not declared."
+        locator: { page: 1, section: THERMAL BREAK }
+    guide:
+      summary: Heavy architectural-grade (AW-65) 4-inch thermally broken 6063-T6 aluminum window engineered for high wind loads and institutional buildings.
+      tradeoffs: Exceptional structural strength (AW-65, 65 psf Design Pressure / 97.5 psf structural test overload) and durability, but higher whole-window U-factor (0.37-0.50) than composite/vinyl frames due to aluminum's high thermal conductivity.
+    variantDefaults:
+      defaults:
+        basis: manufacturer-declared
+        evidence:
+          - source: source.winco.4410s-construction
+            locator: { page: 1, section: CONSTRUCTION }
+      links:
+        - predicate: realizesDesign
+          target: envelope.openings.window
+        - predicate: madeOf
+          target: material.aluminum-6063-t6
+          qualifiers: { role: extruded frame and sash }
+        - predicate: madeOf
+          target: material.polyurethane-thermal-break
+          qualifiers: { role: structural thermal break }
+    variantsTable:
+      csv: 4410s-skus.csv
+      idTemplate: "product.winco.4410s.{sku}"
+      labelTemplate: "Winco 4410S {label} Aluminum Window"
+      defaults:
+        basis: measured
+        scope: whole-window
+        evidence:
+          - source: source.winco.4410s-performance
+            locator:
+              page: 1
+              section: PERFORMANCE
+              row: "{row}"
+      columns:
+        u_factor:
+          property: uFactor
+          basis: simulated
+          unit: "Btu/(h·ft²·°F)"
+          method: NFRC 100
+          conditions: "At 0.24 center-of-glass U-value, NFRC gateway test size (Fixed estimated per footnote 4)"
+        crf:
+          property: condensationResistanceFactor
+          unit: "1"
+          method: AAMA 1503
+        dp:
+          property: structuralDesignPressure
+          unit: psf
+          method: AAMA 101
+          conditions: "AW-65 Design Pressure (65 psf; 1.5x structural test overload 97.5 psf)"
+        air:
+          property: airInfiltration
+          unit: "cfm/ft²"
+          method: AAMA 101
+        perf_class:
+          property: performanceClass
+          valueType: string
+          method: AAMA 101
+
+  - id: process.fabrication.winco-window-assembly
+    kind: process
+    label: Winco 4410S coped-corner aluminum window fabrication & assembly
+    stage: fabrication
+    links:
+      - predicate: performedBy
+        target: actor.winco
+        qualifiers: { role: window manufacturer }
+      - predicate: uses
+        target: material.aluminum-6063-t6
+        qualifiers: { role: 6063-T6 extrusions }
+      - predicate: uses
+        target: material.polyurethane-thermal-break
+        qualifiers: { role: thermal barrier }
+      - predicate: produces
+        target: product.winco.4410s
+        qualifiers: { role: assembled commercial window line }

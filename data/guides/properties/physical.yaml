@@ -1,0 +1,8 @@
+propertyGuides:
+  density:
+    title: Material Density
+    summary: Mass per unit volume (kg/m3), governing dead load on sashes, hardware, and structure.
+    typicalRange: 2500 kg/m3 (soda-lime glass), 2700 kg/m3 (aluminum).
+    ucumUnit: kg/m3
+    externalRefs:
+      ifcPset: Pset_MaterialCommon.MassDensity

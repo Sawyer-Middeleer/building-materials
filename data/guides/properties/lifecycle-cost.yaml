@@ -1,0 +1,34 @@
+propertyGuides:
+  gwp:
+    title: Global Warming Potential (Embodied Carbon)
+    summary: Greenhouse gas emissions per declared unit across an EN 15804 / ISO 21930 lifecycle scope (e.g., A1-A3 cradle-to-gate).
+    betterDirection: Lower means less upfront or lifecycle carbon impact.
+    whyItMatters: Enables apples-to-apples carbon comparison across competing products when normalized to the same declared unit and lifecycle module scope.
+    ucumUnit: kg
+    externalRefs:
+      openepd: gwp
+      ifcPset: Pset_EnvironmentalImpactIndicators.ClimateChangePerUnit
+
+  installedCostPerArea:
+    title: Typical Installed Cost per Unit Area
+    summary: Ballpark installed cost range for decision tradeoffs—not for bidding.
+    betterDirection: Lower upfront cost; weigh against energy savings, service life, and maintenance.
+    typicalRange: "$40-70/ft² ($430-750/m²) vinyl; $65-110/ft² ($700-1184/m²) Fibrex/fiberglass; $100-180+/ft² ($1076-1938+/m²) commercial aluminum."
+    ucumUnit: USD/m2
+    bands:
+      - { label: economy,       max: 700,             meaning: "Entry-level budget tier (<$65/ft², typically standard vinyl)." }
+      - { label: mid-range,     min: 700, max: 1184,  meaning: "Mid-tier balance of durability and efficiency ($65-110/ft², Fibrex/fiberglass)." }
+      - { label: premium,       min: 1184, max: 1776, meaning: "High-end residential or architectural-grade systems ($110-165/ft²)." }
+      - { label: architectural, min: 1776,            meaning: "Heavy commercial/custom architectural systems (>=$165/ft²)." }
+
+  serviceLife:
+    title: Expected Service Life
+    summary: Typical years of functional service before full assembly replacement under normal maintenance.
+    betterDirection: Longer service life reduces lifecycle cost and replacement embodied carbon.
+    typicalRange: 20-30 years (vinyl), 35-50+ years (composite, fiberglass, thermally broken aluminum).
+    ucumUnit: a
+
+  maintenanceLevel:
+    title: Maintenance Profile
+    summary: Ongoing exterior/interior upkeep required over service life (low, medium, high).
+    betterDirection: Lower maintenance avoids periodic repainting or seal replacement.

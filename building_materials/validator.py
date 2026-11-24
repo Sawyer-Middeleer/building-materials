@@ -57,6 +57,18 @@ def validate_bundle(bundle: CompiledBundle) -> CompiledBundle:
         loc = "/".join(map(str, exc.absolute_path))
         raise GraphValidationError(f"Invalid guide at /{loc}: {exc.message}") from exc
 
+    guide_props = bundle.guide.get("properties") or {}
+    guide_params = bundle.guide.get("parameters") or {}
+    guide_ifaces = bundle.guide.get("interfaces") or {}
+
+    for prop_key, pg in guide_props.items():
+        for band in pg.get("bands") or ():
+            if "min" in band and "max" in band and band["min"] > band["max"]:
+                raise GraphValidationError(
+                    f"propertyGuide '{prop_key}' band '{band['label']}' min exceeds max",
+                    bundle.provenance.get(f"propertyGuide:{prop_key}"),
+                )
+
     nodes_by_id: dict[str, dict] = {}
     unique_ext_ids: dict[tuple[str, str, str], str] = {}
     for node in bundle.nodes:
@@ -69,6 +81,43 @@ def validate_bundle(bundle: CompiledBundle) -> CompiledBundle:
             )
         if nid in nodes_by_id:
             raise GraphValidationError(f"Duplicate node ID: {nid}", prov)
+        if "parameters" in node:
+            if node["kind"] != "productModel":
+                raise GraphValidationError(f"{nid}: 'parameters' is only allowed on productModel nodes", prov)
+            for pkey, pval in node["parameters"].items():
+                if pkey not in guide_params:
+                    raise GraphValidationError(
+                        f"{nid}: unregistered parameter '{pkey}' (register it in data/guides/parameters/)",
+                        prov,
+                    )
+                shape = guide_params[pkey]["shape"]
+                if shape in {"enum", "values"}:
+                    if not isinstance(pval, dict) or "values" not in pval or not isinstance(pval["values"], list):
+                        raise GraphValidationError(
+                            f"{nid}: parameter '{pkey}' has registered shape '{shape}' (expected values list)",
+                            prov,
+                        )
+                elif shape == "range":
+                    if not isinstance(pval, dict) or "min" not in pval or "max" not in pval:
+                        raise GraphValidationError(
+                            f"{nid}: parameter '{pkey}' has registered shape 'range' (expected {{min, max}})",
+                            prov,
+                        )
+                    if pval["min"] > pval["max"]:
+                        raise GraphValidationError(f"{nid}: parameter '{pkey}' min exceeds max", prov)
+        if "expectedProfile" in node:
+            if node["kind"] != "referenceDesign":
+                raise GraphValidationError(f"{nid}: 'expectedProfile' is only allowed on referenceDesign nodes", prov)
+            ep = node["expectedProfile"]
+            for prop_k in ep.get("properties", ()):
+                if prop_k not in guide_props:
+                    raise GraphValidationError(f"{nid}: expectedProfile references unregistered property '{prop_k}'", prov)
+            for param_k in ep.get("parameters", ()):
+                if param_k not in guide_params:
+                    raise GraphValidationError(f"{nid}: expectedProfile references unregistered parameter '{param_k}'", prov)
+            for iface_k in ep.get("interfaces", ()):
+                if iface_k not in guide_ifaces:
+                    raise GraphValidationError(f"{nid}: expectedProfile references unregistered interface '{iface_k}'", prov)
         seen_idents: set[tuple[str, str]] = set()
         for ident in node.get("identifiers", ()):
             ns = ident["namespace"].strip()
@@ -89,6 +138,19 @@ def validate_bundle(bundle: CompiledBundle) -> CompiledBundle:
                     )
                 unique_ext_ids[ext_key] = nid
         nodes_by_id[nid] = node
+
+    for nid, node in nodes_by_id.items():
+        if params := node.get("parameters"):
+            prov = bundle.provenance.get(nid)
+            for pkey, pval in params.items():
+                for citation in pval.get("evidence", ()):
+                    src = nodes_by_id.get(citation["source"])
+                    if src is None:
+                        raise GraphValidationError(f"{nid}.parameters.{pkey}: unknown evidence source '{citation['source']}'", prov)
+                    if src["kind"] != "source":
+                        raise GraphValidationError(f"{nid}.parameters.{pkey}: evidence must cite a source node", prov)
+                    if src["source"]["mediaType"] == "application/pdf" and "page" not in citation["locator"]:
+                        raise GraphValidationError(f"{nid}.parameters.{pkey}: PDF evidence requires locator.page", prov)
 
     stmts_by_id: dict[str, dict] = {}
     for stmt in bundle.statements:
@@ -125,6 +187,13 @@ def validate_bundle(bundle: CompiledBundle) -> CompiledBundle:
                 parts.add(subject["id"], target_id)
             elif stmt["predicate"] == "isVariantOf":
                 variant_parents.setdefault(subject["id"], []).append(target_id)
+
+        if iface := (stmt.get("qualifiers") or {}).get("interface"):
+            if iface not in guide_ifaces:
+                raise GraphValidationError(
+                    f"{sid}: unregistered qualifiers.interface '{iface}' (register it in data/guides/interfaces/)",
+                    prov,
+                )
 
         if plant_id := stmt.get("plantActor"):
             plant = nodes_by_id.get(plant_id)

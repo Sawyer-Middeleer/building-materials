@@ -3,39 +3,44 @@ propertyGuides:
     title: U-Factor (Thermal Transmittance)
     summary: Measures how fast heat escapes through a window or glazing assembly (inverse of R-value).
     betterDirection: Lower is better for thermal insulation.
-    typicalRange: 0.15-0.30 (high-performance glazing/composite), 0.30-0.55 (commercial aluminum).
+    typicalRange: 0.15-0.30 Btu/(h·ft²·°F) [0.85-1.70 W/(m²·K)] high-performance; 0.30-0.55 [1.70-3.12] commercial aluminum.
     whyItMatters: Always check scope—center-of-glass U-factor excludes frame and edge-spacer heat loss.
     ucumUnit: W/(m2.K)
     externalRefs:
       ifcPset: Pset_WindowCommon.ThermalTransmittance
       bsdd: https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/ThermalTransmittance
+    bands:
+      - { label: passive-house,    max: 1.14,            meaning: "Triple-pane or superior thermal frame (<0.20 Btu); interior glass stays warm in sub-zero weather." }
+      - { label: high-performance, min: 1.14, max: 1.70, meaning: "Strong residential efficiency (0.20-0.30 Btu); comfortable near the glass with low heating loss." }
+      - { label: code-minimum,     min: 1.70, max: 2.56, meaning: "Baseline code in mild climates (0.30-0.45 Btu); noticeably cooler glass in cold winters." }
+      - { label: poor,             min: 2.56,            meaning: "High conductive heat loss (>=0.45 Btu) through frame or glass; elevated draft and condensation risk." }
 
   solarHeatGainCoefficient:
     title: Solar Heat Gain Coefficient (SHGC)
     summary: Fraction of incident solar radiation (0 to 1) transmitted through glazing as heat.
-    betterDirection: Lower reduces cooling loads in warm climates; higher aids passive solar heating.
-    typicalRange: 0.18-0.30 (solar-control low-e), 0.40-0.60 (clear dual-pane).
+    betterDirection: Lower reduces cooling loads in warm climates; higher aids passive solar heating in cold climates.
+    typicalRange: 0.18-0.30 (solar-control low-e), 0.40-0.60 (passive-solar or clear dual-pane).
     whyItMatters: Triple-silver low-e coatings cut solar heat gain while keeping high daylight.
     ucumUnit: "1"
     externalRefs:
       ifcPset: Pset_DoorWindowGlazingType.SolarHeatGainTransmittance
+    bands:
+      - { label: solar-control, max: 0.25,            meaning: "Blocks >75% of solar heat; ideal for hot/southern climates and west-facing glass." }
+      - { label: balanced,      min: 0.25, max: 0.40, meaning: "Balanced daylight and solar control for mixed climates." }
+      - { label: passive-solar, min: 0.40,            meaning: "Admits substantial free winter sun; best for cold heating-dominated south facades." }
 
   visibleLightTransmittance:
     title: Visible Light Transmittance (VLT)
     summary: Share of visible daylight (380-760 nm) passing through the glazing or window.
     betterDirection: Higher brings more natural daylight indoors (unless glare control is needed).
-    typicalRange: 30-50% (tinted solar-control), 60-75% (clear low-e center-of-glass).
+    typicalRange: 30-50% (tinted solar-control or whole-window), 60-75% (clear low-e center-of-glass).
     ucumUnit: "1"
     externalRefs:
       ifcPset: Pset_DoorWindowGlazingType.VisibleLightTransmittance
-
-  density:
-    title: Material Density
-    summary: Mass per unit volume (kg/m3), governing dead load on sashes, hardware, and structure.
-    typicalRange: 2500 kg/m3 (soda-lime glass), 2700 kg/m3 (aluminum).
-    ucumUnit: kg/m3
-    externalRefs:
-      ifcPset: Pset_MaterialCommon.MassDensity
+    bands:
+      - { label: heavy-tint, max: 0.35,            meaning: "Noticeably dim/tinted view (<35%); strong glare reduction." }
+      - { label: moderate,   min: 0.35, max: 0.55, meaning: "Typical whole-window residential daylighting (35-55%) with low-e coatings." }
+      - { label: bright,     min: 0.55,            meaning: "High natural daylight transmission (>=55%) with minimal tint." }
 
   thermalConductivity:
     title: Thermal Conductivity (lambda)
@@ -52,13 +57,3 @@ propertyGuides:
     betterDirection: Lower emissivity on a low-e surface reflects more room heat back inside.
     typicalRange: 0.84 (uncoated soda-lime glass), 0.02-0.05 (triple-silver low-e).
     ucumUnit: "1"
-
-  gwp:
-    title: Global Warming Potential (Embodied Carbon)
-    summary: Greenhouse gas emissions per declared unit across an EN 15804 / ISO 21930 lifecycle scope (e.g., A1-A3 cradle-to-gate).
-    betterDirection: Lower means less upfront or lifecycle carbon impact.
-    whyItMatters: Enables apples-to-apples carbon comparison across competing products when normalized to the same declared unit and lifecycle module scope.
-    ucumUnit: kg
-    externalRefs:
-      openepd: gwp
-      ifcPset: Pset_EnvironmentalImpactIndicators.ClimateChangePerUnit

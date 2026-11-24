@@ -9,3 +9,11 @@ links:
     evidence:
       - source: source.usgs.aluminum-2025
         locator: { page: 1, section: Tariff }
+  - predicate: incompatibleWith
+    target: material.portland-cement-mortar
+    basis: measured
+    qualifiers: { role: alkaline-corrosion }
+    conditions: "Unprotected aluminum reacts chemically with alkaline fluids in fresh portland cement paste/mortar, evolving hydrogen gas and corroding; requires protective coating or separation membrane."
+    evidence:
+      - source: source.fhwa.hardened-concrete-petrography
+        locator: { page: 108, figure: "Figure 52" }

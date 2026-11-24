@@ -1,0 +1,9 @@
+sku,label,page,row,nfrc_id,u_factor,shgc,vlt,dp,air,perf_class
+single-hung-smartsun,Single-Hung (Low-E SmartSun + HeatLock + Argon),5,100 Series Single Hung Window,AND-N-80-02062-00001,0.25,0.20,0.48,30,0.2,LC-PG30
+casement-lowe,Casement Dual-Pane (Low-E),1,Low-E Without Grilles,,0.28,0.28,0.48,,,
+casement-lowe-heatlock,Casement Dual-Pane (Low-E w/HeatLock),1,Low-E w/HeatLock Without Grilles,,0.24,0.27,0.47,,,
+picture-lowe,Picture Dual-Pane (Low-E),2,Low-E Without Grilles,,0.27,0.32,0.56,,,
+picture-lowe-heatlock,Picture Dual-Pane (Low-E w/HeatLock),2,Low-E w/HeatLock Without Grilles,,0.23,0.32,0.55,,,
+casement-triple-lowe,Casement Triple-Pane (Low-E),4,Low-E Without Grilles,,0.23,0.26,0.44,,,
+casement-triple-smartsun-hl,Casement Triple-Pane (Low-E SmartSun Enhanced w/HeatLock),4,Low-E SmartSun Enhanced w/HeatLock Without Grilles,,0.18,0.16,0.37,,,
+casement-triple-passivesun-hl,Casement Triple-Pane (Low-E PassiveSun Enhanced w/HeatLock),4,Low-E PassiveSun Enhanced w/HeatLock Without Grilles,,0.18,0.36,0.45,,,

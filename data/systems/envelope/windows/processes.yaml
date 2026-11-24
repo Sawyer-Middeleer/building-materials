@@ -167,6 +167,12 @@ entities:
         target: envelope.openings.window.seal
         qualifiers: { role: dual perimeter seal }
       - predicate: produces
+        target: envelope.openings.window.weatherstripping
+        qualifiers: { role: perimeter weatherstripping }
+      - predicate: produces
+        target: envelope.openings.window.hardware
+        qualifiers: { role: sash hardware and balances }
+      - predicate: produces
         target: envelope.openings.window.igu
         qualifiers: { role: sealed insulating glass unit }
       - predicate: produces

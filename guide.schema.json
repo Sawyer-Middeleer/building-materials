@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Building materials educational guide v1",
+  "title": "Building materials educational guide v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,9 +23,32 @@
       "additionalProperties": {
         "$ref": "#/$defs/nodeGuide"
       }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/parameterGuide"
+      }
+    },
+    "interfaces": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/interfaceGuide"
+      }
     }
   },
   "$defs": {
+    "benchmarkBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "meaning"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "meaning": { "type": "string", "minLength": 1 }
+      }
+    },
     "propertyGuide": {
       "type": "object",
       "additionalProperties": false,
@@ -43,6 +66,36 @@
         "externalRefs": {
           "type": "object",
           "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "bands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/benchmarkBand" }
+        }
+      }
+    },
+    "parameterGuide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shape", "role", "summary"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "shape": { "enum": ["enum", "range", "values"] },
+        "role": { "enum": ["aesthetic", "dimensional", "performance", "interface"] },
+        "unit": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "interfaceGuide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "typicalMates": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     },

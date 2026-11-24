@@ -18,12 +18,16 @@ CREATE TABLE IF NOT EXISTS nodes (
     description TEXT,
     revision    TEXT,
     scale       TEXT,
-    stage       TEXT CHECK (stage IS NULL OR stage IN (
-                    'extraction', 'research', 'testing', 'design',
-                    'specification', 'fabrication', 'distribution', 'installation'
-                )),
-    source_file TEXT,
-    CHECK ((kind = 'process') = (stage IS NOT NULL))
+    stage                 TEXT CHECK (stage IS NULL OR stage IN (
+                              'extraction', 'research', 'testing', 'design',
+                              'specification', 'fabrication', 'distribution', 'installation'
+                          )),
+    parameters_json       TEXT,
+    expected_profile_json TEXT,
+    source_file           TEXT,
+    CHECK ((kind = 'process') = (stage IS NOT NULL)),
+    CHECK (parameters_json IS NULL OR kind = 'productModel'),
+    CHECK (expected_profile_json IS NULL OR kind = 'referenceDesign')
 );
 
 CREATE TABLE IF NOT EXISTS sources (
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS statements (
                    )),
     qual_role      TEXT,
     qual_position  TEXT,
+    qual_interface TEXT,
     qual_sequence  INTEGER,
     qual_qty_value REAL,
     qual_qty_min   REAL,
@@ -129,7 +134,24 @@ CREATE TABLE IF NOT EXISTS property_guides (
     typical_range      TEXT,
     why_it_matters     TEXT,
     ucum_unit          TEXT,
-    external_refs_json TEXT
+    external_refs_json TEXT,
+    bands_json         TEXT
+);
+
+CREATE TABLE IF NOT EXISTS parameter_guides (
+    parameter TEXT PRIMARY KEY,
+    title     TEXT,
+    shape     TEXT NOT NULL CHECK (shape IN ('enum', 'range', 'values')),
+    role      TEXT NOT NULL CHECK (role IN ('aesthetic', 'dimensional', 'performance', 'interface')),
+    unit      TEXT,
+    summary   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS interface_guides (
+    interface          TEXT PRIMARY KEY,
+    title              TEXT,
+    summary            TEXT NOT NULL,
+    typical_mates_json TEXT
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(

@@ -1,0 +1,10 @@
+id: source.andersen.100-series-performance
+kind: source
+label: Andersen 100 Series NFRC Certified Total Unit Performance
+revision: "2023-25"
+source:
+  origin: https://www.andersenwindows.com/-/media/Project/AndersenCorporation/AndersenWindows/AndersenWindows/files/technical-docs/performance/performance-windows-patiodoors-nfrcratings--100series.pdf?rev=b404c811bf7a4ee197b0132b0f7b981b
+  mediaType: application/pdf
+  issuer: Andersen Corporation
+  sha256: 5dce633e14c6f42d315afaa866f8fa28b0bc7a589810e0cc83b973861d985224
+  retrievedOn: "2026-11-23"

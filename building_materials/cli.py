@@ -65,9 +65,10 @@ def build_parser() -> argparse.ArgumentParser:
     f_cmd.add_argument("node_id")
     f_cmd.add_argument("--direct-only", action="store_true", help="Exclude claims inherited from productModel")
 
-    cmp_cmd = commands.add_parser("compare", help="Compare facts, materials, parts, and processes of two nodes")
+    cmp_cmd = commands.add_parser("compare", help="Compare facts, bands, medians, parameters, compatibility, materials, parts, and processes")
     cmp_cmd.add_argument("left_id")
     cmp_cmd.add_argument("right_id")
+    cmp_cmd.add_argument("--profile", dest="profile_id", help="Optional requirement node ID (e.g. req.iecc.cz5.fenestration) to evaluate pass/fail")
 
     g_cmd = commands.add_parser("gaps", help="Report composition, value-chain, property, and evidence gaps")
     g_cmd.add_argument("node_id", nargs="?", default=None)
@@ -160,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.command == "facts":
                     result = store.facts(args.node_id, include_inherited=not args.direct_only)
                 elif args.command == "compare":
-                    result = store.compare(args.left_id, args.right_id)
+                    result = store.compare(args.left_id, args.right_id, profile_id=args.profile_id)
                 elif args.command == "gaps":
                     result = store.gaps(args.assets, args.node_id, tier=args.tier, category=args.category)
                 elif args.command == "explain":

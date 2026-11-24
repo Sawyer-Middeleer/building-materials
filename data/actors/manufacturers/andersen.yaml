@@ -1,0 +1,8 @@
+id: actor.andersen
+kind: actor
+label: Andersen Corporation
+guide:
+  summary: Residential and light-commercial window and door manufacturer; producer of the Fibrex composite 100 Series.
+  firm:
+    segment: Residential and light-commercial fenestration
+    website: https://www.andersenwindows.com/

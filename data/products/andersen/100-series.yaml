@@ -1,0 +1,133 @@
+defaults:
+  basis: manufacturer-declared
+  evidence:
+    - source: source.andersen.100-series-performance
+      locator: { page: 5, section: "100 Series Single Hung Window" }
+
+entities:
+  - id: product.andersen.100-series
+    kind: productModel
+    label: Andersen 100 Series Fibrex Composite Window
+    identifiers:
+      - { namespace: masterformat, value: "08 53 13" }
+      - { namespace: uniformat2, value: B2020 }
+    parameters:
+      operationType:
+        values: [single-hung, gliding, casement, awning, picture]
+        locator: { page: 1, section: "100 SERIES PRODUCT PERFORMANCE" }
+      grilleStyle:
+        values: [Without Grilles, Simulated Divided Light, Finelight, Full Divided Light]
+        locator: { page: 1, section: "100 SERIES PRODUCT PERFORMANCE" }
+      glazingPackage:
+        values:
+          - Low-E Dual-Pane
+          - Low-E w/HeatLock Dual-Pane
+          - Low-E SmartSun w/HeatLock Dual-Pane
+          - Low-E Triple-Pane
+          - Low-E Enhanced Triple-Pane
+          - Low-E SmartSun Enhanced w/HeatLock Triple-Pane
+          - Low-E PassiveSun Enhanced w/HeatLock Triple-Pane
+        locator: { page: 4, section: "100 SERIES PRODUCT PERFORMANCE" }
+    links:
+      - predicate: manufacturedBy
+        target: actor.andersen
+      - predicate: realizesDesign
+        target: envelope.openings.window
+      - predicate: compatibleWith
+        target: envelope.openings
+        qualifiers: { interface: rough-opening, role: flange-or-insert-frame }
+    properties:
+      - property: installedCostPerArea
+        scope: whole-window
+        state: unknown
+        conditions: "Dealer-quoted residential product; installed pricing not published in NFRC datasheet."
+      - property: serviceLife
+        scope: whole-window
+        state: unknown
+        conditions: "Full service life not declared in NFRC performance datasheet."
+    guide:
+      summary: Residential and light-commercial (LC-PG30) Fibrex wood-fiber/thermoplastic composite window line offering dual- and triple-pane NFRC U-factors down to 0.18.
+      tradeoffs: Dramatically better thermal efficiency (U = 0.18-0.28) and lower condensation risk than commercial aluminum, at lower structural wind-load ratings (DP 30 vs. AW-65).
+    variantDefaults:
+      defaults:
+        basis: manufacturer-declared
+        evidence:
+          - source: source.andersen.100-series-performance
+            locator: { page: 5, section: "100 Series Single Hung Window" }
+      links:
+        - predicate: realizesDesign
+          target: envelope.openings.window
+        - predicate: madeOf
+          target: material.fibrex-composite
+          qualifiers: { role: composite frame and sash }
+        - predicate: madeOf
+          target: material.soda-lime-glass
+          qualifiers: { role: glazing substrate }
+        - predicate: madeOf
+          target: material.argon-fill
+          qualifiers: { role: insulating cavity gas }
+    variantsTable:
+      csv: 100-series-skus.csv
+      idTemplate: "product.andersen.100.{sku}"
+      labelTemplate: "Andersen 100 Series {label}"
+      identifiers:
+        - namespace: nfrc
+          value: "{nfrc_id}"
+      defaults:
+        basis: simulated
+        scope: whole-window
+        method: NFRC 100 / 200
+        conditions: "Whole-window NFRC certified rating, without grilles"
+        evidence:
+          - source: source.andersen.100-series-performance
+            locator:
+              page: "{page}"
+              row: "{row}"
+      columns:
+        u_factor:
+          property: uFactor
+          unit: "Btu/(h·ft²·°F)"
+        shgc:
+          property: solarHeatGainCoefficient
+          unit: "1"
+        vlt:
+          property: visibleLightTransmittance
+          unit: "1"
+        dp:
+          property: structuralDesignPressure
+          basis: measured
+          unit: psf
+          method: AAMA/WDMA/CSA 101
+          conditions: "Standard Rating Class LC-PG30 (DP +30/-30, 1440 Pa)"
+        air:
+          property: airInfiltration
+          basis: measured
+          unit: "cfm/ft²"
+          method: AAMA/WDMA/CSA 101
+          conditions: "Meets or exceeds CEC & IECC Air Infiltration Requirements of 0.2 cfm/ft² or lower"
+        perf_class:
+          property: performanceClass
+          basis: measured
+          valueType: string
+          method: AAMA/WDMA/CSA 101
+
+  - id: process.fabrication.andersen-window-assembly
+    kind: process
+    label: Andersen 100 Series Fibrex sash/frame welding & IGU glazing assembly
+    stage: fabrication
+    links:
+      - predicate: performedBy
+        target: actor.andersen
+        qualifiers: { role: window manufacturer }
+      - predicate: uses
+        target: material.fibrex-composite
+        qualifiers: { role: extruded Fibrex frame and sash }
+      - predicate: uses
+        target: material.soda-lime-glass
+        qualifiers: { role: glazing lites }
+      - predicate: uses
+        target: material.argon-fill
+        qualifiers: { role: cavity gas }
+      - predicate: produces
+        target: product.andersen.100-series
+        qualifiers: { role: factory-glazed composite window line }

@@ -1,0 +1,25 @@
+parameterGuides:
+  nominalWidth:
+    title: Nominal Width
+    shape: range
+    role: dimensional
+    unit: in
+    summary: Allowable overall or rough-opening width range for the product line.
+  nominalHeight:
+    title: Nominal Height
+    shape: range
+    role: dimensional
+    unit: in
+    summary: Allowable overall or rough-opening height range for the product line.
+  jambDepth:
+    title: Jamb / Frame Depth
+    shape: values
+    role: interface
+    unit: in
+    summary: Available standard frame depths to match wall framing and exterior insulation thickness.
+  thickness:
+    title: Material / Unit Thickness
+    shape: values
+    role: performance
+    unit: in
+    summary: Standard available panel, board, glass, or assembly thicknesses.

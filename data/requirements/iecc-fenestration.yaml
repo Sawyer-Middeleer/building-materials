@@ -1,0 +1,61 @@
+defaults:
+  basis: specification
+  evidence:
+    - source: source.standards.energystar-v7-windows
+      locator: { page: 1, section: "ENERGY STAR Version 7.0 Residential Windows Criteria Table" }
+
+entities:
+  - id: req.iecc.cz3.fenestration
+    kind: requirement
+    label: South-Central / Cooling-Dominant Fenestration Profile (ENERGY STAR v7.0)
+    links:
+      - predicate: appliesTo
+        target: envelope.openings.window
+    properties:
+      - property: uFactor
+        scope: whole-window
+        method: NFRC 100
+        conditions: "ENERGY STAR v7.0 South-Central maximum whole-window U-factor (<= 0.28 Btu/(h·ft²·°F))"
+        quantity: { value: 0.28, unit: "Btu/(h·ft²·°F)" }
+      - property: solarHeatGainCoefficient
+        scope: whole-window
+        method: NFRC 200
+        conditions: "ENERGY STAR v7.0 South-Central maximum whole-window SHGC (<= 0.23)"
+        quantity: { value: 0.23, unit: "1" }
+    guide:
+      summary: Cooling-dominated climate profile prioritizing low SHGC (<= 0.23) to block summer solar heat gain alongside U-factor <= 0.28.
+
+  - id: req.iecc.cz5.fenestration
+    kind: requirement
+    label: North-Central / Cold-Mixed Fenestration Profile (ENERGY STAR v7.0)
+    links:
+      - predicate: appliesTo
+        target: envelope.openings.window
+    properties:
+      - property: uFactor
+        scope: whole-window
+        method: NFRC 100
+        conditions: "ENERGY STAR v7.0 North-Central maximum whole-window U-factor (<= 0.25 Btu/(h·ft²·°F))"
+        quantity: { value: 0.25, unit: "Btu/(h·ft²·°F)" }
+      - property: solarHeatGainCoefficient
+        scope: whole-window
+        method: NFRC 200
+        conditions: "ENERGY STAR v7.0 North-Central maximum whole-window SHGC (<= 0.40)"
+        quantity: { value: 0.40, unit: "1" }
+    guide:
+      summary: Cold-mixed climate profile (North-Central / IECC CZ 5) balancing low heat loss (U <= 0.25) with moderate solar control (SHGC <= 0.40).
+
+  - id: req.iecc.cz7.fenestration
+    kind: requirement
+    label: Northern / Very-Cold Fenestration Profile (ENERGY STAR v7.0)
+    links:
+      - predicate: appliesTo
+        target: envelope.openings.window
+    properties:
+      - property: uFactor
+        scope: whole-window
+        method: NFRC 100
+        conditions: "ENERGY STAR v7.0 Northern prescriptive maximum whole-window U-factor (<= 0.22 Btu/(h·ft²·°F); paired with SHGC >= 0.17)"
+        quantity: { value: 0.22, unit: "Btu/(h·ft²·°F)" }
+    guide:
+      summary: Heating-dominated northern climate profile requiring very low thermal transmittance (U <= 0.22) while allowing passive winter solar gain (SHGC >= 0.17).

@@ -1,0 +1,10 @@
+id: source.fhwa.hardened-concrete-petrography
+kind: source
+label: "Petrographic Methods of Examining Hardened Concrete: A Petrographic Manual (FHWA-HRT-04-150)"
+revision: "July 2006"
+source:
+  origin: https://www.fhwa.dot.gov/publications/research/infrastructure/pavements/pccp/04150/04150.pdf
+  mediaType: application/pdf
+  issuer: U.S. Department of Transportation, Federal Highway Administration
+  sha256: c67906e1129c32cf2f8dd46b1824a3d21e5ba41f3d52b1dc0660ccdf5e69240b
+  retrievedOn: "2026-11-23"
