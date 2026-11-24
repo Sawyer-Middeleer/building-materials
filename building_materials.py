@@ -34,7 +34,7 @@ USED_BY = {
 }
 TRACE_FORWARD = {
     "hasPart", "realizesDesign", "isVariantOf", "usesConfiguration", "usesProduct",
-    "manufacturedBy", "uses", "produces", "performedBy", "supersedes",
+    "manufacturedBy", "uses", "performedBy", "supersedes",
 }
 TRACE_REVERSE = {"produces", "appliesTo"}
 LINK_KINDS = {
@@ -149,7 +149,10 @@ class Graph:
                     selected.add(row["id"])
             for row in self.incoming[current]:
                 if row["predicate"] in reverse or (
-                    trace and row["predicate"] == "uses" and current == node_id
+                    trace
+                    and row["predicate"] == "uses"
+                    and current == node_id
+                    and self.nodes[row["subject"]].get("stage") != "fabrication"
                 ):
                     selected.add(row["id"])
                     pending.append(row["subject"])

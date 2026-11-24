@@ -79,6 +79,21 @@ class WindowGraphTest(unittest.TestCase):
         self.assertEqual(u_row["left"]["quantity"]["value"], 0.28)
         self.assertEqual(u_row["right"]["quantity"]["value"], 0.24)
 
+        win_cmp = self.output("compare", "winco-4410s-single-hung", "andersen-100-single-hung")
+        self.assertEqual([n["id"] for n in win_cmp["materials"]["onlyLeft"]], ["polyurethane-thermal-break"])
+        self.assertEqual([n["id"] for n in win_cmp["materials"]["onlyRight"]], ["fibrex-composite"])
+        self.assertEqual(
+            {n["id"] for n in win_cmp["processes"]["onlyLeft"]},
+            {"thermal-break-pouring", "winco-window-assembly"},
+        )
+        self.assertEqual(
+            {n["id"] for n in win_cmp["processes"]["onlyRight"]},
+            {"fibrex-compounding", "composite-extrusion", "andersen-window-assembly"},
+        )
+        win_u = next(row for row in win_cmp["facts"] if row["property"] == "uFactor")
+        self.assertEqual(win_u["left"]["quantity"]["value"], 0.50)
+        self.assertEqual(win_u["right"]["quantity"]["value"], 0.25)
+
         facts = self.output("facts", "igu-gray-reference")["statements"]
         rating = next(row for row in facts if row["property"] == "solarHeatGainCoefficient")
         self.assertEqual(rating["quantity"], {"value": 0.19, "unit": "1"})

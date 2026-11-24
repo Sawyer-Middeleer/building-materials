@@ -291,7 +291,7 @@ const state = {
   tab: "graph",
   full: { nodes: [], statements: [], byId: new Map(), out: new Map(), inc: new Map() },
   graph: { mode: "parts", root: "window-assembly", nodes: [], statements: [], showSources: false },
-  compare: { left: "igu-gray-air", right: "igu-gray-argon", data: null },
+  compare: { left: "winco-4410s-single-hung", right: "andersen-100-single-hung", data: null },
   tables: { sub: "nodes", filter: "", kind: "", sql: "" },
   gaps: { data: null, category: "all" },
   selectedNodeId: "window-assembly",
@@ -725,6 +725,13 @@ function renderCompareTab() {
   };
 
   $("stage").innerHTML = `
+    <div class="subbar">
+      <div class="subbar-group">
+        <button class="btn-sm" id="cmpPresetWin">Windows: Winco 4410S vs. Andersen 100</button>
+        <button class="btn-sm" id="cmpPresetIgu">IGUs: Air vs. Argon</button>
+      </div>
+      <span class="meta-txt">Side-by-side diff</span>
+    </div>
     <div class="scroll-view"><div class="container">
       <div class="panel"><div class="panel-head pickers">
         <select class="select-clean" id="cmpL">${opts(d.left.id)}</select>
@@ -743,6 +750,8 @@ function renderCompareTab() {
       ${diffCard("Assembly Parts", d.parts)}
     </div></div>`;
 
+  $("cmpPresetWin").onclick = () => loadCompare("winco-4410s-single-hung", "andersen-100-single-hung");
+  $("cmpPresetIgu").onclick = () => loadCompare("igu-gray-air", "igu-gray-argon");
   $("cmpL").onchange = (e) => loadCompare(e.target.value, state.compare.right);
   $("cmpR").onchange = (e) => loadCompare(state.compare.left, e.target.value);
   $("stage").querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => selectNode(b.dataset.jump));
