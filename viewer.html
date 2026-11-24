@@ -959,11 +959,11 @@ function getWindowSlotOptions() {
   const opts = [
     { key: "generic", nodeId: "window-assembly", label: "Generic Reference", sub: "Neutral architectural anatomy", badge: "Reference" },
   ];
-  // Dynamically discover all productVariants realizing window-assembly from the graph
+  // Dynamically discover all instantiated productVariants realizing window-assembly
   const variants = state.full.statements
     .filter((s) => s.predicate === "realizesDesign" && s.target === "window-assembly")
     .map((s) => state.full.byId.get(s.subject))
-    .filter(Boolean);
+    .filter((n) => n && n.kind === "productVariant");
   for (const v of variants) {
     const key = v.id.startsWith("winco") ? "winco" : v.id.startsWith("andersen") ? "andersen" : v.id;
     const firm = findFirmForNode(v.id);
@@ -982,7 +982,7 @@ function getGlazingSlotOptions() {
   const variants = state.full.statements
     .filter((s) => s.predicate === "realizesDesign" && (s.target === "igu-gray-reference" || s.target === "insulating-glass-unit"))
     .map((s) => state.full.byId.get(s.subject))
-    .filter(Boolean);
+    .filter((n) => n && n.kind === "productVariant");
   return variants.map((v) => ({
     key: v.id.includes("air") ? "air" : "argon",
     nodeId: v.id,
@@ -994,10 +994,10 @@ function getGlazingSlotOptions() {
 
 function getFirmDirectoryOptions() {
   return state.full.nodes
-    .filter((n) => n.kind === "actor" && state.guide?.nodes?.[n.id]?.firm)
+    .filter((n) => n.kind === "actor" && state.guide?.nodes?.[n.id]?.firm?.founded)
     .map((n) => {
       const f = state.guide.nodes[n.id].firm;
-      return { key: n.id, nodeId: n.id, label: n.label, sub: [f.segment, f.headquarters].filter(Boolean).join(" · "), badge: f.founded ? `${f.founded}` : "Firm" };
+      return { key: n.id, nodeId: n.id, label: n.label, sub: [f.segment, f.headquarters].filter(Boolean).join(" · "), badge: `${f.founded}` };
     });
 }
 
