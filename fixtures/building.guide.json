@@ -1,0 +1,1017 @@
+{
+  "schemaVersion": 1,
+  "properties": {
+    "uFactor": {
+      "title": "U-Factor (Thermal Transmittance)",
+      "summary": "Measures how fast heat escapes through a window or glazing assembly. It is the inverse of R-value (R = 1 / U).",
+      "betterDirection": "Lower is better for insulation.",
+      "typicalRange": "0.15–0.30 (high-performance composite/triple-pane), 0.30–0.55 (commercial aluminum), 1.0+ (old single-pane glass).",
+      "whyItMatters": "A window with U = 0.25 loses half as much heat as one with U = 0.50. Always check scope: center-of-glass U-factor ignores heat conducting through the frame and edge spacer, so whole-window U-factor is always higher."
+    },
+    "solarHeatGainCoefficient": {
+      "title": "Solar Heat Gain Coefficient (SHGC)",
+      "summary": "The fraction of incoming solar radiation (0 to 1) that passes through the window as heat—both directly transmitted sunlight and absorbed heat re-radiated inward.",
+      "betterDirection": "Lower is better in cooling-dominated/hot climates; higher can help passive solar heating in cold climates.",
+      "typicalRange": "0.18–0.30 (solar-control low-e), 0.40–0.60 (passive-solar or clear dual-pane).",
+      "whyItMatters": "Low-e coatings let you block solar heat (low SHGC) without turning the glass pitch black—cutting air-conditioning loads."
+    },
+    "visibleLightTransmittance": {
+      "title": "Visible Light Transmittance (VT / VLT)",
+      "summary": "The share of visible daylight (380–760 nm) that passes through the glass or whole window.",
+      "betterDirection": "Higher means brighter interiors and more natural daylight (unless glare control is desired).",
+      "typicalRange": "0.30–0.50 (tinted solar-control or whole-window), 0.60–0.75 (clear low-e center-of-glass).",
+      "whyItMatters": "Architects look at the light-to-solar-gain ratio (VT / SHGC): triple-silver low-e coatings achieve high daylight with low solar heat."
+    },
+    "structuralDesignPressure": {
+      "title": "Structural Design Pressure (DP)",
+      "summary": "The positive and negative wind-load pressure (in pounds per square foot, psf) a window is tested to withstand without permanent damage or failure.",
+      "betterDirection": "Higher means stronger resistance to wind loads and tall-building pressures.",
+      "typicalRange": "15–30 psf (residential / light commercial), 50–100+ psf (architectural / high-rise commercial).",
+      "whyItMatters": "Explains why institutional and high-rise buildings often use heavier aluminum frames despite higher U-factors: extruded aluminum handles much higher wind loads."
+    },
+    "condensationResistanceFactor": {
+      "title": "Condensation Resistance Factor (CRF)",
+      "summary": "An AAMA 1503 score (1–100) indicating how well the interior surface of a window resists forming condensation in cold weather.",
+      "betterDirection": "Higher is better (less interior moisture and frost risk).",
+      "typicalRange": "45–55 (thermally broken commercial aluminum), 60–75+ (wood, fiberglass, composite).",
+      "whyItMatters": "Condensation damages interior finishes and causes mold. Thermal breaks in aluminum frames exist largely to keep the indoor metal surface warm."
+    },
+    "airInfiltration": {
+      "title": "Air Infiltration",
+      "summary": "How much outside air leaks through a closed window under standardized wind pressure, measured in cubic feet per minute per square foot (cfm/ft²).",
+      "betterDirection": "Lower is tighter and more energy efficient.",
+      "typicalRange": "0.01–0.10 cfm/ft² (tight architectural/casement), up to 0.30 cfm/ft² (code ceiling).",
+      "whyItMatters": "Drafts bypass insulation completely—weatherstripping and tight sash joinery often matter as much as the glass itself."
+    },
+    "performanceClass": {
+      "title": "AAMA / NAFS Performance Class",
+      "summary": "Industry durability and structural tier: R (Residential), LC (Light Commercial), CW (Commercial), and AW (Architectural Grade), followed by the Design Pressure rating (e.g., AW-65, LC-PG30).",
+      "betterDirection": "Higher class (R < LC < CW < AW) indicates heavier-duty hardware, structural strength, and water-penetration testing.",
+      "whyItMatters": "Quickly tells you whether a window is engineered for a single-family house (R/LC) or a multi-story institutional/commercial building (CW/AW)."
+    },
+    "maxThermalTransmittance": {
+      "title": "Maximum Thermal Transmittance Limit",
+      "summary": "A specification ceiling on whole-window U-factor that any submitted window product must meet or beat.",
+      "betterDirection": "Lower ceiling enforces stricter building-envelope insulation.",
+      "whyItMatters": "Owners and energy codes set maximum U-factor limits so contractors cannot substitute cheaper, thermally weaker windows."
+    },
+    "density": {
+      "title": "Material Density",
+      "summary": "Mass per unit volume (kg/m³). Determines dead weight on sashes, hardware, and structural openings.",
+      "typicalRange": "2500 kg/m³ (soda-lime glass), 2700 kg/m³ (aluminum), ~1988 kg/m³ (fired clay brick), ~1058 kg/m³ (gross hollow CMU), ~1400 kg/m³ (PVC/wood composites).",
+      "whyItMatters": "Large 1/4-inch double-pane IGUs are heavy—requiring sturdy frames, balances, and safe job-site handling."
+    },
+    "thermalConductivity": {
+      "title": "Thermal Conductivity (λ)",
+      "summary": "How readily a solid material conducts heat (W/(m·°C)).",
+      "betterDirection": "Lower conducts less heat (better insulator).",
+      "typicalRange": "0.018 (argon gas), 0.026 (still air), 0.17–0.25 (polymers/composites), 1.0 (glass), ~200 (aluminum).",
+      "whyItMatters": "Aluminum conducts heat ~200× faster than glass and ~1000× faster than polymers—which is why aluminum windows require a non-metallic thermal break."
+    },
+    "correctedEmissivity": {
+      "title": "Emissivity (ε)",
+      "summary": "How strongly a surface radiates infrared heat (0 = perfect mirror, 1 = perfect radiator). Uncoated glass has high emissivity (~0.84).",
+      "betterDirection": "Lower emissivity on a low-e coated surface reflects far more room heat back inside.",
+      "typicalRange": "0.84 (uncoated soda-lime glass), 0.02–0.05 (triple-silver sputtered low-e coating).",
+      "whyItMatters": "Cutting surface emissivity from 0.84 down to ~0.03 is the core physics behind low-e coatings."
+    },
+    "glazingRequirement": {
+      "title": "Glazing Specification Requirement",
+      "summary": "A prescriptive requirement defining tint, glass thickness, coating family, and which glass surface (#1–#4) carries the low-e coating.",
+      "whyItMatters": "In a 2-pane IGU, surfaces are numbered 1 (outermost) to 4 (room-side). Putting a solar-control low-e coating on surface #2 blocks solar heat before it crosses the cavity."
+    },
+    "compressiveStrength": {
+      "title": "Compressive Strength",
+      "summary": "Maximum crushing stress (in psi or MPa) a masonry unit, mortar cube, or assembled masonry wall can sustain before failure.",
+      "betterDirection": "Higher means greater load-bearing capacity and durability, though mortar should generally remain weaker than the masonry units so cracks stay repairable in the joints.",
+      "typicalRange": "750 psi (Type N mortar), 1,800 psi (Type S mortar), ~2,900 psi / 20 MPa (normal-weight CMU), 7,000–15,000+ psi (extruded Grade SW clay facing brick).",
+      "whyItMatters": "Check scope carefully: a clay brick unit can test over 14,000 psi under ASTM C67, while the assembled brick wall (governed by mortar joints and workmanship under TMS 602) has an assumed compressive strength around 2,000 psi."
+    },
+    "waterAbsorption": {
+      "title": "Water Absorption (24-hr Cold / 5-hr Boil)",
+      "summary": "Percentage of water by dry weight that a masonry unit absorbs after 24 hours submerged in cold water or 5 hours in boiling water (ASTM C67).",
+      "betterDirection": "Lower absorption means a denser, more vitrified pore network and higher resistance to freeze-thaw spalling.",
+      "typicalRange": "4–8% (24-hr cold, Grade SW clay brick), 5–12% (5-hr boil, Grade SW limit ≤17%).",
+      "whyItMatters": "Water trapped in open brick pores expands ~9% when it freezes. Kiln sintering closes pore channels so Grade SW facing brick survives decades of severe winter exposure."
+    },
+    "saturationCoefficient": {
+      "title": "Saturation Coefficient (C/B Ratio)",
+      "summary": "Ratio of 24-hour cold-water absorption to 5-hour boiling-water absorption (dimensionless, 0 to 1) measured under ASTM C67.",
+      "betterDirection": "Lower is better for freeze-thaw durability (ASTM C216 Grade SW ceiling is 0.78).",
+      "typicalRange": "0.60–0.78 (freeze-thaw resistant Grade SW clay brick).",
+      "whyItMatters": "A low C/B ratio means a large share of pores stay empty during normal rain and act as expansion relief chambers if absorbed water freezes."
+    },
+    "initialRateOfAbsorption": {
+      "title": "Initial Rate of Absorption (IRA / Suction)",
+      "summary": "How fast a dry brick pulls water out of wet mortar during the first minute of contact, measured in grams per minute per 30 square inches (ASTM C67).",
+      "betterDirection": "Moderate suction (5–20 g/(min·30 in²)) promotes tight mechanical mortar bond; above 30 g/(min·30 in²), bricks must be pre-wetted before laying.",
+      "typicalRange": "5–15 g/(min·30 in²) (ideal extruded facing brick), up to 30 g/(min·30 in²) ASTM C67 threshold.",
+      "whyItMatters": "If a brick sucks water out of mortar too fast, the cement cannot hydrate at the interface, leaving weak, leaky mortar joints; if suction is too low, bricks float on wet mortar."
+    },
+    "waterRetention": {
+      "title": "Mortar Water Retention",
+      "summary": "Percentage of mixing water a fresh mortar holds onto under vacuum suction testing (ASTM C270 / C1506), preventing dry masonry units from prematurely desiccating the joint.",
+      "betterDirection": "Higher water retention (≥75% minimum per ASTM C270) improves workability, board life, and full cement hydration.",
+      "typicalRange": "75% minimum (ASTM C270 specification floor for Types M, S, and N).",
+      "whyItMatters": "Hydrated lime dramatically boosts mortar water retention so Portland cement has enough moisture to form strong C–S–H bond crystals against absorptive brick or block."
+    },
+    "airContent": {
+      "title": "Mortar Air Content",
+      "summary": "Volume percentage of entrained microscopic air bubbles in freshly mixed mortar (ASTM C270).",
+      "betterDirection": "Lower maximum air content improves flexural bond strength to masonry units and steel ties; modest entrained air improves freeze-thaw resistance.",
+      "typicalRange": "≤12% max (ASTM C270 Type S and reinforced Portland-lime mortar), ≤14% max (unreinforced Type N Portland-lime mortar).",
+      "whyItMatters": "Excess air bubbles weaken the mortar-to-brick interface and reduce pull-out resistance on embedded wire wall ties—which is why Type S and reinforced masonry cap air at 12%."
+    },
+    "durabilityGrade": {
+      "title": "Masonry Weathering / Durability Grade",
+      "summary": "Standard classification defining exposure suitability—such as ASTM C216 Grade SW (Severe Weathering) for freeze-thaw exterior brick or ASTM C90 Normal Weight for loadbearing CMU.",
+      "betterDirection": "Grade SW (vs. MW) guarantees freeze-thaw resilience in wet, freezing climates.",
+      "typicalRange": "ASTM C216 Grade SW / MW (clay facing brick); ASTM C90 Normal / Medium / Lightweight (CMU).",
+      "whyItMatters": "Specifying Grade SW prevents spalling and face-flaking on exposed exterior walls, parapets, and sills subject to rain and freezing temperatures."
+    },
+    "unitMass": {
+      "title": "Masonry Unit Mass",
+      "summary": "Average dry weight of a single masonry unit (kg or lb), governing dead load on shelf angles, loose lintels, foundations, and mason ergonomics.",
+      "typicalRange": "1.8 kg / 4.0 lb (standard modular clay brick, 6.75 units/ft²), 15–18 kg / 33–40 lb (8-inch normal-weight hollow CMU).",
+      "whyItMatters": "A 4-inch clay brick veneer adds ~35–40 lb/ft² of dead load, requiring galvanized steel loose lintels over window openings and structural shelf angles at floor lines."
+    },
+    "thermalResistance": {
+      "title": "Thermal Resistance (R-Value)",
+      "summary": "Resistance to conductive heat flow across a wall layer, measured in (hr·ft²·°F)/Btu—the inverse of U-factor (R = 1 / U).",
+      "betterDirection": "Higher resists more steady-state heat transfer.",
+      "typicalRange": "R-0.40 (4-inch clay brick veneer wythe alone), R-1.0–2.0 (uninsulated hollow CMU), R-10 to R-20+ (continuous cavity insulation behind masonry).",
+      "whyItMatters": "Brick and CMU are dense thermal-mass rainscreens rather than insulators—modern cavity walls rely on continuous insulation inside the drainage cavity behind the masonry wythe."
+    },
+    "soundTransmissionClass": {
+      "title": "Sound Transmission Class (STC)",
+      "summary": "Single-number acoustic rating indicating how well a wall assembly attenuates airborne sound (speech, traffic, urban noise).",
+      "betterDirection": "Higher blocks more exterior noise (every +10 STC roughly halves perceived loudness).",
+      "typicalRange": "STC 45 (nominal 4-inch clay brick wythe), STC 52–53 (normal-weight CMU wall).",
+      "whyItMatters": "Heavy masonry mass excels at blocking low- and mid-frequency outdoor noise compared to lightweight siding or curtain walls."
+    },
+    "fireResistanceRating": {
+      "title": "Fire Resistance Rating",
+      "summary": "Duration (in hours) a masonry wall assembly withstands standard fire exposure (ASTM E119 / ACI 216.1) without structural collapse or flame/heat transmission.",
+      "betterDirection": "Higher provides longer passive fire containment.",
+      "typicalRange": "1.0 hour (4-inch clay brick wythe alone), 1.8–4.0 hours (loadbearing normal-weight or grouted CMU).",
+      "whyItMatters": "Because clay brick is already kiln-fired above 1,000 °C and concrete masonry is non-combustible mineral, masonry delivers high passive fire resistance with zero added fireproofing."
+    },
+    "referenceServiceLife": {
+      "title": "Reference Service Life (RSL)",
+      "summary": "Standardized expected functional lifetime (years) of an installed masonry product under ISO 21930 / Product Category Rules.",
+      "betterDirection": "Longer amortizes upfront embodied carbon and replacement cost across generations.",
+      "typicalRange": "100 years (structural concrete masonry / CMU), 150 years (fired clay brick masonry).",
+      "whyItMatters": "Although masonry has meaningful upfront kiln or cement-clinker emissions, a 100–150 year service life avoids multiple cladding replacement cycles over a building's life."
+    },
+    "embodiedCarbonGwp": {
+      "title": "Embodied Carbon — Global Warming Potential (GWP, A1–A3)",
+      "summary": "Cradle-to-gate greenhouse gas emissions (kg CO₂e) from raw material extraction, transport, and factory manufacturing reported in third-party ISO 14025 / 21930 EPDs.",
+      "betterDirection": "Lower means fewer upfront carbon emissions per declared functional unit.",
+      "typicalRange": "47.6 kg CO₂e/m² (A1–A3 clay brick wall, 150.48 kg/m² ≈ 0.32 kg CO₂e/kg); 205 kg CO₂e/m³ (A1–A3 normal-weight CMU, 1,058 kg/m³ ≈ 0.19 kg CO₂e/kg).",
+      "whyItMatters": "Always check the declared functional unit (m² of installed wall vs. m³ of hollow block) and system boundary (A1–A3 cradle-to-gate vs. A5 mortar installation)."
+    },
+    "tensileStrength": {
+      "title": "Tensile Strength",
+      "summary": "Maximum pulling stress (psi) a steel masonry anchor wire can carry before breaking (ASTM A1064).",
+      "betterDirection": "Higher allows slim 3/16-inch anchor wires to resist wind suction loads inside a standard 3/8-inch mortar bed joint.",
+      "typicalRange": "80,000 psi tensile / 70,000 psi yield (cold-drawn carbon steel veneer anchor wire, ASTM A1064).",
+      "whyItMatters": "Exterior brick veneers are non-loadbearing rainscreens that rely entirely on wall ties to transfer positive and negative wind pressures back to the structural wall."
+    },
+    "zincCoatingMass": {
+      "title": "Hot-Dip Galvanized Zinc Coating Mass",
+      "summary": "Weight of protective zinc applied per square foot of steel surface after fabrication (oz/ft², ASTM A153 Class B).",
+      "betterDirection": "Higher zinc mass extends corrosion protection inside damp exterior masonry cavities.",
+      "typicalRange": "1.5 oz/ft² (ASTM A153 Class B hot-dip galvanized after fabrication for brick ties and lintels).",
+      "whyItMatters": "Masonry cavities stay humid after wind-driven rain; zinc sacrificially corrodes to protect the underlying carbon steel wire and lintel from rust-jacking and failure."
+    },
+    "masonryRequirement": {
+      "title": "Masonry Specification Requirement",
+      "summary": "Prescriptive Division 04 architectural requirement governing masonry unit grade, mortar type, joint tooling, anchoring, flashing, weeps, and window-opening lintels.",
+      "whyItMatters": "Most masonry envelope failures come from detailing omissions—like missing through-wall flashing, clogged weeps, or wrong mortar type—rather than brick crushing."
+    }
+  },
+  "nodes": {
+    "window-assembly": {
+      "summary": "A complete factory-assembled window unit combining a perimeter frame, operable or fixed sash, and a sealed insulating glass unit (IGU).",
+      "howItWorks": "The frame anchors into the building wall opening and manages water drainage; the sash holds the glazing and seals against air leakage; the IGU provides daylight and thermal/solar control.",
+      "whyItMatters": "Whole-window performance is governed by the weakest link—both the center of the glass and the heat-conducting frame perimeter."
+    },
+    "insulating-glass-unit": {
+      "summary": "An IGU (often called a double-pane glass unit) is two or more glass panes separated by a perimeter spacer and hermetically sealed around an insulating gas cavity.",
+      "howItWorks": "Trapping a 1/2-inch layer of dry air or argon between two panes slows conductive and convective heat transfer, while a low-e coating on an interior cavity surface cuts radiative heat transfer.",
+      "whyItMatters": "Modern windows rely on the IGU for most of their thermal, acoustic, and solar-control performance. If the edge seal fails, moisture enters and the window fogs permanently."
+    },
+    "window-frame": {
+      "summary": "The stationary outer perimeter structure of a window that fastens into the wall opening.",
+      "howItWorks": "Transfers wind loads to the building structure, supports the weight of the sash and glass, and channels any rainwater back outside via weep holes.",
+      "tradeoffs": "Aluminum frames are very strong and slim for tall commercial buildings but conduct heat without a thermal break; composite, fiberglass, and wood frames insulate far better but have lower structural design pressures."
+    },
+    "window-sash": {
+      "summary": "The inner frame that directly holds the glass unit and moves (slides, tilts, or swings) in an operable window.",
+      "howItWorks": "Compresses against weatherstripping in the main frame when closed to block air and water infiltration."
+    },
+    "outer-pane": {
+      "summary": "The exterior sheet of glass facing the weather. Its inner face (surface #2, facing the sealed cavity) typically carries the solar-control low-e coating.",
+      "howItWorks": "Placing the delicate sputtered silver coating on surface #2 protects it from weather and cleaning while intercepting solar heat before it heats the inner pane."
+    },
+    "inner-pane": {
+      "summary": "The room-side sheet of clear glass in a double-pane IGU.",
+      "howItWorks": "Completes the sealed cavity and stays warmer in winter than a single pane, improving indoor comfort and reducing condensation."
+    },
+    "air-cavity": {
+      "summary": "A 1/2-inch sealed gap filled with dry air between the outer and inner glass panes.",
+      "howItWorks": "Still air conducts heat far more slowly than solid glass. Desiccant inside the perimeter spacer keeps the trapped air dry so it does not condense inside the unit.",
+      "tradeoffs": "Slightly higher U-factor than argon (0.28 vs. 0.24 COG), but cannot suffer gradual argon gas leakage over decades—which is why some institutional owners specify air."
+    },
+    "argon-cavity": {
+      "summary": "A 1/2-inch sealed gap filled with inert argon gas between the outer and inner glass panes.",
+      "howItWorks": "Argon is denser and more viscous than air, slowing both conduction and internal convection currents inside the glass cavity.",
+      "tradeoffs": "Lowers center-of-glass U-factor by ~14% (0.28 → 0.24) at low cost, though it depends on tight PIB edge seals to retain gas concentration over time."
+    },
+    "edge-spacer": {
+      "summary": "The hollow perimeter bar that holds the two glass panes apart at a precise spacing (typically 1/2 inch) and contains desiccant beads.",
+      "howItWorks": "Keeps the panes parallel and absorbs residual moisture trapped during IGU sealing.",
+      "tradeoffs": "Continuous aluminum spacers are rigid and durable, while 'warm-edge' stainless-steel or polymer-hybrid spacers reduce heat bridging around the glass perimeter."
+    },
+    "edge-seal": {
+      "summary": "A two-stage perimeter seal around an IGU: polyisobutylene (PIB) as the primary vapor/gas barrier, backed by silicone as the secondary structural adhesive.",
+      "howItWorks": "PIB has extremely low moisture and argon permeability; silicone resists UV light and holds the two panes together mechanically against wind and thermal expansion."
+    },
+    "vitro-solarban-70": {
+      "summary": "A widely specified commercial triple-silver sputtered low-e coated glass manufactured by Vitro Architectural Glass.",
+      "howItWorks": "Three nanometer-thin layers of pure silver sandwiched between transparent metal-oxide layers reflect infrared heat while letting visible light pass through.",
+      "whyItMatters": "Sets the commercial benchmark for spectrally selective glazing—high daylight with low solar heat gain."
+    },
+    "igu-gray-air": {
+      "summary": "A 1-inch insulating glass configuration combining a Solargray outer pane coated with Solarban 70 on surface #2, a 1/2-inch dry air cavity, and a clear inner pane.",
+      "tradeoffs": "Achieves 0.28 center-of-glass U-factor and 0.19 SHGC without relying on argon gas retention."
+    },
+    "igu-gray-argon": {
+      "summary": "The argon-filled counterpart to the Solarban 70 Solargray + Clear IGU.",
+      "tradeoffs": "Improves center-of-glass U-factor from 0.28 to 0.24 Btu/(h·ft²·°F) with identical SHGC (0.19) and visible light transmittance (32%)."
+    },
+    "winco-4410s": {
+      "summary": "An architectural-grade (AW-65) 4-inch thermally broken extruded aluminum fixed and single-hung window system from Winco Window.",
+      "whyItMatters": "Built for schools, universities, and institutional buildings that demand high wind-load strength, long service life, and heavy-duty hardware."
+    },
+    "winco-4410s-single-hung": {
+      "summary": "Operable single-hung configuration of the Winco 4410S aluminum window (6063-T6 extrusions with poured polyurethane thermal break).",
+      "tradeoffs": "Delivers 97.5 psf structural design pressure (AW-65) and tight 0.02 cfm/ft² air infiltration, at a higher whole-window U-factor (0.50) than polymer-composite residential windows."
+    },
+    "kawneer-optiq-5450": {
+      "summary": "A commercial thermally broken aluminum operable window series from Kawneer, approved alongside Winco 4410S in institutional specs."
+    },
+    "andersen-100-series": {
+      "summary": "Andersen's residential and light-commercial window line built with extruded Fibrex wood-fiber/thermoplastic composite frames instead of aluminum or vinyl.",
+      "whyItMatters": "Demonstrates how switching frame material from metal to polymer composite dramatically lowers whole-window heat loss."
+    },
+    "andersen-100-single-hung": {
+      "summary": "NFRC-certified single-hung Andersen 100 Series unit (AND-N-80-02062-00001) pairing a Fibrex composite frame with Low-E SmartSun HeatLock argon glazing.",
+      "tradeoffs": "Achieves half the whole-window heat loss of the aluminum Winco 4410S (U = 0.25 vs. 0.50), with a lighter-duty structural rating (LC-PG30 / 30 psf vs. AW-65 / 97.5 psf)."
+    },
+    "soda-lime-glass": {
+      "summary": "The standard transparent flat glass used in ~90% of building windows, made by melting silica sand (~72%), soda ash (~13–14% as Na₂O), and limestone (~9–10% as CaO).",
+      "howItWorks": "Cooling the molten mixture quickly prevents crystals from forming, freezing the atoms into a rigid, disordered (amorphous) transparent solid.",
+      "tradeoffs": "Inexpensive, optically clear, and indefinitely recyclable, but brittle in tension and a relatively poor thermal insulator on its own."
+    },
+    "low-e-coating": {
+      "summary": "An ultra-thin (~100–200 nm total) multilayer metallic-oxide stack with three pure silver layers that reflects infrared heat while transmitting visible light.",
+      "howItWorks": "Free electrons in the nanometer-thin silver sheets reflect long-wave room heat and near-infrared solar heat, while surrounding dielectric oxide layers tune optical clarity and protect the silver."
+    },
+    "argon-fill": {
+      "summary": "Colorless, odorless, non-toxic noble gas sealed inside high-performance IGUs to reduce thermal transfer across the cavity."
+    },
+    "air-fill": {
+      "summary": "Ambient air dried via spacer desiccant and sealed inside standard IGUs."
+    },
+    "aluminum-alloy": {
+      "summary": "Architectural extrusion alloy (6063-T6) combining high strength-to-weight ratio, corrosion resistance, and crisp extrudable profiles for frames, sashes, and spacers.",
+      "tradeoffs": "High thermal conductivity (~200 W/m·K) requires a structural thermal break to avoid cold interior frames and condensation."
+    },
+    "polyurethane-thermal-break": {
+      "summary": "A rigid, high-density 2-part structural polyurethane poured into a serrated channel inside an aluminum extrusion, then debridged so indoor and outdoor aluminum never touch.",
+      "howItWorks": "Interrupts the conductive metal path across the window frame while maintaining structural shear strength."
+    },
+    "fibrex-composite": {
+      "summary": "A proprietary wood-polymer composite (reclaimed wood cellulose fiber blended with thermoplastic PVC polymer) extruded into window frames and sashes.",
+      "tradeoffs": "Blocks thermal transfer far better than aluminum and is stiffer than unreinforced vinyl, though not rated for heavy high-rise AW structural loads."
+    },
+    "polyisobutylene": {
+      "summary": "A synthetic rubber (PIB) applied as the primary inner edge seal of an IGU because it is almost impermeable to water vapor and argon gas."
+    },
+    "silicone-sealant": {
+      "summary": "A UV-stable synthetic rubber applied as the secondary outer edge seal of an IGU to structurally bond the glass panes and resist sunlight degradation."
+    },
+    "silica-sand": {
+      "summary": "High-purity quartz sand (≥95% SiO₂, low iron oxide) quarried as the primary glass-forming feedstock in float glassmaking."
+    },
+    "soda-ash": {
+      "summary": "Industrial sodium carbonate (Na₂CO₃), mostly mined from Wyoming trona ore in the U.S. Acts as a flux to lower silica's melting point from >1700 °C to ~1500 °C."
+    },
+    "limestone": {
+      "summary": "Quarried calcium carbonate (CaCO₃) rock added to the glass batch as a stabilizer so finished soda-lime glass does not slowly dissolve in water."
+    },
+    "amorphous-silicate-network": {
+      "summary": "A disordered 3D web of corner-linked SiO₄ tetrahedra without repeating crystal planes.",
+      "howItWorks": "Lack of crystal grain boundaries eliminates internal light scattering (making glass transparent), while Na⁺ and Ca²⁺ ions sit in gaps where they break Si–O–Si bridges to modify melt viscosity and durability."
+    },
+    "silicon-dioxide": {
+      "summary": "Primary glass network former (~72 wt% of commercial float glass).",
+      "chemistry": {
+        "formula": "SiO₂",
+        "molarMass": "60.08 g/mol",
+        "category": "oxide / network former",
+        "role": "Forms the covalent 3D SiO₄ tetrahedral backbone of glass."
+      }
+    },
+    "sodium-oxide": {
+      "summary": "Alkali flux oxide (~13.2–13.9 wt% of float glass), introduced via soda ash.",
+      "chemistry": {
+        "formula": "Na₂O",
+        "molarMass": "61.98 g/mol",
+        "category": "alkali oxide / flux",
+        "role": "Lowers melting temperature and viscosity of molten glass, but reduces water resistance if not balanced by CaO."
+      }
+    },
+    "calcium-oxide": {
+      "summary": "Alkaline-earth stabilizer oxide (~8.7–10.2 wt% of float glass), introduced via limestone.",
+      "chemistry": {
+        "formula": "CaO",
+        "molarMass": "56.08 g/mol",
+        "category": "alkaline-earth oxide / stabilizer",
+        "role": "Restores chemical durability and weather resistance to soda-silica glass."
+      }
+    },
+    "sodium-carbonate": {
+      "summary": "Chemical compound of commercial soda ash used in glass batching.",
+      "chemistry": {
+        "formula": "Na₂CO₃",
+        "molarMass": "105.99 g/mol",
+        "category": "carbonate salt",
+        "role": "Decomposes in the glass furnace (~1500 °C) into Na₂O (flux) and CO₂ gas."
+      }
+    },
+    "calcium-carbonate": {
+      "summary": "Primary mineral compound in limestone used as a glass batch stabilizer.",
+      "chemistry": {
+        "formula": "CaCO₃",
+        "molarMass": "100.09 g/mol",
+        "category": "carbonate mineral",
+        "role": "Decomposes in the glass furnace into CaO (stabilizer) and CO₂ gas."
+      }
+    },
+    "silicon": {
+      "summary": "Metalloid element at the center of every SiO₄ tetrahedron in silicate glass.",
+      "chemistry": {
+        "formula": "Si",
+        "atomicNumber": 14,
+        "molarMass": "28.09 g/mol",
+        "category": "metalloid",
+        "role": "Bonds covalently to four oxygen atoms to build the rigid glass network."
+      }
+    },
+    "oxygen": {
+      "summary": "Element forming both the covalent bridges in glass and ~21% of dry air.",
+      "chemistry": {
+        "formula": "O / O₂",
+        "atomicNumber": 8,
+        "molarMass": "16.00 g/mol (O) / 32.00 g/mol (O₂)",
+        "category": "nonmetal",
+        "role": "Links silicon atoms as bridging oxygens (Si–O–Si) or terminates chains next to Na⁺/Ca²⁺ as non-bridging oxygens."
+      }
+    },
+    "sodium-ion": {
+      "summary": "Positively charged sodium cation embedded in the silicate glass network.",
+      "chemistry": {
+        "formula": "Na⁺",
+        "atomicNumber": 11,
+        "molarMass": "22.99 g/mol",
+        "category": "alkali metal ion",
+        "role": "Network modifier: each Na⁺ creates one non-bridging oxygen, lowering glass melt viscosity."
+      }
+    },
+    "calcium-ion": {
+      "summary": "Doubly charged calcium cation embedded in the silicate glass network.",
+      "chemistry": {
+        "formula": "Ca²⁺",
+        "atomicNumber": 20,
+        "molarMass": "40.08 g/mol",
+        "category": "alkaline-earth metal ion",
+        "role": "Network stabilizer: each Ca²⁺ bridges two non-bridging oxygens, improving chemical durability."
+      }
+    },
+    "nitrogen": {
+      "summary": "Diatomic gas making up ~78% of dry air inside air-filled IGUs.",
+      "chemistry": {
+        "formula": "N₂",
+        "atomicNumber": 7,
+        "molarMass": "28.01 g/mol",
+        "category": "diatomic nonmetal gas",
+        "role": "Primary constituent of dry air cavity fills and protective float-bath atmospheres."
+      }
+    },
+    "argon": {
+      "summary": "Inert noble gas (~0.93% of ambient air) used as a low-conductivity IGU cavity fill.",
+      "chemistry": {
+        "formula": "Ar",
+        "atomicNumber": 18,
+        "molarMass": "39.95 g/mol",
+        "category": "noble gas",
+        "role": "Heavier and ~30% less thermally conductive than air, reducing heat transfer across the glass gap."
+      }
+    },
+    "silver": {
+      "summary": "Precious metal with the highest optical and infrared reflectivity of any metal.",
+      "chemistry": {
+        "formula": "Ag",
+        "atomicNumber": 47,
+        "molarMass": "107.87 g/mol",
+        "category": "transition metal",
+        "role": "Three nanometer-scale silver layers give triple-silver low-e coatings their infrared heat reflection."
+      }
+    },
+    "aluminum": {
+      "summary": "Lightweight, corrosion-resistant metal refined from bauxite ore.",
+      "chemistry": {
+        "formula": "Al",
+        "atomicNumber": 13,
+        "molarMass": "26.98 g/mol",
+        "category": "post-transition metal",
+        "role": "Base element of 6063-T6 extruded window frames, sashes, and perimeter IGU spacers."
+      }
+    },
+    "isobutylene-polymer": {
+      "summary": "Tightly packed hydrocarbon polymer chain forming polyisobutylene (PIB).",
+      "chemistry": {
+        "formula": "(C₄H₈)ₙ",
+        "molarMass": "56.11 g/mol (repeat unit)",
+        "category": "synthetic elastomer",
+        "role": "Dense methyl side-groups block moisture vapor and argon molecules from diffusing through the IGU seal."
+      }
+    },
+    "siloxane-polymer": {
+      "summary": "Inorganic silicon–oxygen backbone polymer forming silicone sealants.",
+      "chemistry": {
+        "formula": "(R₂SiO)ₙ",
+        "molarMass": "74.15 g/mol (PDMS repeat unit)",
+        "category": "silicone elastomer",
+        "role": "Strong Si–O bonds resist UV sunlight and outdoor weathering for structural IGU sealing."
+      }
+    },
+    "polyurethane-polymer": {
+      "summary": "Cross-linked thermoset polymer formed by reacting isocyanate and polyol components.",
+      "chemistry": {
+        "formula": "R–NH–CO–O–R'",
+        "category": "thermoset polymer",
+        "role": "Provides a rigid, low-conductivity structural thermal break inside aluminum extrusions."
+      }
+    },
+    "cellulose-fiber": {
+      "summary": "Natural structural polymer from reclaimed wood sawdust.",
+      "chemistry": {
+        "formula": "(C₆H₁₀O₅)ₙ",
+        "molarMass": "162.14 g/mol (glucose unit)",
+        "category": "biopolymer",
+        "role": "Reinforces thermoplastic resin in Fibrex composite frames, increasing stiffness and reducing thermal expansion."
+      }
+    },
+    "pvc-polymer": {
+      "summary": "Thermoplastic vinyl resin used as the binder in wood-polymer composite window frames.",
+      "chemistry": {
+        "formula": "(C₂H₃Cl)ₙ",
+        "molarMass": "62.50 g/mol (repeat unit)",
+        "category": "thermoplastic polymer",
+        "role": "Encapsulates wood fibers for moisture resistance and allows continuous thermal extrusion."
+      }
+    },
+    "float-glass-forming": {
+      "summary": "The Pilkington float process turns raw sand, soda ash, and limestone into perfectly flat architectural glass sheets.",
+      "steps": [
+        "Mix silica sand, soda ash, limestone, and recycled cullet into a furnace at ~1600 °C.",
+        "Refine (remove bubbles) and cool the molten glass to ~1050 °C.",
+        "Pour onto a shallow bath of molten tin in a nitrogen/hydrogen atmosphere so gravity and surface tension flatten both sides.",
+        "Cool slowly through an annealing lehr (~600 °C → room temp) to relieve internal stress, then score and cut into ribbon sheets."
+      ],
+      "whyItMatters": "Produces optically distortion-free flat glass continuously at industrial scale—without grinding or polishing."
+    },
+    "sputter-coating": {
+      "summary": "Off-line vacuum physical vapor deposition (magnetron sputtering) that applies nanometer-thin silver and metal-oxide low-e layers onto float glass.",
+      "steps": [
+        "Wash annealed glass sheets to atomic cleanliness and load into a multi-chamber vacuum coater.",
+        "Bombard solid metal targets (silver, zinc, tin) with energetic argon ions to eject atoms onto the glass surface.",
+        "Deposit 13–15 alternating dielectric, blocker, and silver layers totaling under ~200 nanometers."
+      ],
+      "whyItMatters": "Creates 'soft-coat' triple-silver low-e glass—much higher solar selectivity than pyrolytic hard coats, though it must be sealed inside an IGU."
+    },
+    "thermal-break-pouring": {
+      "summary": "Pour-and-debridge process that turns a single conductive aluminum extrusion into a thermally broken window frame.",
+      "steps": [
+        "Mechanically abrade/serrate the aluminum thermal cavity (e.g., Azon Azo Brader) for structural grip.",
+        "Pour liquid 2-part structural polyurethane into the channel and let it cure solid.",
+        "Mill away ('debridge') the thin aluminum bridge at the bottom of the channel so interior and exterior metal no longer touch."
+      ],
+      "whyItMatters": "Dramatically reduces heat conduction and interior condensation on commercial aluminum frames."
+    },
+    "composite-extrusion": {
+      "summary": "Heats compounded wood-fiber/thermoplastic pellets and forces them through shaped steel dies to form continuous Fibrex window frame and sash profiles.",
+      "whyItMatters": "Produces hollow, low-conductivity, weather-resistant profiles without needing a separate metal thermal break."
+    },
+    "cryogenic-air-separation": {
+      "summary": "Chills purified ambient air below −185 °C and separates nitrogen, oxygen, and argon by fractional distillation based on their boiling points.",
+      "whyItMatters": "Supplies the high-purity (>99.9%) argon gas injected into energy-efficient IGUs."
+    },
+    "vitro": {
+      "summary": "North America's largest architectural flat glass manufacturer (formerly PPG Flat Glass, acquired by Vitro in 2016).",
+      "firm": {
+        "founded": 1909,
+        "headquarters": "Cheswick, Pennsylvania (U.S. HQ; parent in Monterrey, Mexico)",
+        "segment": "Primary flat glass & low-e coatings",
+        "knownFor": "Solarban® triple-silver low-e coatings, Starphire® ultra-clear glass, and Cradle-to-Cradle / low-embodied-carbon architectural glass.",
+        "website": "https://www.vitroglazings.com"
+      }
+    },
+    "winco": {
+      "summary": "U.S. manufacturer specializing in heavy-duty architectural-grade (AW) aluminum windows for schools, universities, hospitals, and historic renovations.",
+      "firm": {
+        "founded": 1915,
+        "headquarters": "St. Louis, Missouri",
+        "segment": "Commercial & institutional aluminum windows",
+        "knownFor": "Thermally broken AW-class extruded aluminum windows, blast/impact-resistant systems, and historic-profile institutional glazing.",
+        "website": "https://www.wincowindow.com"
+      }
+    },
+    "kawneer": {
+      "summary": "Major North American commercial architectural aluminum systems manufacturer (curtain walls, storefronts, entrances, and thermal windows).",
+      "firm": {
+        "founded": 1906,
+        "headquarters": "Peachtree Corners, Georgia",
+        "segment": "Commercial architectural aluminum systems",
+        "knownFor": "Storefront framing, unitized curtain walls, and OptiQ® thermal window systems.",
+        "website": "https://www.kawneer.com"
+      }
+    },
+    "andersen": {
+      "summary": "Largest U.S. residential window and door manufacturer, operating across wood, aluminum-clad, and proprietary Fibrex® composite product lines.",
+      "firm": {
+        "founded": 1903,
+        "headquarters": "Bayport, Minnesota",
+        "segment": "Residential & light-commercial windows and doors",
+        "knownFor": "100 Series (Fibrex composite), 400 Series (wood/vinyl-clad), and founding membership in the NFRC.",
+        "website": "https://www.andersenwindows.com"
+      }
+    },
+    "primary-glassmaker": {
+      "summary": "Large capital-intensive float glass manufacturers (e.g., Vitro, Guardian, AGC, Pilkington/NSG) operating continuous 24/7 melting furnaces.",
+      "firm": {
+        "segment": "Primary float glass production"
+      }
+    },
+    "glazing-fabricator": {
+      "summary": "Regional glass processors who buy jumbo float/coated sheets, cut, temper, assemble spacers/sealants, and seal finished IGUs to project dimensions.",
+      "firm": {
+        "segment": "Secondary glass & IGU fabrication"
+      }
+    },
+    "window-manufacturer": {
+      "summary": "Firms that extrude or machine frames/sashes, integrate IGUs and hardware, and ship complete tested window units.",
+      "firm": {
+        "segment": "Fenestration assembly & manufacturing"
+      }
+    },
+    "architect-specifier": {
+      "summary": "Design professionals who write Division 08 specifications setting thermal, structural, durability, and aesthetic requirements.",
+      "firm": {
+        "segment": "Architecture & specification"
+      }
+    },
+    "glazing-installer": {
+      "summary": "Specialized field trade contractors who flash rough openings, anchor window frames, apply perimeter air/water seals, and coordinate field water testing.",
+      "firm": {
+        "segment": "Field glazing & building envelope installation"
+      }
+    },
+    "masonry-wall-assembly": {
+      "summary": "An exterior anchored masonry veneer wall combining a single wythe of brick or concrete masonry units, 3/8-inch tooled mortar joints, galvanized wall ties, a drained cavity air space, stainless steel through-wall flashing with weeps, and galvanized opening lintels.",
+      "howItWorks": "Masonry veneer acts as a drained rainscreen: any rainwater that penetrates hairlines in the masonry or mortar drains down the back of the wythe inside the air cavity, lands on the stainless through-wall flashing, and exits through cell weeps.",
+      "whyItMatters": "Anchored masonry walls frame window openings directly—loose steel lintels set the window jamb depth, while silicone perimeter joints seal the Division 04 / Division 08 boundary."
+    },
+    "masonry-unit": {
+      "summary": "The primary modular building block of a masonry wythe—either kiln-fired clay facing brick (ASTM C216) or hydraulic-cement concrete masonry units (ASTM C90).",
+      "tradeoffs": "Fired clay brick offers 150-year service life, high compressive strength (>7,000–14,000 psi), and zero drying shrinkage; concrete masonry units offer larger modular speed, higher STC (52–53), longer fire ratings (1.8 hr), and lower cradle-to-gate GWP per kg without brick kiln firing."
+    },
+    "mortar-joint": {
+      "summary": "A 3/8-inch tooled bed and head joint of hydrated Portland-cement-lime-sand mortar (ASTM C270) that bonds masonry units, levels dimensional tolerances, and sheds rain.",
+      "howItWorks": "Tooling the joint concave or V-shaped when thumb-print hard compacts the surface mortar tightly against the brick edges to resist rainwater penetration.",
+      "tradeoffs": "Mortar should be tailored to the unit: Type N (750 psi) gives flexibility and breathability for clay brick veneers, while Type S (1,800 psi) adds flexural bond and structural capacity for loadbearing or below-grade CMU."
+    },
+    "masonry-wall-tie": {
+      "summary": "Mechanical steel anchors spaced at 16 inches on center that tie an exterior masonry veneer wythe across the air cavity to the structural backup wall.",
+      "howItWorks": "Transfers horizontal wind suction and pressure loads from the veneer into the building frame while allowing slight vertical differential movement.",
+      "whyItMatters": "Institutional specs ban flimsy corrugated sheet ties in favor of rigid two-piece adjustable wire-and-backplate systems (like Hohmann & Barnard HB-200-X / HB-213)."
+    },
+    "masonry-drainage-cavity": {
+      "summary": "A continuous 1- to 2-inch open air space between the exterior masonry wythe and the interior weather barrier / insulation.",
+      "howItWorks": "Breaks capillary moisture bridging and creates a gravity drainage and ventilation plane behind the veneer, aided by a mortar-dropping drainage net above flashed levels."
+    },
+    "masonry-flashing-weeps": {
+      "summary": "A 26-gauge Type 304 stainless steel bed flashing pan paired with flexible through-wall membrane and plastic cell vent weeps spaced every 2 feet on center.",
+      "howItWorks": "Collects water descending inside the masonry cavity at base walls, shelf angles, and window lintels, directing it cleanly back outside through open cell weeps."
+    },
+    "masonry-loose-lintel": {
+      "summary": "A hot-dip galvanized structural steel angle (ASTM A123/A153) spanning across window and door openings to carry the weight of the masonry veneer above.",
+      "howItWorks": "Bears at least 8 inches onto the masonry jambs on each side and sits recessed 1 inch behind the brick face so a full tooled mortar joint protects the steel edge from freeze-thaw spalling."
+    },
+    "masonry-control-joint-seal": {
+      "summary": "An elastomeric silicone expansion/control joint (e.g., Dow 790/795) placed vertically in masonry walls and around window perimeters.",
+      "howItWorks": "Accommodates thermal and irreversible clay moisture expansion without cracking the masonry wythe, and bridges the window-to-masonry opening watertightly."
+    },
+    "glengery-extruded-brick": {
+      "summary": "Glen-Gery's commercial stiff-mud wirecut extruded clay facing brick line manufactured to ASTM C216 Grade SW, Type FBS.",
+      "whyItMatters": "Represents standard North American institutional extruded clay brick with facility-specific ISO 14025 / 21930 EPDs and a 150-year reference service life."
+    },
+    "belden-facing-brick": {
+      "summary": "The Belden Brick Company's architectural fireclay and shale facing brick line conforming to ASTM C216 Grade SW.",
+      "whyItMatters": "Provides independently measured ASTM C67 laboratory test benchmarks (National Brick Research Center / Bishop Materials Laboratory) for compressive strength, absorption, saturation coefficient, and IRA."
+    },
+    "echelon-cmu": {
+      "summary": "Oldcastle APG / Echelon Masonry's normal-weight loadbearing concrete masonry unit (CMU) line manufactured to ASTM C90.",
+      "whyItMatters": "Provides a direct hydraulic-cement concrete counterpart to kiln-fired clay brick for comparing chemistry, process energy, acoustic STC, fire rating, and embodied carbon."
+    },
+    "specmix-portland-lime-mortar": {
+      "summary": "Factory-proportioned dry preblended Portland cement, hydrated lime, and dried ASTM C144 masonry sand delivered in 80-lb bags or 3,000-lb jobsite silo bulk bags.",
+      "whyItMatters": "Eliminates field shovel-batching variability—guaranteeing exact ASTM C270 / C1714 Type N and Type S compressive strength, water retention, and air limits."
+    },
+    "hb-200-x-anchor": {
+      "summary": "Hohmann & Barnard's two-piece adjustable masonry veneer anchor pairing a slotted backplate with a 3/16-inch cold-drawn 2X-Hook wire tie.",
+      "whyItMatters": "Rated over 200 lbf in tension/compression at maximum vertical offset while fitting neatly inside a 3/8-inch mortar bed joint."
+    },
+    "glengery-clay-brick-veneer": {
+      "summary": "Complete anchored exterior clay brick veneer wall using Glen-Gery Modular Grade SW extruded brick (150.48 kg/m²), SPEC MIX Type N Portland-lime mortar, and H&B HB-200-X galvanized ties.",
+      "tradeoffs": "Delivers a 150-year reference service life and low-maintenance vitrified ceramic durability (STC 45, 1-hr fire rating, R-0.40, 47.6 kg CO₂e/m² A1–A3), with smaller unit scale and higher kiln firing energy per kg than concrete block."
+    },
+    "glengery-modular-clay-brick": {
+      "summary": "Standard modular (3-5/8\" × 2-1/4\" × 7-5/8\", 1.8 kg) extruded clay facing brick from Glen-Gery's Mid-Atlantic plant (98.62% mined clay & shale).",
+      "tradeoffs": "High typical compressive strength (7,000–30,000 psi) and Grade SW freeze-thaw durability at 6.75 units/ft²."
+    },
+    "belden-canton-clay-brick": {
+      "summary": "Belden Brick Canton Plant all-fireclay facing brick (NBRC Report 13057-32387) measured at 14,620 psi compressive strength, 4.6% 24-hr cold absorption, 5.9% 5-hr boil absorption, 0.77 saturation coefficient, and 9.7 g/(min·30 in²) IRA.",
+      "whyItMatters": "Demonstrates real lab-measured ASTM C67-23a performance well beyond ASTM C216 Grade SW minimums."
+    },
+    "echelon-cmu-veneer": {
+      "summary": "Normal-weight loadbearing concrete masonry wall pairing Echelon ASTM C90 CMUs with SPEC MIX Type S structural mortar and H&B galvanized anchors.",
+      "tradeoffs": "Achieves higher acoustic attenuation (STC 52–53), longer fire rating (1.8 hr), and avoids high-temperature brick kiln firing (205 kg CO₂e/m³ A1–A3), with a 100-year service life and higher dependence on Portland cement clinker."
+    },
+    "echelon-normal-weight-cmu": {
+      "summary": "Expocrete / Echelon normal-weight hollow concrete masonry unit (ASTM C90, 20 MPa average loadbearing capacity, 1,058 kg/m³ gross bulk density).",
+      "tradeoffs": "Zero kiln brick firing—gains strength via ambient/steam hydration of Portland cement around crushed stone aggregate."
+    },
+    "specmix-mortar-type-n": {
+      "summary": "ASTM C270 Type N Portland-cement-lime mortar (PL-04): 750 psi min 28-day compressive strength, ≥75% water retention, ≤14% air content.",
+      "tradeoffs": "Higher lime-to-cement ratio yields superior workability, self-healing elasticity, and vapor permeability—the institutional standard for exterior above-grade clay brick veneer."
+    },
+    "specmix-mortar-type-s": {
+      "summary": "ASTM C270 Type S Portland-cement-lime mortar (PL-03): 1,800 psi min 28-day compressive strength, ≥75% water retention, ≤12% air content.",
+      "tradeoffs": "More than doubles compressive strength vs. Type N (1,800 vs. 750 psi) and tightens max air content to 12% for loadbearing CMU, high lateral wind loads, and below-grade masonry."
+    },
+    "hb-200-x-galvanized-tie": {
+      "summary": "Hot-dip galvanized (ASTM A153-B, 1.5 oz/ft² zinc) carbon steel (ASTM A1064, 80,000 psi tensile) adjustable veneer anchor with 3/16-inch 2X-Hook.",
+      "tradeoffs": "Economical corrosion protection for brick veneers; stainless steel Type 304/316 is specified when anchoring stone or in coastal/severe exposure."
+    },
+    "brick-clay-shale": {
+      "summary": "Surface-mined common clay and shale feedstock rich in quartz (48–86 wt%), kaolinite (13–27 wt%), alumina (14–24 wt% Al₂O₃), and iron oxide (4.4–6.8 wt% Fe₂O₃).",
+      "whyItMatters": "USGS reports 47% of U.S. common clay goes into brick and 22% goes into Portland cement—linking both clay brick and concrete masonry to the same geological deposits."
+    },
+    "gypsum-rock": {
+      "summary": "Mined calcium sulfate dihydrate (CaSO₄·2H₂O) interground in small percentages with Portland cement clinker.",
+      "whyItMatters": "Has no practical substitute in Portland cement manufacturing—without gypsum, tricalcium aluminate (C₃A) would flash-set instantly upon contact with water."
+    },
+    "iron-ore": {
+      "summary": "Open-pit mined hematite/taconite iron ore pellets used both as the primary feedstock for structural steel/wire and as an iron flux in Portland cement kilns.",
+      "whyItMatters": "Supplies both the carbon steel wire in masonry wall ties/lintels and the iron oxide flux that lowers cement clinker sintering temperatures."
+    },
+    "crushed-stone-aggregate": {
+      "summary": "Quarried and graded carbonate and siliceous rock particles forming ~80%+ of the structural skeleton of concrete masonry units.",
+      "whyItMatters": "Provides dimensional stability, compressive stiffness, and mass while minimizing the volume of high-carbon Portland cement paste needed per block."
+    },
+    "zinc-metal": {
+      "summary": "Refined Special High Grade (≥99.99%) zinc metal used in molten hot-dip galvanizing baths.",
+      "whyItMatters": "Galvanized steel is the #1 end use of zinc in the United States, protecting concealed masonry ties and lintels from cavity moisture corrosion."
+    },
+    "mixing-water": {
+      "summary": "Clean potable water free of acids, alkalis, or organic impurities used to temper clay for extrusion and chemically hydrate Portland cement in mortar and CMU.",
+      "howItWorks": "In cementitious masonry, water is not just a lubricant—it chemically reacts with clinker silicates (C₃S and C₂S) to crystallize the solid C–S–H binding gel."
+    },
+    "fired-clay-brick-body": {
+      "summary": "A permanent vitrified ceramic solid (1,988 kg/m³ gross density) produced by firing extruded clay/shale above 1,050 °C until a silicate liquid phase fuses quartz grains and mullite crystals together.",
+      "howItWorks": "Above 520 °C kaolinite loses structural water; above 1,050 °C alumina and silica crystallize into interlocking mullite (33–37 wt%) while molten silicate glass seals open pores and hematite gives the brick its red color."
+    },
+    "portland-cement": {
+      "summary": "Finely ground hydraulic binder made by sintering limestone, shale, and iron at ~1,500 °C into clinker (57.9% alite C₃S, 24.7% belite C₂S, 9.6% C₃A) and intergrinding with gypsum.",
+      "howItWorks": "Reacts chemically with water at room temperature to form calcium-silicate-hydrate (C–S–H) gel that glues sand and stone aggregates into solid concrete block and mortar."
+    },
+    "hydrated-lime": {
+      "summary": "Dry calcium hydroxide (Ca(OH)₂) powder made by calcining limestone into quicklime (CaO) and reacting it with controlled water in a hydrator.",
+      "howItWorks": "In ASTM C270 masonry mortar, ultra-fine hydrated lime platelets retain water, create creamy trowel workability, and slowly recarbonate with atmospheric CO₂ to autogenously heal microcracks."
+    },
+    "concrete-masonry-body": {
+      "summary": "Zero-slump hydraulic concrete formed by vibro-compacting Portland cement, graded stone aggregate, and water in steel molds, then curing into a hardened C–S–H bound matrix.",
+      "tradeoffs": "Requires no 1,100 °C ceramic firing kiln—its embodied carbon comes primarily from Portland cement clinker calcination."
+    },
+    "type-n-portland-lime-mortar": {
+      "summary": "Medium-strength (750 psi min) Portland-cement-lime-sand masonry mortar formulated with higher lime share for exterior brick veneer workability and elasticity.",
+      "tradeoffs": "Absorbs thermal movement better than stiffer Type S/M mortars so bricks do not spall at the edges."
+    },
+    "type-s-portland-lime-mortar": {
+      "summary": "High-strength (1,800 psi min) Portland-cement-lime-sand mortar with a higher Portland cement ratio for structural CMU, high wind loads, and below-grade exposure.",
+      "tradeoffs": "Delivers 2.4× the minimum compressive strength of Type N and tighter air limits (≤12%), with slightly lower crack-healing plasticity."
+    },
+    "galvanized-steel": {
+      "summary": "Cold-drawn carbon steel wire (ASTM A1064) or structural angle coated by immersion in molten zinc (ASTM A153 Class B, 1.5 oz/ft²).",
+      "howItWorks": "Metallurgically bonded zinc-iron alloy layers provide both a barrier and cathodic sacrificial protection inside damp masonry wall cavities."
+    },
+    "type-304-stainless-steel": {
+      "summary": "Corrosion-resistant austenitic iron-chromium alloy (26-gauge sheet) specified for permanent through-wall masonry bed flashing.",
+      "howItWorks": "Chromium forms an invisible, self-healing chromium-oxide passive film that resists alkaline mortar leachate and trapped cavity moisture for the life of the building."
+    },
+    "fired-clay-ceramic-matrix": {
+      "summary": "A composite ceramic microstructure combining interlocking crystalline mullite (3Al₂O₃·2SiO₂) needles, residual quartz/cristobalite grains, hematite pigments, and an amorphous silicate glassy binder.",
+      "howItWorks": "The glassy silicate melt shrinks and closes capillary pores during firing, while crystalline quartz and mullite provide rigid compressive strength and dimensional stability."
+    },
+    "csh-hydration-gel": {
+      "summary": "A nanoscale network of foil-like and fibrous calcium-silicate-hydrate (C–S–H) gel intergrown with hexagonal plates of portlandite (Ca(OH)₂) that forms when Portland cement reacts with water.",
+      "howItWorks": "As alite (C₃S) and belite (C₂S) dissolve in mixing water, C–S–H fibers grow outward from cement grains, interlocking across pore spaces to bind masonry sand and stone aggregate into rock-hard mortar and CMU."
+    },
+    "aluminum-oxide": {
+      "summary": "Alumina oxide component (~14–24 wt% of brick clay, ~5.5 wt% of Portland cement clinker).",
+      "chemistry": {
+        "formula": "Al₂O₃",
+        "molarMass": "101.96 g/mol",
+        "category": "amphoteric oxide",
+        "role": "Supplies aluminum ions that form mullite crystals in fired clay brick and C₃A aluminate phases in cement clinker."
+      }
+    },
+    "iron-iii-oxide": {
+      "summary": "Hematite iron oxide (~4.4–6.8 wt% of brick clay, ~2.4 wt% of cement clinker, primary mineral in iron ore).",
+      "chemistry": {
+        "formula": "Fe₂O₃",
+        "molarMass": "159.69 g/mol",
+        "category": "transition-metal oxide",
+        "role": "Produces the signature red color of fired clay brick, acts as a sintering flux, and supplies iron for steelmaking."
+      }
+    },
+    "kaolinite": {
+      "summary": "Layered hydrous aluminosilicate clay mineral (13–27 wt% of kaolinitic brick clays).",
+      "chemistry": {
+        "formula": "Al₂Si₂O₅(OH)₄",
+        "molarMass": "258.16 g/mol",
+        "category": "phyllosilicate clay mineral",
+        "role": "Provides wet plasticity for brick extrusion; dehydroxylates at 520–550 °C and transforms into mullite above 1,050 °C."
+      }
+    },
+    "mullite": {
+      "summary": "High-temperature orthorhombic aluminosilicate crystal (33–37 wt% of fired kaolinitic brick).",
+      "chemistry": {
+        "formula": "3Al₂O₃·2SiO₂",
+        "molarMass": "426.05 g/mol",
+        "category": "aluminosilicate ceramic crystal",
+        "role": "Forms needle-like crystals during kiln firing that reinforce the fired ceramic body against thermal and mechanical stress."
+      }
+    },
+    "tricalcium-silicate": {
+      "summary": "Alite—the dominant crystalline phase (~57.9 wt% in NIST SRM 2687a) of Portland cement clinker.",
+      "chemistry": {
+        "formula": "Ca₃SiO₅ (C₃S)",
+        "molarMass": "228.32 g/mol",
+        "category": "calcium silicate clinker mineral",
+        "role": "Hydrates rapidly with water to produce C–S–H gel and portlandite, driving 1- to 28-day mortar and CMU strength."
+      }
+    },
+    "dicalcium-silicate": {
+      "summary": "Belite—the second major crystalline phase (~24.7 wt% in NIST SRM 2687a) of Portland cement clinker.",
+      "chemistry": {
+        "formula": "Ca₂SiO₄ (C₂S)",
+        "molarMass": "172.24 g/mol",
+        "category": "calcium silicate clinker mineral",
+        "role": "Hydrates slowly over months to yield dense secondary C–S–H gel, contributing long-term durability and strength."
+      }
+    },
+    "tricalcium-aluminate": {
+      "summary": "Interstitial aluminate phase (~9.6 wt% in NIST SRM 2687a) of Portland cement clinker.",
+      "chemistry": {
+        "formula": "Ca₃Al₂O₆ (C₃A)",
+        "molarMass": "270.19 g/mol",
+        "category": "calcium aluminate clinker mineral",
+        "role": "Reacts rapidly with water and interground gypsum to control early mortar stiffening and setting time."
+      }
+    },
+    "calcium-hydroxide": {
+      "summary": "Portlandite / slaked hydrated lime—both an added mortar plasticizer (ASTM C207) and a crystalline byproduct of cement hydration.",
+      "chemistry": {
+        "formula": "Ca(OH)₂",
+        "molarMass": "74.09 g/mol",
+        "category": "alkaline-earth hydroxide",
+        "role": "Maintains high alkaline pore pH (~12.5) that passivates embedded steel ties and enhances fresh mortar water retention."
+      }
+    },
+    "calcium-sulfate-dihydrate": {
+      "summary": "Natural or synthetic gypsum interground with Portland cement clinker.",
+      "chemistry": {
+        "formula": "CaSO₄·2H₂O",
+        "molarMass": "172.17 g/mol",
+        "category": "hydrated sulfate mineral",
+        "role": "Regulates Portland cement setting time by reacting with C₃A to prevent flash set."
+      }
+    },
+    "calcium-silicate-hydrate": {
+      "summary": "The poorly crystalline, variable-stoichiometry gel phase that acts as the primary glue in hardened concrete and masonry mortar.",
+      "chemistry": {
+        "formula": "CaO·SiO₂·H₂O (C–S–H)",
+        "category": "nanoscale silicate hydrate gel",
+        "role": "Binds sand and crushed stone aggregates together into loadbearing CMU and watertight masonry mortar joints."
+      }
+    },
+    "water-molecule": {
+      "summary": "Polar liquid reactant required to hydrate Portland cement clinker and slake quicklime.",
+      "chemistry": {
+        "formula": "H₂O",
+        "molarMass": "18.02 g/mol",
+        "category": "inorganic molecular solvent/reactant",
+        "role": "Dissolves C₃S/C₂S ions and becomes chemically bound inside C–S–H gel and portlandite."
+      }
+    },
+    "iron": {
+      "summary": "Transition metal forming the structural base of carbon/stainless steel ties, lintels, and brick-coloring hematite.",
+      "chemistry": {
+        "formula": "Fe",
+        "atomicNumber": 26,
+        "molarMass": "55.85 g/mol",
+        "category": "transition metal",
+        "role": "Provides high tensile strength (80,000 psi wire) in masonry anchors and structural shear support in window lintels."
+      }
+    },
+    "zinc": {
+      "summary": "Post-transition metal applied in molten hot-dip galvanizing baths over fabricated steel masonry anchors and lintels.",
+      "chemistry": {
+        "formula": "Zn",
+        "atomicNumber": 30,
+        "molarMass": "65.38 g/mol",
+        "category": "transition metal",
+        "role": "Acts as a sacrificial anode that corrodes preferentially to prevent rusting of steel ties and lintels."
+      }
+    },
+    "chromium": {
+      "summary": "Corrosion-resistant alloying metal (~18 wt% in AISI Type 304 stainless steel).",
+      "chemistry": {
+        "formula": "Cr",
+        "atomicNumber": 24,
+        "molarMass": "52.00 g/mol",
+        "category": "transition metal",
+        "role": "Forms a nanometer-thin passive Cr₂O₃ oxide skin that keeps through-wall flashing rust-free inside wet masonry cavities."
+      }
+    },
+    "hydrogen": {
+      "summary": "Lightest element, bound as hydroxyl (–OH) and structural water groups inside clay kaolinite, hydrated lime, and C–S–H gel.",
+      "chemistry": {
+        "formula": "H",
+        "atomicNumber": 1,
+        "molarMass": "1.008 g/mol",
+        "category": "nonmetal",
+        "role": "Drives hydration bonding in C–S–H and portlandite, and departs as steam during kaolinite dehydroxylation at 520–550 °C."
+      }
+    },
+    "glengery-brick-extrusion-firing": {
+      "summary": "Industrial stiff-mud brickmaking process transforming raw mined clay and shale into vitrified Grade SW facing brick.",
+      "steps": [
+        "Mine, crush, screen, and blend clay and shale with water to stiff-mud plasticity.",
+        "Force clay under vacuum through a rectangular die with coring bridges and wire-cut into modular units.",
+        "Dry green brick in controlled humidity chambers to remove free water without cracking.",
+        "Hack onto kiln cars and fire through a tunnel kiln (~1,050–1,200 °C) to form mullite and glassy silicate bonds, then cool and de-hack."
+      ],
+      "whyItMatters": "Firing accounts for most of clay brick's embodied energy—and locks in its 150-year freeze-thaw durability and permanent color."
+    },
+    "cement-clinker-calcination": {
+      "summary": "High-temperature rotary kiln process that transforms limestone, shale, and iron into hydraulic Portland cement clinker, followed by finish grinding with gypsum.",
+      "steps": [
+        "Quarried limestone (~60–80%) and clay/shale + iron are crushed and ground into fine raw meal.",
+        "Preheater and calciner (~900 °C) decompose CaCO₃ into CaO + CO₂ gas (process emissions).",
+        "Rotary kiln (~1,500 °C) sinters CaO, SiO₂, Al₂O₃, and Fe₂O₃ into crystalline alite (C₃S) and belite (C₂S) clinker nodules.",
+        "Cool rapidly and ball-mill clinker with ~3–5% gypsum (CaSO₄·2H₂O) into fine ASTM C150 Portland cement powder."
+      ],
+      "whyItMatters": "Responsible for ~7–8% of global CO₂ emissions—half from kiln fuel combustion and half from chemical calcination of limestone (CaCO₃ → CaO + CO₂)."
+    },
+    "cmu-vibro-compaction-curing": {
+      "summary": "Automated zero-slump molding process that forms and cures concrete masonry units without firing kilns.",
+      "steps": [
+        "Dose graded stone aggregates and Portland cement from silos onto a conveyor and dry-mix.",
+        "Add controlled mixing water and admixtures to create a stiff, zero-slump concrete batch.",
+        "Fill precision steel block molds and consolidate under intense vibration and hydraulic compaction.",
+        "Convey green blocks into heated curing kilns to accelerate C–S–H hydration, then cube and shrink-wrap on pallets."
+      ],
+      "whyItMatters": "Allows rapid, dimensionally accurate block manufacturing with lower firing energy per unit mass than kiln-fired clay brick."
+    },
+    "lime-calcination-hydration": {
+      "summary": "Converts quarried limestone (CaCO₃) via calcination into quicklime (CaO), then reacts it with a controlled dose of water in a hydrator to produce dry calcium hydroxide (Ca(OH)₂) powder.",
+      "whyItMatters": "Produces ASTM C207 Type S hydrated masonry lime—the key ingredient that gives Portland-lime mortar high water retention and board life."
+    },
+    "glengery-brick-veneer-installation": {
+      "summary": "Field masonry construction combining mechanical batch-mixed Type N mortar with modular clay brick, wall ties, through-wall flashing, and open cell weeps.",
+      "steps": [
+        "Install Type 304 stainless steel bed flashing, flexible membrane, termination bar, and mortar drainage net above base/lintel supports.",
+        "Batch-mix preblended Type N mortar with potable water for 4–5 minutes (use within 2.5 hours).",
+        "Lay modular clay brick in 3/8-inch full bed and head joints, embedding galvanized 2X-Hook wall ties at 16\" O.C.",
+        "Install plastic cell vent weeps at 2' O.C., tool joints when thumb-print hard, and cure 7–28 days before gentle cleaning."
+      ]
+    },
+    "glengery": {
+      "summary": "One of North America's largest clay brick manufacturers (part of Brickworks Limited), operating extrusion and molded brick plants across the U.S. Mid-Atlantic and Midwest.",
+      "firm": {
+        "founded": 1890,
+        "headquarters": "Wyomissing, Pennsylvania (Brickworks North America)",
+        "segment": "Clay facing brick & architectural masonry",
+        "knownFor": "Extruded & molded ASTM C216 clay brick, custom brick shapes, and facility-specific ISO 14025 EPDs.",
+        "website": "https://www.glengery.com"
+      }
+    },
+    "belden-brick": {
+      "summary": "Family-owned U.S. architectural brickmaker operating fireclay and shale plants in Canton and Sugarcreek, Ohio.",
+      "firm": {
+        "founded": 1885,
+        "headquarters": "Canton, Ohio",
+        "segment": "Architectural clay facing & paving brick",
+        "knownFor": "High-strength fireclay & shale ASTM C216 Grade SW brick with published independent NBRC/ASTM C67 lab test reports.",
+        "website": "https://www.beldenbrick.com"
+      }
+    },
+    "echelon-masonry": {
+      "summary": "Oldcastle APG's North American architectural concrete masonry brand (CRH group), supplying structural and architectural CMUs across the U.S. and Canada.",
+      "firm": {
+        "headquarters": "Atlanta, Georgia / Acheson, Alberta (Oldcastle APG)",
+        "segment": "Architectural & structural concrete masonry units (CMU)",
+        "knownFor": "Normal-weight and architectural ASTM C90 CMUs, Trenwyth glazed/ground-face units, and third-party verified concrete EPDs.",
+        "website": "https://www.echelonmasonry.com"
+      }
+    },
+    "specmix": {
+      "summary": "North American producer of computer-batched preblended masonry mortars, grouts, and portable jobsite silo delivery systems.",
+      "firm": {
+        "founded": 1989,
+        "headquarters": "Eagan, Minnesota",
+        "segment": "Preblended masonry mortars & jobsite silo systems",
+        "knownFor": "ASTM C270 / C1714 Portland-lime-sand mortars (Types M, S, N) in 80-lb bags and 3,000-lb silo bulk bags.",
+        "website": "https://www.specmix.com"
+      }
+    },
+    "hohmann-barnard": {
+      "summary": "Major U.S. manufacturer of masonry reinforcing, adjustable veneer anchors, through-wall flashing systems, and cavity drainage accessories.",
+      "firm": {
+        "founded": 1933,
+        "headquarters": "Hauppauge, New York",
+        "segment": "Masonry anchors, wall ties & through-wall flashing",
+        "knownFor": "HB-200-X / HB-213 adjustable veneer anchors, 2X-Hook wire ties, and TeXtroflash through-wall flashing systems.",
+        "website": "https://www.h-b.com"
+      }
+    },
+    "cement-manufacturer": {
+      "summary": "Heavy-industrial operators running dry-process rotary kilns and finish ball mills that convert limestone, shale, and gypsum into ASTM C150 / C595 hydraulic cements.",
+      "firm": {
+        "segment": "Portland & blended hydraulic cement manufacturing"
+      }
+    },
+    "lime-manufacturer": {
+      "summary": "Industrial lime producers operating vertical/rotary calcining kilns and hydrators converting high-calcium or dolomitic limestone into quicklime and ASTM C207 hydrated lime.",
+      "firm": {
+        "segment": "Quicklime & hydrated masonry lime production"
+      }
+    },
+    "steel-producer": {
+      "summary": "Integrated blast-furnace and electric-arc-furnace steel mills rolling stainless flashing sheet and drawing carbon steel rod for masonry anchors and lintels.",
+      "firm": {
+        "segment": "Carbon & stainless steel production"
+      }
+    },
+    "zinc-smelter": {
+      "summary": "Primary and secondary zinc refineries supplying Special High Grade zinc for hot-dip galvanizing baths.",
+      "firm": {
+        "segment": "Zinc mining & refining"
+      }
+    },
+    "water-utility": {
+      "summary": "Municipal or jobsite potable water suppliers providing clean, low-impurity mixing water for clay tempering and mortar/CMU hydration.",
+      "firm": {
+        "segment": "Potable construction water supply"
+      }
+    },
+    "masonry-testing-lab": {
+      "summary": "Accredited third-party masonry laboratories (such as Clemson's National Brick Research Center / Bishop Materials Laboratory) running ASTM C67, C140, and C270 compliance tests.",
+      "firm": {
+        "segment": "Masonry materials testing & certification"
+      }
+    },
+    "masonry-contractor": {
+      "summary": "Specialized Division 04 field trade contractors who erect mockups, batch-mix mortar, install through-wall flashing and ties, lay brick/CMU courses, and tool joints.",
+      "firm": {
+        "segment": "Field masonry construction & envelope installation"
+      }
+    }
+  }
+}

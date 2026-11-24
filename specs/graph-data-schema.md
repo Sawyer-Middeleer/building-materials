@@ -24,7 +24,7 @@ python -m building_materials serve --open
 python -m unittest discover -s tests -v
 ```
 
-The commands default to `fixtures/window.json`. Pass `--graph` or `--assets` before the command to use a different graph or archive. Use `python -m building_materials import-source <url>` to fetch and archive a source. For a file already on disk, use `python -m building_materials import-source <path> --url <source-url>`. Every imported file keeps its original HTTP(S) URL. Local captures live under `.materials/`. When a capture is absent, citations still resolve using the source URL and locator.
+The commands default to `fixtures/building.json`. Pass `--graph` or `--assets` before the command to use a different graph or archive. Use `python -m building_materials import-source <url>` to fetch and archive a source. For a file already on disk, use `python -m building_materials import-source <path> --url <source-url>`. Every imported file keeps its original HTTP(S) URL. Local captures live under `.materials/`. When a capture is absent, citations still resolve using the source URL and locator.
 
 ## Record types
 

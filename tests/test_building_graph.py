@@ -25,7 +25,7 @@ def cli(*args):
     )
 
 
-class WindowGraphTest(unittest.TestCase):
+class BuildingGraphTest(unittest.TestCase):
     def output(self, *args):
         result = cli(*args)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -121,6 +121,92 @@ class WindowGraphTest(unittest.TestCase):
             self.assertEqual(exported["statements"], validated["statements"])
             self.assertTrue(db_path.is_file())
 
+    def test_masonry_composition_value_chain_comparison_and_cross_links(self):
+        brick_parts = self.output("parts", "glengery-clay-brick-veneer")
+        brick_links = {
+            (row["subject"], row["predicate"], row.get("target"))
+            for row in brick_parts["statements"] if "predicate" in row
+        }
+        self.assertTrue({
+            ("glengery-clay-brick-veneer", "hasPart", "glengery-modular-clay-brick"),
+            ("glengery-modular-clay-brick", "madeOf", "fired-clay-brick-body"),
+            ("fired-clay-brick-body", "hasStructure", "fired-clay-ceramic-matrix"),
+            ("fired-clay-ceramic-matrix", "includesChemical", "aluminum"),
+            ("type-n-portland-lime-mortar", "hasStructure", "csh-hydration-gel"),
+            ("csh-hydration-gel", "includesChemical", "calcium-ion"),
+        }.issubset(brick_links))
+
+        cmu_trace = self.output("trace", "echelon-cmu-veneer")
+        cmu_lineage = {
+            (row["subject"], row["predicate"], row.get("target"))
+            for row in cmu_trace["statements"] if "predicate" in row
+        }
+        self.assertTrue({
+            ("echelon-cmu-veneer-installation", "produces", "echelon-cmu-veneer"),
+            ("cmu-vibro-compaction-curing", "produces", "echelon-normal-weight-cmu"),
+            ("cement-clinker-calcination", "uses", "limestone"),
+            ("cement-clinker-calcination", "produces", "portland-cement"),
+            ("mortar-blending-type-s", "produces", "specmix-mortar-type-s"),
+        }.issubset(cmu_lineage))
+        self.assertNotIn("glengery-clay-brick-veneer", {n["id"] for n in cmu_trace["nodes"]})
+
+        # Shared feedstocks & sealants connect windows and masonry in one graph
+        limestone_used = {n["id"] for n in self.output("used-by", "limestone")["nodes"]}
+        self.assertTrue({"float-glass-forming", "cement-clinker-calcination", "lime-calcination-hydration"}.issubset(limestone_used))
+        silica_used = {n["id"] for n in self.output("used-by", "silica-sand")["nodes"]}
+        self.assertTrue({"float-glass-forming", "glengery-clay-brick-veneer", "echelon-cmu-veneer"}.issubset(silica_used))
+
+        # Whole-wall comparison: fired clay brick veneer vs. normal-weight CMU wall
+        wall_cmp = self.output("compare", "glengery-clay-brick-veneer", "echelon-cmu-veneer")
+        self.assertEqual(
+            {n["id"] for n in wall_cmp["materials"]["onlyLeft"]},
+            {"fired-clay-brick-body", "type-n-portland-lime-mortar"},
+        )
+        self.assertEqual(
+            {n["id"] for n in wall_cmp["materials"]["onlyRight"]},
+            {"crushed-stone-aggregate", "concrete-masonry-body", "type-s-portland-lime-mortar"},
+        )
+        self.assertEqual(
+            {n["id"] for n in wall_cmp["processes"]["onlyLeft"]},
+            {"glengery-brick-extrusion-firing", "mortar-blending-type-n", "glengery-brick-veneer-installation"},
+        )
+        self.assertEqual(
+            {n["id"] for n in wall_cmp["processes"]["onlyRight"]},
+            {"aggregate-quarrying", "cmu-vibro-compaction-curing", "mortar-blending-type-s", "echelon-cmu-veneer-installation"},
+        )
+        rsl_row = next(row for row in wall_cmp["facts"] if row["property"] == "referenceServiceLife")
+        self.assertEqual(rsl_row["left"]["quantity"]["value"], 150)
+        self.assertEqual(rsl_row["right"]["quantity"]["value"], 100)
+
+        # Sub-assembly comparison: Type N vs. Type S Portland-lime mortar
+        mort_cmp = self.output("compare", "specmix-mortar-type-n", "specmix-mortar-type-s")
+        self.assertEqual([n["id"] for n in mort_cmp["materials"]["onlyLeft"]], ["type-n-portland-lime-mortar"])
+        self.assertEqual([n["id"] for n in mort_cmp["materials"]["onlyRight"]], ["type-s-portland-lime-mortar"])
+        self.assertEqual([n["id"] for n in mort_cmp["processes"]["onlyLeft"]], ["mortar-blending-type-n"])
+        self.assertEqual([n["id"] for n in mort_cmp["processes"]["onlyRight"]], ["mortar-blending-type-s"])
+        comp_row = next(row for row in mort_cmp["facts"] if row["property"] == "compressiveStrength")
+        self.assertEqual(comp_row["left"]["quantity"]["value"], 750)
+        self.assertEqual(comp_row["right"]["quantity"]["value"], 1800)
+
+        # Scoped unit facts, citations, and companion guide explainers
+        belden_facts = self.output("facts", "belden-canton-clay-brick")["statements"]
+        belden_comp = next(row for row in belden_facts if row["property"] == "compressiveStrength")
+        self.assertEqual(belden_comp["quantity"], {"value": 14620, "unit": "psi"})
+        self.assertEqual(belden_comp["scope"], "masonry-unit")
+        self.assertEqual(self.output("facts", "masonry-wall-assembly")["statements"], [])
+        belden_cite = self.output("cite", belden_comp["id"])
+        self.assertEqual(belden_cite["evidence"][0]["locator"]["page"], 1)
+        self.assertEqual(belden_cite["evidence"][0]["capture"], "saved")
+        self.assertEqual(self.output("explain", "glengery")["guide"]["firm"]["founded"], 1890)
+        self.assertEqual(self.output("explain", "iron")["guide"]["chemistry"]["atomicNumber"], 26)
+        self.assertIn("Compressive Strength", self.output("explain", "compressiveStrength")["guide"]["title"])
+
+        audit = self.output("audit")
+        self.assertTrue(audit["ok"])
+        self.assertEqual(audit["summary"]["errors"], 0)
+        self.assertEqual(audit["summary"]["warnings"], 0)
+        self.assertGreaterEqual(audit["summary"]["pdfsChecked"], 28)
+
     def test_source_versions_keep_the_original_citation_openable(self):
         with TemporaryDirectory() as directory:
             workspace = Path(directory)
@@ -138,13 +224,13 @@ class WindowGraphTest(unittest.TestCase):
             first = self.output(*options, "import-source", original, "--url", origin)
             self.assertEqual(first["source"]["source"]["origin"], origin)
 
-            fixture = json.loads((ROOT / "fixtures" / "window.json").read_text(encoding="utf-8"))
+            fixture = json.loads((ROOT / "fixtures" / "building.json").read_text(encoding="utf-8"))
             rating = next(row for row in fixture["statements"] if row["id"] == "igu-gray-shgc")
             rating["evidence"] = [{
                 "source": first["source"]["id"],
                 "locator": {"anchor": "performance", "quote": "SHGC 0.19"},
             }]
-            graph = workspace / "window.json"
+            graph = workspace / "building.json"
             graph.write_text(json.dumps(fixture), encoding="utf-8")
 
             newer = self.output(*options, "import-source", updated, "--url", origin)
@@ -168,6 +254,18 @@ class WindowGraphTest(unittest.TestCase):
             bad_pred = cli(*options, "--graph", graph, "validate")
             self.assertNotEqual(bad_pred.returncode, 0)
             self.assertIn("Invalid graph", bad_pred.stderr)
+
+            # Audit catches out-of-bounds PDF pages and missing process roles
+            audit_fixture = json.loads((ROOT / "fixtures" / "building.json").read_text(encoding="utf-8"))
+            belden_comp = next(row for row in audit_fixture["statements"] if row["id"] == "belden-unit-comp")
+            belden_comp["evidence"][0]["locator"]["page"] = 999
+            proc_stmt = next(row for row in audit_fixture["statements"] if row["id"] == "proc-ext-clay-out")
+            del proc_stmt["qualifiers"]["role"]
+            graph.write_text(json.dumps(audit_fixture), encoding="utf-8")
+            bad_audit = cli("--graph", graph, "audit")
+            self.assertNotEqual(bad_audit.returncode, 0)
+            audit_codes = {e["code"] for e in json.loads(bad_audit.stdout)["errors"]}
+            self.assertTrue({"pdf-page-out-of-bounds", "process-missing-role"}.issubset(audit_codes))
 
     def test_web_ui_serves_viewer_and_graph_endpoints(self):
         graph = building_materials.Graph(building_materials.DEFAULT_GRAPH, building_materials.DEFAULT_ASSETS)

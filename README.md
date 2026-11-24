@@ -1,6 +1,6 @@
 # Building Materials
 
-A source-backed graph describing what goes into a building—from assemblies down to atomic structure—and how each component is designed, made, and installed. The first working slice is a single window (`fixtures/window.json`).
+A source-backed graph describing what goes into a building—from assemblies down to atomic structure—and how each component is designed, made, and installed (`fixtures/building.json`).
 
 ## Setup
 
@@ -12,10 +12,11 @@ python -m pip install -r requirements.txt
 
 ## CLI
 
-All commands default to `fixtures/window.json` and `.materials/`. Pass `--graph <path>` or `--assets <dir>` before the subcommand to override.
+All commands default to `fixtures/building.json` and `.materials/`. Pass `--graph <path>` or `--assets <dir>` before the subcommand to override.
 
 ```text
 python -m building_materials validate
+python -m building_materials audit
 python -m building_materials parts window-assembly
 python -m building_materials trace igu-gray-argon
 python -m building_materials used-by vitro-solarban-70

@@ -10,6 +10,7 @@ import json
 import mimetypes
 import os
 from pathlib import Path
+import re
 import sqlite3
 import sys
 from tempfile import NamedTemporaryFile
@@ -18,10 +19,14 @@ from urllib.request import Request, urlopen
 import webbrowser
 
 from jsonschema import Draft202012Validator, ValidationError
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_GRAPH = ROOT / "fixtures" / "window.json"
+DEFAULT_GRAPH = ROOT / "fixtures" / "building.json"
 DEFAULT_ASSETS = ROOT / ".materials"
 MAX_ASSET_BYTES = 32 * 1024 * 1024
 COMPOSITION = {
@@ -297,6 +302,213 @@ class Graph:
                 "evidence": counts["evidence"],
             },
             "gaps": items,
+        }
+
+    def audit(self, assets, guide=None):
+        """Check PDF/hash citation integrity and graph modeling conventions beyond schema/gaps."""
+        errors = []
+        warnings = []
+
+        def record(bucket, code, message, *, node=None, statement=None, source=None, page=None):
+            entry = {"code": code, "message": message}
+            if node:
+                entry["nodeId"] = node["id"]
+                entry["kind"] = node["kind"]
+            if statement:
+                entry["statementId"] = statement["id"]
+            if source:
+                entry["sourceId"] = source
+            if page is not None:
+                entry["page"] = page
+            bucket.append(entry)
+
+        # 1. Source archive integrity, duplicate manifests, and PDF parsing
+        seen_source_keys = {}
+        pdf_readers = {}
+        cited_sources = {ev["source"] for row in self.statements.values() for ev in row["evidence"]}
+        for nid in sorted(self.nodes):
+            node = self.nodes[nid]
+            kind = node["kind"]
+            out = self.outgoing[nid]
+            inc = self.incoming[nid]
+
+            if kind == "source":
+                meta = node["source"]
+                digest = meta.get("sha256")
+                if digest:
+                    key = (meta["origin"], digest)
+                    if key in seen_source_keys:
+                        record(
+                            errors,
+                            "duplicate-source-sha",
+                            f"Duplicate source manifest for same origin and sha256 (also {seen_source_keys[key]})",
+                            node=node,
+                        )
+                    else:
+                        seen_source_keys[key] = nid
+                    snapshot = asset_path(assets, digest, meta["mediaType"])
+                    if snapshot.is_file():
+                        actual = hashlib.sha256(snapshot.read_bytes()).hexdigest()
+                        if actual != digest:
+                            record(errors, "source-hash-mismatch", "Archived blob sha256 does not match source metadata", node=node)
+                        elif meta["mediaType"] == "application/pdf" and pypdf is not None:
+                            try:
+                                pdf_readers[nid] = pypdf.PdfReader(snapshot)
+                            except Exception as exc:
+                                record(errors, "pdf-unreadable", f"Archived PDF could not be parsed: {exc}", node=node)
+                if nid not in cited_sources:
+                    record(errors, "unused-source", "Source node is not cited by any statement", node=node)
+                continue
+
+            if not out and not inc:
+                record(errors, "orphan-node", "Node has no incoming or outgoing statements", node=node)
+
+            if kind == "referenceDesign":
+                has_mat = any(r.get("predicate") == "madeOf" for r in out)
+                realized_by_variant = any(
+                    r.get("predicate") == "realizesDesign" and self.nodes[r["subject"]]["kind"] == "productVariant"
+                    for r in inc
+                )
+                if has_mat and realized_by_variant:
+                    record(
+                        errors,
+                        "shared-slot-contamination",
+                        "Shared referenceDesign slot carries madeOf directly while realized by productVariants",
+                        node=node,
+                    )
+            elif kind == "productModel":
+                if not any(r.get("predicate") == "manufacturedBy" for r in out):
+                    record(errors, "model-missing-manufacturer", "productModel has no manufacturedBy actor", node=node)
+            elif kind == "productVariant":
+                if not any(r.get("predicate") == "realizesDesign" for r in out):
+                    record(errors, "variant-missing-design", "productVariant has no realizesDesign link", node=node)
+                has_model = any(r.get("predicate") in {"isVariantOf", "usesProduct"} for r in out)
+                is_subpart = any(
+                    r.get("predicate") == "hasPart" and self.nodes[r["subject"]]["kind"] == "productVariant"
+                    for r in inc
+                )
+                if not has_model and not is_subpart:
+                    record(warnings, "variant-missing-model", "productVariant has no isVariantOf or usesProduct link", node=node)
+            elif kind == "requirement":
+                if not any(r.get("predicate") == "appliesTo" for r in out):
+                    record(errors, "requirement-missing-target", "requirement has no appliesTo target", node=node)
+
+        if pypdf is None and any(
+            n["kind"] == "source" and n["source"]["mediaType"] == "application/pdf" for n in self.nodes.values()
+        ):
+            record(warnings, "pdf-parser-missing", "Install pypdf to verify PDF page bounds and locators")
+
+        # 2. Statement convention & PDF page/locator checks
+        page_text_cache = {}
+        word_nums = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+
+        def get_page_text(sid, pg):
+            key = (sid, pg)
+            if key not in page_text_cache:
+                raw = pdf_readers[sid].pages[pg - 1].extract_text() or ""
+                norm = " ".join(raw.lower().split())
+                page_text_cache[key] = re.sub(r"(\d)\s*\.\s*(\d)", r"\1.\2", norm)
+            return page_text_cache[key]
+
+        def number_in_text(val, txt):
+            cands = set()
+            if float(val).is_integer():
+                iv = int(val)
+                cands.update([str(iv), f"{iv:,}", f"{val:.1f}", f"{val:.2f}"])
+                if iv in word_nums:
+                    cands.add(word_nums[iv])
+            else:
+                s = f"{val:g}"
+                cands.update([s, f"{val:.1f}", f"{val:.2f}", f"{val:.3f}", f"{val:,.1f}", f"{val:,.2f}"])
+                if s.startswith("0."):
+                    cands.add(s[1:])
+            cands.update([f"{val:.2e}".lower(), f"{val:.1e}".lower()])
+            return any(c in txt for c in cands)
+
+        guide_props = set((guide or {}).get("properties", {}))
+        checked_props = set()
+        for row in self.statements.values():
+            pred = row.get("predicate")
+            if pred in {"uses", "produces", "performedBy"} and not row.get("qualifiers", {}).get("role"):
+                record(errors, "process-missing-role", f"'{pred}' link is missing qualifiers.role", statement=row)
+
+            if "property" in row:
+                prop = row["property"]
+                if guide is not None and prop not in guide_props and prop not in checked_props:
+                    record(errors, "property-missing-guide", f"Property '{prop}' has no companion guide entry", statement=row)
+                    checked_props.add(prop)
+                if "quantity" in row and not row.get("scope"):
+                    record(warnings, "property-missing-scope", f"Numeric property '{prop}' has no scope", statement=row)
+
+            qty = row.get("quantity") or row.get("qualifiers", {}).get("quantity")
+            qty_vals = ([qty["value"]] if "value" in qty else [qty["min"], qty["max"]]) if qty else []
+
+            for ev in row["evidence"]:
+                sid = ev["source"]
+                loc = ev["locator"]
+                reader = pdf_readers.get(sid)
+                if reader is None or "page" not in loc:
+                    continue
+                pg = loc["page"]
+                if pg < 1 or pg > len(reader.pages):
+                    record(
+                        errors,
+                        "pdf-page-out-of-bounds",
+                        f"Cited page {pg} exceeds PDF length ({len(reader.pages)} pages)",
+                        statement=row,
+                        source=sid,
+                        page=pg,
+                    )
+                    continue
+                txt = get_page_text(sid, pg)
+                for v in qty_vals:
+                    if not number_in_text(v, txt):
+                        record(
+                            warnings,
+                            "quantity-not-on-page",
+                            f"Numeric value {v} not found in extracted text of page {pg}",
+                            statement=row,
+                            source=sid,
+                            page=pg,
+                        )
+                if "quote" in loc and " ".join(loc["quote"].lower().split()) not in txt:
+                    record(
+                        warnings,
+                        "quote-not-on-page",
+                        f"Cited quote not found on page {pg}",
+                        statement=row,
+                        source=sid,
+                        page=pg,
+                    )
+                for key in ("table", "figure"):
+                    if key in loc:
+                        tokens = [
+                            w.strip("().,:/-\"")
+                            for w in loc[key].lower().split()
+                            if len(w.strip("().,:/-\"")) >= 3
+                        ]
+                        if tokens and not all(
+                            any(t in txt for t in (tok, tok.rstrip("s"))) for tok in tokens[:2]
+                        ):
+                            record(
+                                warnings,
+                                "locator-not-on-page",
+                                f"Cited {key} '{loc[key]}' not found on page {pg}",
+                                statement=row,
+                                source=sid,
+                                page=pg,
+                            )
+
+        return {
+            "ok": len(errors) == 0,
+            "summary": {
+                "errors": len(errors),
+                "warnings": len(warnings),
+                "pdfsChecked": len(pdf_readers),
+                "citedPagesChecked": len(page_text_cache),
+            },
+            "errors": errors,
+            "warnings": warnings,
         }
 
     def export_db(self, db_path):
@@ -594,6 +806,9 @@ def make_server(graph, assets, host="127.0.0.1", port=8000, guide=None):
             if path == "/api/gaps":
                 self._json(200, graph.gaps(assets))
                 return
+            if path == "/api/audit":
+                self._json(200, graph.audit(assets, guide_data))
+                return
             if path == "/api/schema":
                 schema_path = ROOT / "schema.sql"
                 text = schema_path.read_text(encoding="utf-8") if schema_path.is_file() else ""
@@ -674,7 +889,7 @@ def make_server(graph, assets, host="127.0.0.1", port=8000, guide=None):
 
 def parser():
     cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Graph JSON, defaults to the window fixture")
+    cli.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Graph JSON, defaults to fixtures/building.json")
     cli.add_argument("--assets", type=Path, default=DEFAULT_ASSETS, help="Source asset directory")
     cli.add_argument("--guide", type=Path, default=None, help="Companion educational guide JSON (auto-discovers *.guide.json)")
     commands = cli.add_subparsers(dest="command", required=True)
@@ -691,6 +906,7 @@ def parser():
     cmp_cmd.add_argument("right_id")
     gaps_cmd = commands.add_parser("gaps", help="Report composition, value-chain, property, and evidence gaps")
     gaps_cmd.add_argument("node_id", nargs="?", default=None)
+    commands.add_parser("audit", help="Verify archived PDF hashes/pages/locators and graph conventions")
     db_cmd = commands.add_parser("export-db", help="Materialize the graph into a SQLite database using schema.sql")
     db_cmd.add_argument("output", type=Path, nargs="?", default=DEFAULT_ASSETS / "materials.db")
     commands.add_parser("cite", help="Resolve a statement to its source and exact locator").add_argument("statement_id")
@@ -748,6 +964,10 @@ def main():
                 result = graph.compare(args.left_id, args.right_id)
             elif args.command == "gaps":
                 result = graph.gaps(args.assets, args.node_id)
+            elif args.command == "audit":
+                result = graph.audit(args.assets, guide)
+                print(json.dumps(result, indent=2))
+                return 0 if result["ok"] else 1
             elif args.command == "export-db":
                 result = graph.export_db(args.output)
             elif args.command == "cite":
