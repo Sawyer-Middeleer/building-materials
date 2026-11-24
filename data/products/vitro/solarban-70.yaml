@@ -1,7 +1,7 @@
 defaults:
   basis: manufacturer-declared
   evidence:
-    - source: source.vitro.solarban-70
+    - source: source.manufacturers.vitro.solarban-70
       locator: { page: 1, section: Solarban 70 Glass }
 
 entities:
@@ -31,7 +31,7 @@ entities:
       defaults:
         basis: manufacturer-declared
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
       links:
         - predicate: realizesDesign
@@ -58,7 +58,7 @@ entities:
         method: LBNL Window 7.8
         conditions: "1-inch (25 mm) IGU, 1/2-inch (13 mm) airspace, two 1/4-inch (6 mm) lites"
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator:
               page: "{page}"
               table: Insulating Glass Unit Performance Comparisons

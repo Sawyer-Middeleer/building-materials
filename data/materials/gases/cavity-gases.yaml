@@ -5,7 +5,7 @@ entities:
     defaults:
       basis: typical-reference
       evidence:
-        - source: source.vitro.solarban-70
+        - source: source.manufacturers.vitro.solarban-70
           locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Nighttime }
     links:
       - predicate: hasComposition
@@ -21,5 +21,5 @@ entities:
         target: chem.ar
         basis: manufacturer-declared
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Argon }

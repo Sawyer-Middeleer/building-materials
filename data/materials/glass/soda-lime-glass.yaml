@@ -5,7 +5,7 @@ entities:
     defaults:
       basis: typical-reference
       evidence:
-        - source: source.research.flat-glass-structure
+        - source: source.research.mdpi.flat-glass-structure
           locator: { page: 6, table: Table 2 }
     links:
       - predicate: hasStructure
@@ -61,5 +61,5 @@ entities:
         basis: manufacturer-declared
         qualifiers: { role: triple-silver IR reflective layers }
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 1, section: Solarban 70 Glass }

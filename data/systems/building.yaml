@@ -1,7 +1,7 @@
 defaults:
   basis: specification
   evidence:
-    - source: source.standards.ua-window-guidelines
+    - source: source.institutions.ua.window-guidelines
       locator: { page: 9, section: "Section 08 50 00 – Windows" }
 
 entities:

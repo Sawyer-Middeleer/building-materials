@@ -8,7 +8,7 @@ entities:
         basis: typical-reference
         qualifiers: { role: primary constituent (>=95% silica) }
         evidence:
-          - source: source.usgs.silica-2025
+          - source: source.agencies.usgs.silica-2025
             locator: { page: 1, section: Tariff }
 
   - id: material.soda-ash
@@ -20,7 +20,7 @@ entities:
         basis: typical-reference
         qualifiers: { role: primary constituent }
         evidence:
-          - source: source.usgs.soda-ash-2025
+          - source: source.agencies.usgs.soda-ash-2025
             locator: { page: 1, section: Domestic Production and Use }
 
   - id: material.limestone
@@ -32,5 +32,5 @@ entities:
         basis: typical-reference
         qualifiers: { role: primary constituent }
         evidence:
-          - source: source.usgs.stone-2025
+          - source: source.agencies.usgs.stone-2025
             locator: { page: 1, section: Tariff }

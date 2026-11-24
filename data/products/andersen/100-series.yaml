@@ -1,7 +1,7 @@
 defaults:
   basis: manufacturer-declared
   evidence:
-    - source: source.andersen.100-series-performance
+    - source: source.manufacturers.andersen.100-series-performance
       locator: { page: 5, section: "100 Series Single Hung Window" }
 
 entities:
@@ -52,7 +52,7 @@ entities:
       defaults:
         basis: manufacturer-declared
         evidence:
-          - source: source.andersen.100-series-performance
+          - source: source.manufacturers.andersen.100-series-performance
             locator: { page: 5, section: "100 Series Single Hung Window" }
       links:
         - predicate: realizesDesign
@@ -79,7 +79,7 @@ entities:
         method: NFRC 100 / 200
         conditions: "Whole-window NFRC certified rating, without grilles"
         evidence:
-          - source: source.andersen.100-series-performance
+          - source: source.manufacturers.andersen.100-series-performance
             locator:
               page: "{page}"
               row: "{row}"

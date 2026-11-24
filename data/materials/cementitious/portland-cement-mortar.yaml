@@ -5,7 +5,7 @@ entities:
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.specmix.portland-lime-mortar
+        - source: source.manufacturers.specmix.portland-lime-mortar
           locator: { page: 1, section: "04 DIVISION MORTAR" }
     links:
       - predicate: hasComposition
@@ -24,7 +24,7 @@ entities:
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.specmix.portland-lime-mortar
+        - source: source.manufacturers.specmix.portland-lime-mortar
           locator: { page: 1, section: "04 DIVISION MORTAR" }
     links:
       - predicate: performedBy

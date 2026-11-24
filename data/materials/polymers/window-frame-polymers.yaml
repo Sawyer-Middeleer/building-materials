@@ -8,7 +8,7 @@ entities:
         basis: manufacturer-declared
         qualifiers: { role: poured-and-debridged thermal barrier }
         evidence:
-          - source: source.winco.4410s-construction
+          - source: source.manufacturers.winco.4410s-construction
             locator: { page: 1, section: THERMAL BREAK }
     guide:
       summary: Structural 2-part urethane poured into serrated aluminum channels and debridged to interrupt conductive heat flow through metal frames.
@@ -20,7 +20,7 @@ entities:
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.andersen.100-series-performance
+        - source: source.manufacturers.andersen.100-series-performance
           locator: { page: 5, section: "100 Series Single Hung Window" }
     links:
       - predicate: hasComposition
@@ -39,7 +39,7 @@ entities:
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.winco.4410s-construction
+        - source: source.manufacturers.winco.4410s-construction
           locator: { page: 1, section: THERMAL BREAK }
     links:
       - predicate: performedBy
@@ -61,7 +61,7 @@ entities:
         basis: typical-reference
         qualifiers: { role: rigid thermoplastic base resin }
         evidence:
-          - source: source.winco.4410s-construction
+          - source: source.manufacturers.winco.4410s-construction
             locator: { page: 1, section: WEATHER-STRIP }
     guide:
       summary: Multi-chamber extruded rigid vinyl (uPVC) used for economy and mid-range residential window frames; low thermal conductivity, low maintenance, lower stiffness than composite or aluminum.
@@ -73,7 +73,7 @@ entities:
     defaults:
       basis: typical-reference
       evidence:
-        - source: source.winco.4410s-construction
+        - source: source.manufacturers.winco.4410s-construction
           locator: { page: 1, section: WEATHER-STRIP }
     links:
       - predicate: performedBy
@@ -90,7 +90,7 @@ entities:
     defaults:
       basis: typical-reference
       evidence:
-        - source: source.andersen.100-series-performance
+        - source: source.manufacturers.andersen.100-series-performance
           locator: { page: 5, section: "100 Series Single Hung Window" }
     links:
       - predicate: performedBy

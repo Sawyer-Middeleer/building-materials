@@ -1,7 +1,7 @@
 defaults:
   basis: specification
   evidence:
-    - source: source.standards.ua-window-guidelines
+    - source: source.institutions.ua.window-guidelines
       locator: { page: 13, section: I. Glazing }
 
 entities:
@@ -16,37 +16,37 @@ entities:
         target: actor.mining-supplier
         qualifiers: { role: mineral producer }
         evidence:
-          - source: source.usgs.silica-2025
+          - source: source.agencies.usgs.silica-2025
             locator: { page: 1, section: Domestic Production and Use }
       - predicate: produces
         target: material.silica-sand
         qualifiers: { role: feedstock }
         evidence:
-          - source: source.usgs.silica-2025
+          - source: source.agencies.usgs.silica-2025
             locator: { page: 1, section: Domestic Production and Use }
       - predicate: produces
         target: material.soda-ash
         qualifiers: { role: feedstock }
         evidence:
-          - source: source.usgs.soda-ash-2025
+          - source: source.agencies.usgs.soda-ash-2025
             locator: { page: 1, section: Domestic Production and Use }
       - predicate: produces
         target: material.limestone
         qualifiers: { role: feedstock }
         evidence:
-          - source: source.usgs.stone-2025
+          - source: source.agencies.usgs.stone-2025
             locator: { page: 1, section: Domestic Production and Use }
       - predicate: produces
         target: material.aluminum-6063-t6
         qualifiers: { role: primary metal }
         evidence:
-          - source: source.usgs.aluminum-2025
+          - source: source.agencies.usgs.aluminum-2025
             locator: { page: 1, section: Domestic Production and Use }
       - predicate: produces
         target: chem.ag
         qualifiers: { role: refined silver target metal }
         evidence:
-          - source: source.usgs.silver-2025
+          - source: source.agencies.usgs.silver-2025
             locator: { page: 1, section: Domestic Production and Use }
 
   - id: process.specification.window-spec
@@ -70,7 +70,7 @@ entities:
     defaults:
       basis: typical-reference
       evidence:
-        - source: source.research.flat-glass-structure
+        - source: source.research.mdpi.flat-glass-structure
           locator: { page: 4, section: "2.1. Float Glass Process" }
     links:
       - predicate: performedBy
@@ -99,7 +99,7 @@ entities:
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.vitro.solarban-70
+        - source: source.manufacturers.vitro.solarban-70
           locator: { page: 1, section: Solarban 70 Glass }
     links:
       - predicate: performedBy
@@ -134,7 +134,7 @@ entities:
         basis: manufacturer-declared
         qualifiers: { role: purified argon fill }
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Argon }
       - predicate: produces
         target: material.polyisobutylene

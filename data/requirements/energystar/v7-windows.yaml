@@ -1,7 +1,7 @@
 defaults:
   basis: specification
   evidence:
-    - source: source.standards.energystar-v7-windows
+    - source: source.agencies.epa-energystar.v7-windows
       locator: { page: 1, section: "ENERGY STAR Version 7.0 Residential Windows Criteria Table" }
 
 entities:

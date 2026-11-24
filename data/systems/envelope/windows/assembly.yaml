@@ -1,7 +1,7 @@
 defaults:
   basis: specification
   evidence:
-    - source: source.standards.ua-window-guidelines
+    - source: source.institutions.ua.window-guidelines
       locator: { page: 13, section: I. Glazing }
 
 entities:
@@ -90,14 +90,14 @@ entities:
         target: envelope.openings.window.outer-pane
         basis: manufacturer-declared
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
         qualifiers: { role: pane, position: outside, sequence: 1 }
       - predicate: hasPart
         target: envelope.openings.window.inner-pane
         basis: manufacturer-declared
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
         qualifiers: { role: pane, position: inside, sequence: 2 }
       - predicate: hasPart
@@ -115,14 +115,14 @@ entities:
         target: material.soda-lime-glass
         basis: typical-reference
         evidence:
-          - source: source.research.flat-glass-structure
+          - source: source.research.mdpi.flat-glass-structure
             locator: { page: 5, section: "3.1. Composition and Network Structure" }
         qualifiers: { role: substrate }
       - predicate: madeOf
         target: material.low-e-coating
         basis: manufacturer-declared
         evidence:
-          - source: source.vitro.solarban-70
+          - source: source.manufacturers.vitro.solarban-70
             locator: { page: 1, section: Solarban 70 Glass }
         qualifiers: { role: coating, position: "surface #2" }
 
@@ -134,7 +134,7 @@ entities:
         target: material.soda-lime-glass
         basis: typical-reference
         evidence:
-          - source: source.research.flat-glass-structure
+          - source: source.research.mdpi.flat-glass-structure
             locator: { page: 5, section: "3.1. Composition and Network Structure" }
         qualifiers: { role: substrate }
 

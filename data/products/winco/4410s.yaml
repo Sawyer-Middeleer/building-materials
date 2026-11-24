@@ -1,7 +1,7 @@
 defaults:
   basis: manufacturer-declared
   evidence:
-    - source: source.winco.4410s-construction
+    - source: source.manufacturers.winco.4410s-construction
       locator: { page: 1, section: CONSTRUCTION }
 
 entities:
@@ -15,7 +15,7 @@ entities:
       operationType:
         values: [fixed, single-hung]
         evidence:
-          - source: source.winco.4410s-performance
+          - source: source.manufacturers.winco.4410s-performance
             locator: { page: 1, section: PERFORMANCE }
       jambDepth:
         values: [4.0]
@@ -35,21 +35,21 @@ entities:
         state: unknown
         conditions: "Depends on project-specified insulating glass unit; not fixed in frame datasheet."
         evidence:
-          - source: source.winco.4410s-performance
+          - source: source.manufacturers.winco.4410s-performance
             locator: { page: 1, section: PERFORMANCE }
       - property: visibleLightTransmittance
         scope: whole-window
         state: unknown
         conditions: "Depends on project-specified insulating glass unit; not fixed in frame datasheet."
         evidence:
-          - source: source.winco.4410s-performance
+          - source: source.manufacturers.winco.4410s-performance
             locator: { page: 1, section: PERFORMANCE }
       - property: installedCostPerArea
         scope: whole-window
         state: unknown
         conditions: "Project-quoted commercial architectural window; pricing not published in datasheet."
         evidence:
-          - source: source.winco.4410s-performance
+          - source: source.manufacturers.winco.4410s-performance
             locator: { page: 1, section: PERFORMANCE }
       - property: serviceLife
         scope: whole-window
@@ -63,7 +63,7 @@ entities:
       defaults:
         basis: manufacturer-declared
         evidence:
-          - source: source.winco.4410s-construction
+          - source: source.manufacturers.winco.4410s-construction
             locator: { page: 1, section: CONSTRUCTION }
       links:
         - predicate: realizesDesign
@@ -82,7 +82,7 @@ entities:
         basis: measured
         scope: whole-window
         evidence:
-          - source: source.winco.4410s-performance
+          - source: source.manufacturers.winco.4410s-performance
             locator:
               page: 1
               section: PERFORMANCE
