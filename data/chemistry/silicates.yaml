@@ -84,6 +84,9 @@ entities:
   - id: chem.si
     kind: chemicalEntity
     label: Silicon (Si)
+    identifiers:
+      - namespace: cas
+        value: "7440-21-3"
     guide:
       summary: Tetravalent network-forming atom at the center of each SiO4 tetrahedron.
       chemistry:
@@ -96,6 +99,9 @@ entities:
   - id: chem.o
     kind: chemicalEntity
     label: Oxygen (O)
+    identifiers:
+      - namespace: cas
+        value: "7782-44-7"
     guide:
       summary: Bridging and non-bridging oxygen atoms linking SiO4 tetrahedra.
       chemistry:
@@ -108,6 +114,9 @@ entities:
   - id: chem.na-ion
     kind: chemicalEntity
     label: Sodium ion (Na+)
+    identifiers:
+      - namespace: cas
+        value: "17341-25-2"
     guide:
       summary: Monovalent alkali modifier ion residing in interstitial voids of the silicate network.
       chemistry:
@@ -120,6 +129,9 @@ entities:
   - id: chem.ca-ion
     kind: chemicalEntity
     label: Calcium ion (Ca2+)
+    identifiers:
+      - namespace: cas
+        value: "14127-61-8"
     guide:
       summary: Divalent alkaline-earth cation cross-linking non-bridging oxygens to stabilize the glass.
       chemistry:

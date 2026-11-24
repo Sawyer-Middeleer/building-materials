@@ -1172,21 +1172,43 @@ class MaterialStore:
                                 f"productModel is missing expected parameter '{expected_param}' for {rd['id']}",
                                 node=node,
                             )
-                    if ep.get("properties"):
+                    if ep.get("properties") or ep.get("materialRoles"):
                         child_variants = [
                             r["subject"] for r in inc if r.get("predicate") == "isVariantOf"
                         ]
-                        present_props = {r["property"] for r in out if "property" in r}
-                        for cv_id in child_variants:
-                            present_props.update(r["property"] for r in out_by[cv_id] if "property" in r)
-                        for expected_prop in ep["properties"]:
-                            if expected_prop not in present_props:
-                                add(
-                                    "properties",
-                                    "profile-missing-property",
-                                    f"productModel is missing expected property '{expected_prop}' for {rd['id']}",
-                                    node=node,
+                        if ep.get("properties"):
+                            present_props = {r["property"] for r in out if "property" in r}
+                            for cv_id in child_variants:
+                                present_props.update(r["property"] for r in out_by[cv_id] if "property" in r)
+                            for expected_prop in ep["properties"]:
+                                if expected_prop not in present_props:
+                                    add(
+                                        "properties",
+                                        "profile-missing-property",
+                                        f"productModel is missing expected property '{expected_prop}' for {rd['id']}",
+                                        node=node,
+                                    )
+                        if ep.get("materialRoles"):
+                            made_of_roles = [
+                                ((r.get("qualifiers") or {}).get("role") or "")
+                                for r in out
+                                if r.get("predicate") == "madeOf"
+                            ]
+                            for cv_id in child_variants:
+                                made_of_roles.extend(
+                                    ((r.get("qualifiers") or {}).get("role") or "")
+                                    for r in out_by[cv_id]
+                                    if r.get("predicate") == "madeOf"
                                 )
+                            for expected_role in ep["materialRoles"]:
+                                pat = re.compile(rf"\b{re.escape(expected_role)}\b", re.I)
+                                if not any(pat.search(role_text) for role_text in made_of_roles):
+                                    add(
+                                        "composition",
+                                        "profile-missing-material-role",
+                                        f"productModel is missing madeOf material for '{expected_role}' role of {rd['id']}",
+                                        node=node,
+                                    )
             elif kind == "productVariant":
                 if not any(r.get("predicate") == "isVariantOf" for r in out):
                     add("composition", "variant-missing-model", "productVariant has no isVariantOf productModel", node=node)
@@ -1272,6 +1294,9 @@ class MaterialStore:
             elif kind == "structureModel":
                 if not any(r.get("predicate") == "includesChemical" for r in out):
                     add("composition", "structure-missing-chemical", "structureModel has no includesChemical links", node=node)
+            elif kind == "chemicalEntity":
+                if not any(i.get("namespace") == "cas" for i in (node.get("identifiers") or ())):
+                    add("composition", "chemical-missing-cas", "chemicalEntity has no CAS Registry Number identifier", node=node)
 
         if tier == "assembly":
             for stage in ("fabrication", "installation"):

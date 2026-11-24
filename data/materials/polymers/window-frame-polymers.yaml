@@ -16,21 +16,23 @@ entities:
   - id: material.fibrex-composite
     kind: material
     label: Fibrex reclaimed wood-fiber / thermoplastic composite
-    description: Proprietary Andersen wood-fiber/thermoplastic formulation; exact additive and stabilizer ratios are not publicly disclosed.
+    description: Proprietary Andersen wood-fiber/thermoplastic formulation composed of 40% reclaimed wood fiber by weight with special polymer formulations; exact additive and stabilizer ratios are not publicly disclosed.
     defaults:
       basis: manufacturer-declared
       evidence:
-        - source: source.manufacturers.andersen.100-series-performance
-          locator: { page: 5, section: "100 Series Single Hung Window" }
+        - source: source.manufacturers.andersen.100-series-product-guide
+          locator: { page: 6, section: "FIBREX MATERIAL" }
     links:
       - predicate: hasComposition
         target: chem.cellulose
-        qualifiers: { role: reclaimed wood-fiber reinforcement }
+        qualifiers:
+          role: reclaimed wood-fiber reinforcement
+          quantity: { value: 40, unit: "%", basis: mass }
       - predicate: hasComposition
         target: chem.pvc
         qualifiers: { role: thermoplastic polymer matrix }
     guide:
-      summary: Extruded composite combining reclaimed wood fiber with thermoplastic polymer—far lower thermal conductivity than aluminum and stiffer than standard vinyl.
+      summary: Extruded composite combining 40% reclaimed wood fiber by weight with thermoplastic polymer—far lower thermal conductivity than aluminum and stiffer than standard vinyl.
 
   - id: process.fabrication.thermal-break-pouring
     kind: process
@@ -88,10 +90,10 @@ entities:
     label: Fibrex wood-fiber / thermoplastic compounding & profile extrusion
     stage: fabrication
     defaults:
-      basis: typical-reference
+      basis: manufacturer-declared
       evidence:
-        - source: source.manufacturers.andersen.100-series-performance
-          locator: { page: 5, section: "100 Series Single Hung Window" }
+        - source: source.manufacturers.andersen.100-series-product-guide
+          locator: { page: 6, section: "FIBREX MATERIAL" }
     links:
       - predicate: performedBy
         target: actor.andersen
@@ -105,3 +107,38 @@ entities:
       - predicate: produces
         target: material.fibrex-composite
         qualifiers: { role: extruded composite frame profile }
+
+  - id: material.polypropylene-weatherstrip
+    kind: material
+    label: Mineral-filled polypropylene window weatherstripping
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-epd
+          locator: { page: 14, table: "Table 8" }
+    links:
+      - predicate: hasComposition
+        target: chem.pp
+        qualifiers: { role: polyolefin thermoplastic weatherstrip base }
+    guide:
+      summary: Extruded mineral-filled polypropylene weatherstripping and leaf-seal profiles compressing between sash and frame to block air and water infiltration.
+
+  - id: process.fabrication.polypropylene-extrusion
+    kind: process
+    label: Polypropylene weatherstrip & leaf-seal extrusion
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-epd
+          locator: { page: 8, section: "Flow Dataset" }
+    links:
+      - predicate: performedBy
+        target: actor.igu-fabricator
+        qualifiers: { role: weatherstrip extruder }
+      - predicate: uses
+        target: chem.pp
+        qualifiers: { role: polypropylene granulate feedstock }
+      - predicate: produces
+        target: material.polypropylene-weatherstrip
+        qualifiers: { role: extruded weatherstripping profile }

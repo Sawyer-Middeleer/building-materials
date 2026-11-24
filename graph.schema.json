@@ -166,6 +166,11 @@
               "type": "array",
               "uniqueItems": true,
               "items": { "type": "string", "minLength": 1 }
+            },
+            "materialRoles": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
             }
           }
         }

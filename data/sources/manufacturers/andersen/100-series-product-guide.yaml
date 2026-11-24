@@ -1,0 +1,10 @@
+id: source.manufacturers.andersen.100-series-product-guide
+kind: source
+label: Andersen 100 Series Product Guide for Professionals
+source:
+  origin: https://edge.sitecorecloud.io/andersencor0d3d-andersencorae0f-prod102c-dc69/media/Project/AndersenCorporation/AndersenWindows/AndersenWindows/files/brochures/2020-to-current-literature/100-series-product-guide.pdf
+  mediaType: application/pdf
+  sha256: 45e3f4658ba1992726d4906014a0470bb33a9bab37e4866fae2a4ec7e1a4d960
+  retrievedAt: 2026-11-24T17:49:17.862756+00:00
+  issuer: Andersen Corporation
+revision: '2024'

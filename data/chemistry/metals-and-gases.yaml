@@ -26,3 +26,31 @@ entities:
     identifiers:
       - namespace: cas
         value: "7440-37-1"
+
+  - id: chem.fe
+    kind: chemicalEntity
+    label: Iron (Fe)
+    identifiers:
+      - namespace: cas
+        value: "7439-89-6"
+
+  - id: chem.cr
+    kind: chemicalEntity
+    label: Chromium (Cr)
+    identifiers:
+      - namespace: cas
+        value: "7440-47-3"
+
+  - id: chem.ni
+    kind: chemicalEntity
+    label: Nickel (Ni)
+    identifiers:
+      - namespace: cas
+        value: "7440-02-0"
+
+  - id: chem.zn
+    kind: chemicalEntity
+    label: Zinc (Zn)
+    identifiers:
+      - namespace: cas
+        value: "7440-66-6"

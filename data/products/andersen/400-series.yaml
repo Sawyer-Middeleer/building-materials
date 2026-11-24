@@ -1,0 +1,146 @@
+defaults:
+  basis: manufacturer-declared
+  evidence:
+    - source: source.manufacturers.andersen.400-series-performance
+      locator: { page: 13, section: "400 Series Casement Window" }
+
+entities:
+  - id: product.andersen.400-series
+    kind: productModel
+    label: Andersen 400 Series Vinyl-Clad Wood Window
+    identifiers:
+      - { namespace: masterformat, value: "08 52 13" }
+      - { namespace: uniformat2, value: B2020 }
+    parameters:
+      operationType:
+        values: [casement, double-hung, picture]
+        locator: { page: 1, section: "400 Series Casement Windows" }
+      grilleStyle:
+        values:
+          - Without Grilles
+          - Simulated Divided Light
+          - Finelight
+          - Energy Spacer Divided Light
+          - Full Divided Light
+        locator: { page: 1, section: "400 Series Casement Windows" }
+      glazingPackage:
+        values:
+          - Low-E4 Dual-Pane
+          - Low-E4 w/HeatLock Dual-Pane
+          - Low-E4 Sun Dual-Pane
+          - Low-E4 SmartSun Dual-Pane
+          - Low-E4 SmartSun w/HeatLock Dual-Pane
+          - Low-E4 Triple-Pane
+          - Low-E4 Enhanced Triple-Pane
+          - Low-E4 Enhanced w/HeatLock Triple-Pane
+          - Low-E4 SmartSun Triple-Pane
+        locator: { page: 9, section: "400 Series Casement Windows" }
+    links:
+      - predicate: manufacturedBy
+        target: actor.andersen
+      - predicate: realizesDesign
+        target: envelope.openings.window
+      - predicate: compatibleWith
+        target: envelope.openings
+        qualifiers: { interface: rough-opening, role: vinyl-clad-wood-frame }
+    properties:
+      - property: installedCostPerArea
+        scope: whole-window
+        state: unknown
+        conditions: "Dealer-quoted residential product; installed pricing not published in NFRC datasheet."
+      - property: serviceLife
+        scope: whole-window
+        state: unknown
+        conditions: "Full service life not declared in NFRC performance datasheet."
+    guide:
+      summary: Residential and light-commercial (LC-PG50) vinyl-clad wood window line combining a structural wood interior core, weather-resistant vinyl exterior cladding, and dual- or triple-pane Low-E4 glazing down to U = 0.20.
+      tradeoffs: Higher structural wind-load rating (LC-PG50 / DP 50) and natural wood interior than 100 Series Fibrex (LC-PG30 / DP 30), while retaining comparable residential thermal performance (U = 0.20-0.29).
+    variantDefaults:
+      defaults:
+        basis: manufacturer-declared
+        evidence:
+          - source: source.manufacturers.andersen.400-series-performance
+            locator: { page: 13, section: "400 Series Casement Window" }
+      links:
+        - predicate: realizesDesign
+          target: envelope.openings.window
+        - predicate: madeOf
+          target: material.softwood-frame
+          qualifiers: { role: structural wood frame and sash core }
+        - predicate: madeOf
+          target: material.upvc-frame
+          qualifiers: { role: exterior protective vinyl cladding }
+        - predicate: madeOf
+          target: material.soda-lime-glass
+          qualifiers: { role: glazing substrate }
+        - predicate: madeOf
+          target: material.argon-fill
+          qualifiers: { role: insulating cavity gas }
+    variantsTable:
+      csv: 400-series-skus.csv
+      idTemplate: "product.andersen.400.{sku}"
+      labelTemplate: "Andersen 400 Series {label}"
+      identifiers:
+        - namespace: nfrc
+          value: "{nfrc_id}"
+      defaults:
+        basis: simulated
+        scope: whole-window
+        method: NFRC 100 / 200
+        conditions: "Whole-window NFRC certified rating, without grilles"
+        evidence:
+          - source: source.manufacturers.andersen.400-series-performance
+            locator:
+              page: "{page}"
+              row: "{row}"
+      columns:
+        u_factor:
+          property: uFactor
+          unit: "Btu/(h·ft²·°F)"
+        shgc:
+          property: solarHeatGainCoefficient
+          unit: "1"
+        vlt:
+          property: visibleLightTransmittance
+          unit: "1"
+        dp:
+          property: structuralDesignPressure
+          basis: measured
+          unit: psf
+          method: AAMA/WDMA/CSA 101
+          conditions: "Standard Rating Class LC-PG50 (DP +50/-50, 2440 Pa)"
+        air:
+          property: airInfiltration
+          basis: measured
+          unit: "cfm/ft²"
+          method: AAMA/WDMA/CSA 101
+          conditions: "Meets or exceeds CEC & IECC Air Infiltration Requirements of 0.2 cfm/ft² or lower"
+        perf_class:
+          property: performanceClass
+          basis: measured
+          valueType: string
+          method: AAMA/WDMA/CSA 101
+
+  - id: process.fabrication.andersen-400-assembly
+    kind: process
+    label: Andersen 400 Series vinyl-clad wood frame & IGU glazing assembly
+    stage: fabrication
+    links:
+      - predicate: performedBy
+        target: actor.andersen
+        qualifiers: { role: window manufacturer }
+      - predicate: uses
+        target: material.softwood-frame
+        qualifiers: { role: milled wood frame and sash core }
+      - predicate: uses
+        target: material.upvc-frame
+        qualifiers: { role: exterior vinyl cladding }
+      - predicate: uses
+        target: material.soda-lime-glass
+        qualifiers: { role: glazing lites }
+      - predicate: uses
+        target: material.argon-fill
+        qualifiers: { role: cavity gas }
+      - predicate: produces
+        target: product.andersen.400-series
+        qualifiers: { role: factory-glazed vinyl-clad wood window line }

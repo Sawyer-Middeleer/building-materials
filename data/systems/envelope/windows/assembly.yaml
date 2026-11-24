@@ -35,6 +35,13 @@ entities:
         - rough-opening
         - drainage-plane
         - interior-finish-return
+      materialRoles:
+        - frame
+        - sash
+        - glazing
+        - spacer
+        - weatherstripping
+        - hardware
     links:
       - predicate: hasPart
         target: envelope.openings.window.frame

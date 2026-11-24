@@ -1,0 +1,88 @@
+entities:
+  - id: material.stainless-steel-304
+    kind: material
+    label: Austenitic stainless steel (IGU spacer & hinge channel alloy)
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-product-guide
+          locator: { page: 15, section: "GLASS SPACER OPTIONS" }
+    links:
+      - predicate: hasComposition
+        target: chem.fe
+        qualifiers: { role: primary iron alloy matrix }
+      - predicate: hasComposition
+        target: chem.cr
+        qualifiers: { role: corrosion-resistant chromium alloying element }
+      - predicate: hasComposition
+        target: chem.ni
+        qualifiers: { role: austenitic nickel stabilizer }
+    guide:
+      summary: Corrosion-resistant stainless steel alloy used for warm-edge IGU perimeter spacers and casement hinge channels; far lower thermal conductivity than aluminum spacers.
+
+  - id: process.fabrication.stainless-steel-forming
+    kind: process
+    label: Stainless steel roll-forming & IGU spacer fabrication
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-product-guide
+          locator: { page: 15, section: "GLASS SPACER OPTIONS" }
+    links:
+      - predicate: performedBy
+        target: actor.igu-fabricator
+        qualifiers: { role: spacer and channel fabricator }
+      - predicate: uses
+        target: chem.fe
+        qualifiers: { role: iron feedstock }
+      - predicate: uses
+        target: chem.cr
+        qualifiers: { role: chromium alloying feedstock }
+      - predicate: uses
+        target: chem.ni
+        qualifiers: { role: nickel alloying feedstock }
+      - predicate: produces
+        target: material.stainless-steel-304
+        qualifiers: { role: formed stainless steel spacer and channel }
+
+  - id: material.low-alloy-steel-hardware
+    kind: material
+    label: Zinc-coated low-alloy steel window hardware
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-epd
+          locator: { page: 8, section: "Flow Dataset" }
+    links:
+      - predicate: hasComposition
+        target: chem.fe
+        qualifiers: { role: low-alloy structural steel base }
+      - predicate: hasComposition
+        target: chem.zn
+        qualifiers: { role: protective zinc piece coating }
+    guide:
+      summary: Hot-rolled and stamped low-alloy steel with protective zinc plating used for window locks, keepers, tie bars, hinges, and sash operators.
+
+  - id: process.fabrication.steel-hardware-stamping
+    kind: process
+    label: Low-alloy steel hardware metalworking & zinc plating
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.100-series-epd
+          locator: { page: 8, section: "Flow Dataset" }
+    links:
+      - predicate: performedBy
+        target: actor.igu-fabricator
+        qualifiers: { role: hardware fabricator }
+      - predicate: uses
+        target: chem.fe
+        qualifiers: { role: low-alloy steel feedstock }
+      - predicate: uses
+        target: chem.zn
+        qualifiers: { role: zinc coating feedstock }
+      - predicate: produces
+        target: material.low-alloy-steel-hardware
+        qualifiers: { role: "finished locks, keepers, hinges, and operators" }

@@ -1,0 +1,10 @@
+id: source.manufacturers.andersen.400-series-performance
+kind: source
+label: Andersen 400 Series NFRC Certified Total Unit Performance
+source:
+  origin: https://www.andersenwindows.com/-/media/Project/AndersenCorporation/AndersenWindows/AndersenWindows/files/technical-docs/performance/performance-windows-patiodoors-nfrcratings--400series.pdf
+  mediaType: application/pdf
+  sha256: aeeddb40d8d03f78621551477cdc457a81f92f13133b27772c26c373f34bed00
+  retrievedAt: 2026-11-24T17:51:39.324195+00:00
+  issuer: Andersen Corporation
+revision: '2024'

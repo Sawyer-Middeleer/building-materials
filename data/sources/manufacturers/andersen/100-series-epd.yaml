@@ -1,0 +1,10 @@
+id: source.manufacturers.andersen.100-series-epd
+kind: source
+label: Andersen 100 Series Windows Environmental Product Declaration (SCS-EPD-10522)
+source:
+  origin: https://www.andersenwindows.com/-/media/Project/AndersenCorporation/AndersenWindows/AndersenWindows/files/technical-docs/leed/scs-epd-andersen-100series-window.pdf
+  mediaType: application/pdf
+  sha256: 87a7f17f02b57a12625fda8dfa3b22163983a8e0c71941d333e63fd5ec79767f
+  retrievedAt: 2026-11-24T19:47:37.397460+00:00
+  issuer: SCS Global Services / Andersen Corporation
+revision: '2025'

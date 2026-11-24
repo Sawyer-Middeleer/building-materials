@@ -128,8 +128,16 @@ class BuildingMaterialsE2ETest(unittest.TestCase):
             for tier in ("catalog", "assembly", "atomic"):
                 g = self.cli_json("--db", db_path, "gaps", "--tier", tier)
                 self.assertEqual(g["tier"], tier)
-                self.assertEqual(g["summary"]["composition"], 0)
+                non_profile_comp = [
+                    item for item in g["gaps"]
+                    if item["category"] == "composition" and item["code"] != "profile-missing-material-role"
+                ]
+                self.assertEqual(non_profile_comp, [])
                 self.assertEqual(g["summary"]["valueChain"], 0)
+
+            andersen_atomic = self.cli_json("--db", db_path, "gaps", "product.andersen.100-series", "--tier", "atomic")
+            self.assertEqual(andersen_atomic["summary"]["composition"], 0)
+            self.assertEqual(andersen_atomic["summary"]["evidence"], 0)
 
     def test_authoring_roundtrip_and_negative_contracts(self):
         with TemporaryDirectory() as tmp:

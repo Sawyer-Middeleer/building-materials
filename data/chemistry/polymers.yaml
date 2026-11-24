@@ -9,6 +9,9 @@ entities:
   - id: chem.siloxane
     kind: chemicalEntity
     label: Polysiloxane elastomer
+    identifiers:
+      - namespace: cas
+        value: "63148-62-9"
 
   - id: chem.polyurethane
     kind: chemicalEntity
@@ -48,3 +51,16 @@ entities:
         formula: "(C6H10O5)n"
         category: Natural biopolymer
         role: Stiffness & thermal-stability reinforcement
+
+  - id: chem.pp
+    kind: chemicalEntity
+    label: Polypropylene thermoplastic
+    identifiers:
+      - namespace: cas
+        value: "9003-07-0"
+    guide:
+      summary: Semi-crystalline polyolefin thermoplastic used in extruded weatherstripping and leaf-seal profiles for moisture resistance and flex durability.
+      chemistry:
+        formula: "(C3H6)n"
+        category: Thermoplastic polyolefin
+        role: Weatherstripping & flexible seal matrix

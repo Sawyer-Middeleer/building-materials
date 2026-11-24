@@ -11,6 +11,7 @@ entities:
     identifiers:
       - { namespace: masterformat, value: "08 53 13" }
       - { namespace: uniformat2, value: B2020 }
+      - { namespace: epd, value: SCS-EPD-10522 }
     parameters:
       operationType:
         values: [single-hung, gliding, casement, awning, picture]
@@ -28,6 +29,43 @@ entities:
           - Low-E SmartSun Enhanced w/HeatLock Triple-Pane
           - Low-E PassiveSun Enhanced w/HeatLock Triple-Pane
         locator: { page: 4, section: "100 SERIES PRODUCT PERFORMANCE" }
+      finishColor:
+        values: [White, Sandtone, Terratone, Dark Bronze, Black]
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 12, section: "EXTERIOR COLORS" }
+      interiorFinish:
+        values: [White, Sandtone, Dark Bronze, Black]
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 12, section: "INTERIOR COLORS" }
+      hardwareFinish:
+        values: [Antique Brass, Black, Dark Bronze, Sandtone, Satin Nickel, White]
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 13, section: "WINDOW HARDWARE FINISHES" }
+      nominalWidth:
+        min: 11.5
+        max: 95.5
+        step: 0.125
+        unit: in
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 100, section: "Picture Windows" }
+      nominalHeight:
+        min: 11.5
+        max: 95.5
+        step: 0.125
+        unit: in
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 100, section: "Picture Windows" }
+      jambDepth:
+        values: [3.25]
+        unit: in
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 27, section: "Casement Window Details - New Construction" }
     links:
       - predicate: manufacturedBy
         target: actor.andersen
@@ -37,6 +75,19 @@ entities:
         target: envelope.openings
         qualifiers: { interface: rough-opening, role: flange-or-insert-frame }
     properties:
+      - property: gwp
+        scope: A1-A3
+        basis: measured
+        quantity: { value: 91.1, unit: "kg CO2e", basis: "per 1 m² fenestration assembly" }
+        method: TRACI 2.1 / ISO 21930
+        geography: North America
+        pcr: "NSF 1102-23 PCR for Fenestration Assemblies v2 (2023-12)"
+        validUntil: "2030-10-30"
+        plantActor: actor.andersen
+        conditions: "Cradle-to-gate A1-A3 GWP for 100 Series Single-Hung reference assembly (91.1 kg CO2e/m², Table 26); other 100 Series types range 74.0 (Picture, Table 34) to 96.9 (Casement, Table 22)."
+        evidence:
+          - source: source.manufacturers.andersen.100-series-epd
+            locator: { page: 20, table: "Table 26" }
       - property: installedCostPerArea
         scope: whole-window
         state: unknown
@@ -44,7 +95,7 @@ entities:
       - property: serviceLife
         scope: whole-window
         state: unknown
-        conditions: "Full service life not declared in NFRC performance datasheet."
+        conditions: "Full service life not declared in NFRC performance datasheet or cradle-to-gate EPD."
     guide:
       summary: Residential and light-commercial (LC-PG30) Fibrex wood-fiber/thermoplastic composite window line offering dual- and triple-pane NFRC U-factors down to 0.18.
       tradeoffs: Dramatically better thermal efficiency (U = 0.18-0.28) and lower condensation risk than commercial aluminum, at lower structural wind-load ratings (DP 30 vs. AW-65).
@@ -66,6 +117,30 @@ entities:
         - predicate: madeOf
           target: material.argon-fill
           qualifiers: { role: insulating cavity gas }
+        - predicate: madeOf
+          target: material.stainless-steel-304
+          qualifiers: { role: stainless steel IGU spacer }
+          evidence:
+            - source: source.manufacturers.andersen.100-series-product-guide
+              locator: { page: 15, section: "GLASS SPACER OPTIONS" }
+        - predicate: madeOf
+          target: material.polypropylene-weatherstrip
+          qualifiers: { role: mineral-filled polypropylene weatherstripping }
+          evidence:
+            - source: source.manufacturers.andersen.100-series-epd
+              locator: { page: 14, table: "Table 8" }
+        - predicate: madeOf
+          target: material.low-alloy-steel-hardware
+          qualifiers: { role: "low-alloy steel locks, hinges, and hardware" }
+          evidence:
+            - source: source.manufacturers.andersen.100-series-epd
+              locator: { page: 14, table: "Table 8" }
+        - predicate: madeOf
+          target: material.silicone-sealant
+          qualifiers: { role: glazing bead and silicone perimeter seal }
+          evidence:
+            - source: source.manufacturers.andersen.100-series-epd
+              locator: { page: 14, table: "Table 8" }
     variantsTable:
       csv: 100-series-skus.csv
       idTemplate: "product.andersen.100.{sku}"
@@ -128,6 +203,24 @@ entities:
       - predicate: uses
         target: material.argon-fill
         qualifiers: { role: cavity gas }
+      - predicate: uses
+        target: material.stainless-steel-304
+        qualifiers: { role: IGU perimeter spacer }
+        evidence:
+          - source: source.manufacturers.andersen.100-series-product-guide
+            locator: { page: 15, section: "GLASS SPACER OPTIONS" }
+      - predicate: uses
+        target: material.polypropylene-weatherstrip
+        qualifiers: { role: sash weatherstripping }
+        evidence:
+          - source: source.manufacturers.andersen.100-series-epd
+            locator: { page: 14, table: "Table 8" }
+      - predicate: uses
+        target: material.low-alloy-steel-hardware
+        qualifiers: { role: "operating hardware, locks, and hinges" }
+        evidence:
+          - source: source.manufacturers.andersen.100-series-epd
+            locator: { page: 14, table: "Table 8" }
       - predicate: produces
         target: product.andersen.100-series
         qualifiers: { role: factory-glazed composite window line }

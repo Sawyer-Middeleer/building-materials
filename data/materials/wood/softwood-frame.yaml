@@ -1,0 +1,35 @@
+entities:
+  - id: material.softwood-frame
+    kind: material
+    label: Structural wood window frame core
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.400-series-performance
+          locator: { page: 13, section: "400 Series Casement Window" }
+    links:
+      - predicate: hasComposition
+        target: chem.cellulose
+        qualifiers: { role: lignocellulosic structural fiber }
+    guide:
+      summary: Milled structural wood core used in vinyl- or aluminum-clad residential window frames; low thermal conductivity and natural interior finishability, protected from exterior weathering by polymer or metal cladding.
+
+  - id: process.fabrication.wood-frame-milling
+    kind: process
+    label: Window frame wood core milling & exterior vinyl cladding
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.manufacturers.andersen.400-series-performance
+          locator: { page: 13, section: "400 Series Casement Window" }
+    links:
+      - predicate: performedBy
+        target: actor.andersen
+        qualifiers: { role: clad-wood window manufacturer }
+      - predicate: uses
+        target: chem.cellulose
+        qualifiers: { role: structural timber feedstock }
+      - predicate: produces
+        target: material.softwood-frame
+        qualifiers: { role: milled wood frame core }
