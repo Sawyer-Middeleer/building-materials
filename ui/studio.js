@@ -79,6 +79,8 @@ export class SchematicStudio {
     this.targetExplode = 0;
     this.interactiveParts = [];
     this.selectedNodeId = null;
+    this.lensDirectIds = null;     // Set<string> | null
+    this.lensContainerIds = null;  // Set<string> | null
     this.hoveredMesh = null;
     this.calloutLayer = null;
     this.leaderSvg = null;
@@ -142,6 +144,12 @@ export class SchematicStudio {
     this._updateHighlights();
   }
 
+  setLensNodes(directIds = null, containerIds = null) {
+    this.lensDirectIds = directIds && directIds.size ? directIds : null;
+    this.lensContainerIds = containerIds && containerIds.size ? containerIds : null;
+    this._updateHighlights();
+  }
+
   _applyExplode(t) {
     for (const part of this.interactiveParts) {
       const b = part.userData.basePos;
@@ -177,7 +185,8 @@ export class SchematicStudio {
 
   _updateCallouts() {
     if (!this.calloutLayer) return;
-    const show = this.explode >= 0.18;
+    const lensActive = Boolean(this.lensDirectIds || this.lensContainerIds);
+    const showAll = this.explode >= 0.18;
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
     const box = new THREE.Box3();
@@ -186,7 +195,14 @@ export class SchematicStudio {
 
     const placed = [];
     for (const item of this.calloutEls) {
-      if (!show) {
+      const nid = item.part.userData.nodeId;
+      const inLens = (this.lensDirectIds?.has(nid)) || (this.lensContainerIds?.has(nid));
+      if (!showAll && !inLens) {
+        item.el.style.opacity = "0";
+        item.el.style.pointerEvents = "none";
+        continue;
+      }
+      if (lensActive && !inLens && nid !== this.selectedNodeId) {
         item.el.style.opacity = "0";
         item.el.style.pointerEvents = "none";
         continue;
@@ -227,15 +243,18 @@ export class SchematicStudio {
 
     let svgMarkup = "";
     for (const p of placed) {
-      const isSel = p.item.part.userData.nodeId === this.selectedNodeId;
+      const nid = p.item.part.userData.nodeId;
+      const isSel = nid === this.selectedNodeId;
+      const inLens = Boolean(this.lensDirectIds?.has(nid) || this.lensContainerIds?.has(nid));
       p.item.el.style.transform = `translate(${p.sx}px, ${p.sy}px) translate(-50%, -100%)`;
       p.item.el.style.opacity = "0.96";
       p.item.el.style.pointerEvents = "auto";
       p.item.el.classList.toggle("active", isSel);
+      p.item.el.classList.toggle("lens-hit", inLens && !isSel);
       // Hairline leader from 3D part center to callout pill bottom
-      const stroke = isSel ? "rgba(24,24,22,0.75)" : "rgba(24,24,22,0.22)";
-      svgMarkup += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.sx.toFixed(1)}" y2="${(p.sy - 2).toFixed(1)}" stroke="${stroke}" stroke-width="${isSel ? 1.25 : 0.9}" stroke-dasharray="${isSel ? "" : "2,2"}"/>`;
-      svgMarkup += `<circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="${isSel ? 3.2 : 2.0}" fill="${isSel ? "#181816" : "rgba(24,24,22,0.35)"}"/>`;
+      const stroke = inLens ? "#7e22ce" : isSel ? "rgba(24,24,22,0.75)" : "rgba(24,24,22,0.22)";
+      svgMarkup += `<line x1="${p.ax.toFixed(1)}" y1="${p.ay.toFixed(1)}" x2="${p.sx.toFixed(1)}" y2="${(p.sy - 2).toFixed(1)}" stroke="${stroke}" stroke-width="${(isSel || inLens) ? 1.35 : 0.9}" stroke-dasharray="${(isSel || inLens) ? "" : "2,2"}"/>`;
+      svgMarkup += `<circle cx="${p.ax.toFixed(1)}" cy="${p.ay.toFixed(1)}" r="${(isSel || inLens) ? 3.5 : 2.0}" fill="${inLens ? "#7e22ce" : isSel ? "#181816" : "rgba(24,24,22,0.35)"}"/>`;
     }
 
     // Draw crisp architectural elbow tether from selected 3D part directly to the floating Anchor Card
@@ -267,19 +286,45 @@ export class SchematicStudio {
   }
 
   _updateHighlights() {
+    const lensActive = Boolean(this.lensDirectIds || this.lensContainerIds);
     this.rootGroup.traverse((obj) => {
       if (!obj.isMesh || !obj.material || !("emissive" in obj.material)) return;
       if (!obj.userData._origMat) {
         obj.userData._origMat = obj.material;
       }
-      const isSel = obj.userData.nodeId && obj.userData.nodeId === this.selectedNodeId;
-      const isHov = this.hoveredMesh && obj.userData.nodeId === this.hoveredMesh.userData.nodeId;
-      if (isSel || isHov) {
+      const nid = obj.userData.nodeId;
+      const isSel = nid && nid === this.selectedNodeId;
+      const isHov = this.hoveredMesh && nid === this.hoveredMesh.userData.nodeId;
+      const isLensDirect = Boolean(nid && this.lensDirectIds?.has(nid));
+      const isLensContainer = Boolean(nid && this.lensContainerIds?.has(nid));
+
+      if (lensActive && !isLensDirect && !isLensContainer) {
+        // Dim unrelated parts so the vendor's footprint pops cleanly
+        if (!obj.userData._dimMat) {
+          const dm = obj.userData._origMat.clone();
+          dm.transparent = true;
+          dm.opacity = Math.min(dm.opacity ?? 1, 0.16);
+          dm.depthWrite = false;
+          obj.userData._dimMat = dm;
+        }
+        obj.material = obj.userData._dimMat;
+        return;
+      }
+
+      if (isLensDirect || isLensContainer || isSel || isHov) {
         if (!obj.userData._hlMat) {
           obj.userData._hlMat = obj.userData._origMat.clone();
         }
-        obj.userData._hlMat.emissive.setHex(isSel ? 0x1d4ed8 : 0x3b82f6);
-        obj.userData._hlMat.emissiveIntensity = isSel ? 0.28 : 0.14;
+        if (isLensDirect) {
+          obj.userData._hlMat.emissive.setHex(0x7e22ce);
+          obj.userData._hlMat.emissiveIntensity = 0.36;
+        } else if (isLensContainer) {
+          obj.userData._hlMat.emissive.setHex(0x9333ea);
+          obj.userData._hlMat.emissiveIntensity = 0.22;
+        } else {
+          obj.userData._hlMat.emissive.setHex(isSel ? 0x1d4ed8 : 0x3b82f6);
+          obj.userData._hlMat.emissiveIntensity = isSel ? 0.26 : 0.14;
+        }
         obj.material = obj.userData._hlMat;
       } else if (obj.userData._origMat) {
         obj.material = obj.userData._origMat;

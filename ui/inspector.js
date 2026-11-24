@@ -198,12 +198,14 @@ export function renderAnchoredCard(el, {
   openPropHelp,
   drillLevel,
   firmNode,
+  vendorFootprint = null,
   activeTab = "overview",
   selectedStatementId = null,
   citation = null,
   onSelectTab,
   onSelectNode,
   onSelectFirm,
+  onClearLens,
   onInspectStatement,
   onTogglePropHelp,
   onDrill,
@@ -249,7 +251,17 @@ export function renderAnchoredCard(el, {
           ${f.headquarters ? `<span class="meta-txt">HQ</span><span>${esc(f.headquarters)}</span>` : ""}
           ${f.knownFor ? `<span class="meta-txt">known for</span><span>${esc(f.knownFor)}</span>` : ""}
         </div>
-        ${f.website ? `<a class="guide-ext" href="${esc(f.website)}" target="_blank" rel="noopener">${esc(f.website.replace(/^https?:\/\//, ""))} ↗</a>` : ""}`;
+        ${f.website ? `<a class="guide-ext" href="${esc(f.website)}" target="_blank" rel="noopener">${esc(f.website.replace(/^https?:\/\//, ""))} ↗</a>` : ""}
+        ${vendorFootprint?.length ? `<div class="anchor-facts">
+          <div class="insp-section-title" style="margin-bottom:2px"><span>Where they show up in 3D</span><span>${vendorFootprint.length}</span></div>
+          <div class="anchor-list">
+            ${vendorFootprint.map((p) => `
+              <button class="anchor-list-row" data-jump="${esc(p.nodeId)}">
+                <span style="font-size:12px;font-weight:550">${esc(p.label)}</span>
+                <span class="tag">${esc(p.levelLabel)}</span>
+              </button>`).join("")}
+          </div>
+        </div>` : ""}`;
     } else if (entry?.summary) {
       summaryHtml = `<p class="anchor-summary">${esc(entry.summary)}</p>
         ${entry.howItWorks ? `<p class="anchor-summary"><strong>How it works:</strong> ${esc(entry.howItWorks)}</p>` : ""}
@@ -351,13 +363,15 @@ export function renderAnchoredCard(el, {
       <button class="anchor-tab ${activeTab === "links" ? "active" : ""}" data-atab="links">Links (${linksCount})</button>
     </div>
     <div class="anchor-body">${bodyHtml}</div>
-    ${drillLevel ? `<div class="anchor-foot">
-      <button class="btn-primary-sm" id="anchorDrillBtn" style="width:100%">Drill Into Next Layer →</button>
+    ${(drillLevel || onClearLens) ? `<div class="anchor-foot">
+      ${drillLevel ? `<button class="btn-primary-sm" id="anchorDrillBtn" style="flex:1">Drill Into Next Layer →</button>` : ""}
+      ${onClearLens ? `<button class="btn-sm" id="anchorClearLensBtn" style="flex:1">Clear Vendor Lens ×</button>` : ""}
     </div>` : ""}
   `;
 
   if ($("anchorCloseBtn")) $("anchorCloseBtn").onclick = () => onClose?.();
   if ($("anchorDrillBtn")) $("anchorDrillBtn").onclick = () => onDrill?.(drillLevel, node.id);
+  if ($("anchorClearLensBtn")) $("anchorClearLensBtn").onclick = () => onClearLens?.();
   if ($("anchorFirmBtn") && firmNode) $("anchorFirmBtn").onclick = () => onSelectFirm?.(firmNode.id);
   if ($("anchorGraphTabBtn")) $("anchorGraphTabBtn").onclick = () => onOpenInGraph?.(node.id);
   el.querySelectorAll("[data-atab]").forEach((b) => b.onclick = () => onSelectTab?.(b.dataset.atab));

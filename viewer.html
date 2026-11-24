@@ -149,6 +149,7 @@
   }
   .callout-pin:hover { border-color: var(--ink); color: var(--ink); }
   .callout-pin.active { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 4px 14px rgba(24, 24, 22, 0.18); }
+  .callout-pin.lens-hit { background: #faf5ff; border-color: #9333ea; color: #6b21a8; box-shadow: 0 4px 14px rgba(126, 34, 206, 0.16); }
   .pin-brand {
     font-family: var(--mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase;
     padding: 0 5px; border-radius: 999px; background: #f3e8ff; color: #7e22ce;
@@ -266,6 +267,7 @@
   .spec-opt.selected { background: var(--ink); color: #fff; }
   .spec-opt.selected .meta-txt { color: rgba(255,255,255,0.72); }
   .spec-opt-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; font-size: 12px; }
+  .spec-opt-top .meta-txt { flex-shrink: 0; white-space: nowrap; }
 
   /* Atomic Level Legend (Bottom-Left on Level 4) */
   .atomic-legend {
@@ -586,6 +588,7 @@ const state = {
     level: "building",
     variant: "generic", // "generic" | "winco" | "andersen"
     fill: "argon",      // "argon" | "air"
+    vendorLens: null,   // null | "winco" | "andersen" | "vitro" | "kawneer"
     explode: 0,
     studio: null,
     cameraDefaults: null,
@@ -706,7 +709,15 @@ function setTab(tab) {
   renderAll();
 }
 
-function selectNode(nodeId) {
+function selectNode(nodeId, { allowCrossLevel = true } = {}) {
+  // Auto-navigate to the node's actual 3D level when on Schematic so card & 3D scene stay in sync
+  if (allowCrossLevel && state.tab === "schematic") {
+    const mapped = NODE_3D_MAP[nodeId];
+    if (mapped && mapped.level !== state.schematic.level) {
+      viewNodeIn3D(nodeId);
+      return;
+    }
+  }
   state.selectedNodeId = nodeId;
   state.selectedStatementId = null;
   state.citation = null;
@@ -838,6 +849,88 @@ function renderSchematicTab() {
   renderSpecDock();
 }
 
+const VENDOR_3D_FOOTPRINT = {
+  winco: [
+    { nodeId: "winco-4410s-frame", label: "6063-T6 Thermally Broken Frame", level: "window", levelLabel: "Window" },
+    { nodeId: "polyurethane-thermal-break", label: "Poured Polyurethane Thermal Break", level: "window", levelLabel: "Window" },
+    { nodeId: "winco-4410s-sash", label: "6063-T6 Aluminum Operable Sash", level: "window", levelLabel: "Window" },
+  ],
+  andersen: [
+    { nodeId: "andersen-100-frame", label: "Fibrex Composite Frame & Flange", level: "window", levelLabel: "Window" },
+    { nodeId: "andersen-100-sash", label: "Fibrex Composite Operable Sash", level: "window", levelLabel: "Window" },
+  ],
+  vitro: [
+    { nodeId: "outer-pane", label: "Solargray 6mm Outer Glass Pane", level: "igu", levelLabel: "IGU" },
+    { nodeId: "low-e-coating", label: "Solarban 70 Low-E Coating (Surface #2)", level: "igu", levelLabel: "IGU" },
+    { nodeId: "igu-gray-argon", label: "1-Inch Solarban 70 IGU", level: "window", levelLabel: "Window" },
+  ],
+};
+
+function applyVendorLensToStudio() {
+  const studio = state.schematic.studio;
+  if (!studio) return;
+  const firmId = state.schematic.vendorLens;
+  if (!firmId) {
+    studio.setLensNodes(null, null);
+    return;
+  }
+  const direct = new Set();
+  const containers = new Set();
+  const lv = state.schematic.level;
+  const footprint = VENDOR_3D_FOOTPRINT[firmId] || [];
+  for (const item of footprint) {
+    if (item.level === lv) direct.add(item.nodeId);
+  }
+  // Hierarchical roll-up: highlight the parent container when the vendor lives inside it
+  if (lv === "building") {
+    if (firmId === "winco") direct.add("winco-4410s-single-hung");
+    else if (firmId === "andersen") direct.add("andersen-100-single-hung");
+    else if (firmId === "vitro") {
+      containers.add("window-assembly");
+      containers.add("winco-4410s-single-hung");
+      containers.add("andersen-100-single-hung");
+    }
+  } else if (lv === "window" && firmId === "vitro") {
+    direct.add("igu-gray-argon");
+    direct.add("igu-gray-air");
+    direct.add("insulating-glass-unit");
+  }
+  studio.setLensNodes(direct, containers);
+}
+
+function activateVendorLens(firmId) {
+  state.schematic.vendorLens = firmId;
+  state.schematic.anchorHidden = false;
+  state.schematic.anchorTab = "overview";
+  // Auto-instantiate this vendor's product if they make a window variant
+  if ((firmId === "winco" || firmId === "andersen") && state.schematic.variant !== firmId) {
+    state.schematic.variant = firmId;
+    if (state.schematic.level === "igu" || state.schematic.level === "atomic") {
+      state.schematic.level = "window";
+      mountSchematicLevel({ keepCamera: false });
+    } else {
+      mountSchematicLevel({ keepCamera: true });
+    }
+  } else if (firmId === "vitro" && state.schematic.level === "atomic") {
+    state.schematic.level = "igu";
+    mountSchematicLevel({ keepCamera: false });
+  }
+  state.selectedNodeId = firmId;
+  state.selectedStatementId = null;
+  state.citation = null;
+  applyVendorLensToStudio();
+  renderSchematicControls();
+  renderSpecDock();
+  renderAnchor();
+}
+
+function clearVendorLens() {
+  state.schematic.vendorLens = null;
+  applyVendorLensToStudio();
+  renderSpecDock();
+  renderAnchor();
+}
+
 function mountSchematicLevel({ selectNodeId = null, keepCamera = false } = {}) {
   const studio = state.schematic.studio;
   if (!studio) return;
@@ -896,6 +989,7 @@ function mountSchematicLevel({ selectNodeId = null, keepCamera = false } = {}) {
   state.citation = null;
   state.schematic.anchorTab = "overview";
   studio.setSelectedNode(nextId);
+  applyVendorLensToStudio();
   renderAnchor();
 }
 
@@ -1033,11 +1127,24 @@ function renderSpecDock() {
       </div>
     </div>`;
 
+  const lv = state.schematic.level;
+  const showWindowSlot = lv === "building" || lv === "window";
+  const showGlazingSlot = lv === "window" || lv === "igu";
+  const activeFirm = state.schematic.vendorLens ? state.full.byId.get(state.schematic.vendorLens) : null;
+
   dock.innerHTML = `
-    ${slotHtml("window", "Window", curWin?.label || "Generic", winOpts, state.schematic.variant, `Search ${winOpts.length} window specs...`)}
-    ${slotHtml("glazing", "Glazing", curGlaze?.label || "Argon", glazeOpts, state.schematic.fill, `Search ${glazeOpts.length} glazing packages...`)}
-    ${slotHtml("firms", "Firms", `${firmOpts.length} manufacturers`, firmOpts, null, `Search ${firmOpts.length} manufacturers...`)}
+    ${showWindowSlot ? slotHtml("window", "Window", curWin?.label || "Generic", winOpts, state.schematic.variant, `Search ${winOpts.length} window specs...`) : ""}
+    ${showGlazingSlot ? slotHtml("glazing", "Glazing", curGlaze?.label || "Argon", glazeOpts, state.schematic.fill, `Search ${glazeOpts.length} glazing packages...`) : ""}
+    ${slotHtml("firms", "Vendor Lens", activeFirm ? activeFirm.label : `All (${firmOpts.length})`, firmOpts, state.schematic.vendorLens, `Search ${firmOpts.length} manufacturers...`)}
+    ${activeFirm ? `<button class="brand-chip" id="clearLensDockBtn" title="Clear vendor lens">Lens: ${esc(activeFirm.label.split(" ")[0])} ×</button>` : ""}
   `;
+
+  if ($("clearLensDockBtn")) {
+    $("clearLensDockBtn").onclick = (e) => {
+      e.stopPropagation();
+      clearVendorLens();
+    };
+  }
 
   dock.querySelectorAll("[data-slot-toggle]").forEach((btn) => {
     btn.onclick = (e) => {
@@ -1075,7 +1182,8 @@ function renderSpecDock() {
         state.schematic.fill = key;
         mountSchematicLevel({ keepCamera: true });
       } else if (slot === "firms") {
-        selectNode(key);
+        activateVendorLens(key);
+        return;
       }
       renderSpecDock();
     };
@@ -1101,6 +1209,7 @@ function renderAnchor() {
     openPropHelp: state.openPropHelp,
     drillLevel,
     firmNode,
+    vendorFootprint: node?.kind === "actor" ? (VENDOR_3D_FOOTPRINT[node.id] || []) : null,
     activeTab: state.schematic.anchorTab,
     selectedStatementId: state.selectedStatementId,
     citation: state.citation,
@@ -1109,7 +1218,8 @@ function renderAnchor() {
       renderAnchor();
     },
     onSelectNode: (id) => selectNode(id),
-    onSelectFirm: (fid) => selectNode(fid),
+    onSelectFirm: (fid) => activateVendorLens(fid),
+    onClearLens: state.schematic.vendorLens ? clearVendorLens : null,
     onInspectStatement: inspectStatement,
     onTogglePropHelp: (prop) => {
       if (state.openPropHelp.has(prop)) state.openPropHelp.delete(prop);
