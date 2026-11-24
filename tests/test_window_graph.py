@@ -5,6 +5,7 @@ import sys
 from tempfile import TemporaryDirectory
 import threading
 import unittest
+from urllib.error import HTTPError
 from urllib.request import urlopen
 
 import building_materials
@@ -198,6 +199,21 @@ class WindowGraphTest(unittest.TestCase):
                 cited = json.loads(res.read().decode("utf-8"))
                 self.assertEqual(cited["evidence"][0]["locator"]["page"], 2)
                 self.assertIn("webHref", cited["evidence"][0])
+            for asset in (
+                "/ui/studio.js",
+                "/ui/materials.js",
+                "/ui/inspector.js",
+                "/ui/levels/building.js",
+                "/ui/levels/window.js",
+                "/ui/levels/igu.js",
+                "/ui/levels/atomic.js",
+            ):
+                with urlopen(f"{base}{asset}", timeout=5) as res:
+                    self.assertEqual(res.status, 200)
+                    self.assertIn("javascript", res.headers.get("Content-Type", ""))
+            with self.assertRaises(HTTPError) as ctx:
+                urlopen(f"{base}/ui/../building_materials.py", timeout=5)
+            self.assertEqual(ctx.exception.code, 404)
         finally:
             server.shutdown()
             server.server_close()

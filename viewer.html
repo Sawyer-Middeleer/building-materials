@@ -3,7 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Building Materials</title>
+<title>Building Materials — 3D Exploded Schematic & Graph</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 <style>
   :root {
     --bg: #f8f7f4;
@@ -34,7 +42,7 @@
   /* Top Navigation */
   .topbar {
     display: flex; align-items: center; gap: 20px; padding: 0 20px;
-    background: var(--surface); border-bottom: 1px solid var(--border); z-index: 20;
+    background: var(--surface); border-bottom: 1px solid var(--border); z-index: 30;
   }
   .brand { font-weight: 650; font-size: 14px; letter-spacing: -0.01em; white-space: nowrap; }
   .nav { display: flex; gap: 4px; }
@@ -61,7 +69,7 @@
   .jump-menu {
     position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 320px; overflow-y: auto;
     background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.08); display: none; z-index: 30; padding: 4px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08); display: none; z-index: 40; padding: 4px;
   }
   .jump-menu.open { display: block; }
   .jump-item {
@@ -72,17 +80,18 @@
   .jump-item-label { font-size: 12.5px; font-weight: 500; }
   .jump-item-sub { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 
-  /* Main 2-Pane Layout */
-  .main { display: grid; grid-template-columns: 1fr 350px; min-height: 0; }
+  /* Main Layout: Full-bleed on Schematic, 2-Pane on other tabs */
+  .main { display: grid; grid-template-columns: 1fr 370px; min-height: 0; position: relative; }
+  .main.full-bleed { grid-template-columns: 1fr; }
   .stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 
-  /* Sub-toolbar (quiet single line) */
+  /* Sub-toolbar */
   .subbar {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 8px 18px; border-bottom: 1px solid var(--border); background: var(--bg);
-    min-height: 44px; flex-shrink: 0;
+    padding: 7px 18px; border-bottom: 1px solid var(--border); background: var(--bg);
+    min-height: 42px; flex-shrink: 0; flex-wrap: wrap;
   }
-  .subbar-group { display: flex; align-items: center; gap: 8px; }
+  .subbar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .select-clean {
     padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
     background: var(--surface); font-size: 12.5px; cursor: pointer;
@@ -98,15 +107,191 @@
     padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap;
   }
   .btn-sm:hover { border-color: var(--border-strong); color: var(--ink); }
+  .btn-primary-sm {
+    border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 5px;
+    padding: 3px 10px; font-size: 12px; font-weight: 550; cursor: pointer; white-space: nowrap;
+  }
+  .btn-primary-sm:hover { background: #1e40af; }
   .meta-txt { font-family: var(--mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
+
+  /* 3D Schematic Studio (Full-Bleed + Integrated HUD) */
+  .breadcrumb { display: inline-flex; align-items: center; gap: 4px; }
+  .crumb-btn {
+    border: none; background: transparent; padding: 3px 8px; border-radius: 5px;
+    font-size: 12.5px; font-weight: 500; color: var(--muted); cursor: pointer;
+  }
+  .crumb-btn:hover { background: var(--subtle); color: var(--ink); }
+  .crumb-btn.active { background: var(--surface); color: var(--ink); font-weight: 650; border: 1px solid var(--border); }
+  .crumb-sep { color: var(--faint); font-size: 11px; user-select: none; }
+
+  .explode-ctrl { display: inline-flex; align-items: center; gap: 7px; }
+  .explode-ctrl input[type="range"] { width: 110px; accent-color: var(--ink); cursor: pointer; }
+
+  .studio-wrap {
+    flex: 1; position: relative; overflow: hidden; background: #f4f2ec; min-height: 0;
+  }
+  .studio-wrap canvas { display: block; width: 100%; height: 100%; }
+
+  .leader-svg {
+    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4;
+  }
+  .callout-layer {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5;
+  }
+  .callout-pin {
+    position: absolute; top: 0; left: 0;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 255, 255, 0.94); border: 1px solid var(--border-strong);
+    border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 550; color: var(--ink);
+    box-shadow: 0 2px 8px rgba(24, 24, 22, 0.09); white-space: nowrap; cursor: pointer;
+    transition: opacity 0.16s ease, background 0.12s, color 0.12s, border-color 0.12s;
+    opacity: 0;
+  }
+  .callout-pin:hover { border-color: var(--ink); color: var(--ink); }
+  .callout-pin.active { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 4px 14px rgba(24, 24, 22, 0.18); }
+  .pin-brand {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    padding: 0 5px; border-radius: 999px; background: #f3e8ff; color: #7e22ce;
+  }
+  .callout-pin.active .pin-brand { background: rgba(255,255,255,0.22); color: #fff; }
+  .pin-metric {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+    padding: 0 5px; border-radius: 999px; background: var(--teal-bg); color: var(--teal);
+  }
+  .callout-pin.active .pin-metric { background: rgba(255,255,255,0.22); color: #fff; }
+
+  .hover-tip {
+    position: absolute; pointer-events: none; z-index: 12; display: none;
+    background: rgba(24, 24, 22, 0.9); color: #fff; border-radius: 6px;
+    padding: 4px 8px; font-size: 11.5px; white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .level-badge {
+    position: absolute; left: 16px; top: 14px; z-index: 6; pointer-events: none;
+    background: rgba(255, 255, 255, 0.86); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px;
+  }
+  .level-badge-kicker { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+  .level-badge-title { font-size: 13px; font-weight: 650; color: var(--ink); }
+
+  /* Floating Anchored Data Card (tethered to selected 3D part via SVG leader line) */
+  .anchor-card {
+    position: absolute; top: 16px; right: 18px; width: 326px; max-height: calc(100% - 108px);
+    overflow: hidden; z-index: 8; display: none; flex-direction: column; gap: 8px;
+    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+    border: 1px solid rgba(24, 24, 22, 0.10);
+    border-radius: 10px; padding: 13px 15px;
+    box-shadow: 0 12px 32px rgba(24, 24, 22, 0.08), 0 1px 3px rgba(24, 24, 22, 0.05);
+  }
+  .anchor-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+  .anchor-close {
+    border: none; background: transparent; color: var(--faint); font-size: 16px; line-height: 1;
+    cursor: pointer; padding: 0 3px; border-radius: 4px;
+  }
+  .anchor-close:hover { background: var(--subtle); color: var(--ink); }
+  .anchor-title { font-size: 14.5px; font-weight: 650; line-height: 1.25; color: var(--ink); }
+  .anchor-tabs {
+    display: flex; gap: 2px; background: var(--subtle); padding: 2px; border-radius: 6px;
+    border: 1px solid var(--border); flex-shrink: 0;
+  }
+  .anchor-tab {
+    flex: 1; border: none; background: transparent; padding: 3px 6px; border-radius: 4px;
+    font-size: 11.5px; font-weight: 500; color: var(--muted); cursor: pointer; white-space: nowrap;
+  }
+  .anchor-tab.active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .anchor-body { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; padding-right: 2px; }
+  .anchor-summary { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .anchor-facts {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+  }
+  .anchor-fact { display: flex; flex-direction: column; gap: 3px; }
+  .anchor-list { display: flex; flex-direction: column; gap: 4px; }
+  .anchor-list-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%;
+    text-align: left; border: 1px solid var(--border); background: var(--bg); border-radius: 6px;
+    padding: 6px 8px; cursor: pointer;
+  }
+  .anchor-list-row:hover, .anchor-list-row.active { border-color: var(--ink); background: var(--surface); }
+  .anchor-links { display: flex; flex-direction: column; }
+  .anchor-foot {
+    display: flex; gap: 6px; padding-top: 8px; border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  .brand-chip {
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    border: 1px solid #e9d5ff; background: #faf5ff; color: #7e22ce;
+    border-radius: 999px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; cursor: pointer;
+  }
+  .brand-chip:hover { background: #f3e8ff; border-color: #c084fc; }
+
+  /* Scalable Spec / Build Configurator Dock (Bottom-Center of 3D Canvas) */
+  .spec-dock {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+    border: 1px solid rgba(24, 24, 22, 0.12); border-radius: 12px; padding: 6px 10px;
+    box-shadow: 0 8px 24px rgba(24, 24, 22, 0.10); max-width: calc(100% - 32px);
+  }
+  .spec-trigger-wrap { position: relative; }
+  .spec-trigger {
+    display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border);
+    background: var(--bg); border-radius: 8px; padding: 5px 10px; cursor: pointer;
+    font-size: 12px; color: var(--ink); white-space: nowrap;
+  }
+  .spec-trigger:hover, .spec-trigger.open { border-color: var(--ink); background: var(--surface); }
+  .spec-slot-k { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+  .spec-slot-v { font-weight: 600; }
+  .spec-popover {
+    position: absolute; bottom: calc(100% + 8px); left: 0; width: 320px; max-height: 340px;
+    display: none; flex-direction: column; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px;
+    box-shadow: 0 14px 34px rgba(24, 24, 22, 0.16); z-index: 25;
+  }
+  .spec-popover.open { display: flex; }
+  .spec-pop-search {
+    padding: 8px; border-bottom: 1px solid var(--border); background: var(--bg);
+  }
+  .spec-pop-search input {
+    width: 100%; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); font-size: 12px; outline: none;
+  }
+  .spec-pop-search input:focus { border-color: var(--ink); }
+  .spec-pop-list { overflow-y: auto; overflow-x: hidden; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+  .spec-popover .meta-txt { white-space: normal; overflow-wrap: anywhere; }
+  .spec-opt {
+    display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
+    border: none; background: transparent; padding: 7px 9px; border-radius: 6px; cursor: pointer;
+  }
+  .spec-opt:hover { background: var(--subtle); }
+  .spec-opt.selected { background: var(--ink); color: #fff; }
+  .spec-opt.selected .meta-txt { color: rgba(255,255,255,0.72); }
+  .spec-opt-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; font-size: 12px; }
+
+  /* Atomic Level Legend (Bottom-Left on Level 4) */
+  .atomic-legend {
+    position: absolute; left: 16px; bottom: 72px; z-index: 6;
+    background: rgba(255, 255, 255, 0.90); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px;
+    display: none; flex-direction: column; gap: 4px;
+  }
+  .legend-item {
+    display: inline-flex; align-items: center; gap: 7px; border: none; background: transparent;
+    padding: 2px 4px; border-radius: 4px; font-size: 11.5px; color: var(--ink); cursor: pointer; text-align: left;
+  }
+  .legend-item:hover { background: var(--subtle); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; }
+
+  /* Hide Right Inspector on Full-Bleed Schematic tab (data lives inside the Anchored Card) */
+  .main.full-bleed .inspector { display: none; }
 
   /* Graph Canvas */
   .svg-wrap { flex: 1; position: relative; overflow: hidden; cursor: grab; background: var(--bg); }
   .svg-wrap:active { cursor: grabbing; }
   svg#graph { width: 100%; height: 100%; display: block; }
   .hint {
-    position: absolute; left: 16px; bottom: 12px; font-size: 11px; color: var(--faint);
-    pointer-events: none;
+    position: absolute; left: 16px; bottom: 16px; font-size: 11px; color: var(--faint);
+    pointer-events: none; z-index: 4;
+    background: rgba(244, 242, 236, 0.78); padding: 2px 6px; border-radius: 4px;
   }
   .edge-path { fill: none; stroke: #94a3b8; stroke-width: 1.5; transition: stroke 0.12s; cursor: pointer; }
   .edge-path:hover, .edge-path.selected { stroke: var(--accent); stroke-width: 2.4; }
@@ -186,18 +371,52 @@
   .tag-amber { background: var(--amber-bg); border-color: #fde68a; color: var(--amber); }
   .tag-rose { background: var(--rose-bg); border-color: #fecdd3; color: var(--rose); }
 
-  /* Right Inspector (clean & quiet) */
+  /* Right Inspector */
   .inspector {
     background: var(--surface); border-left: 1px solid var(--border);
-    overflow-y: auto; padding: 18px 18px 28px; display: flex; flex-direction: column; gap: 18px;
+    overflow-y: auto; overflow-x: hidden; padding: 18px 18px 28px; display: flex; flex-direction: column; gap: 16px;
   }
+  .inspector .meta-txt { white-space: normal; overflow-wrap: anywhere; }
   .insp-head { display: flex; flex-direction: column; gap: 5px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
   .insp-title { margin: 2px 0 0; font-size: 16px; font-weight: 650; line-height: 1.25; }
-  .insp-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .insp-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
   .insp-section-title {
     font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--faint); margin: 0 0 8px; display: flex; justify-content: space-between;
   }
+
+  /* Guide / Firm / Chemistry Cards */
+  .guide-card {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .guide-chem { background: #f2fbfb; border-color: #bae6e4; }
+  .guide-kicker {
+    font-family: var(--mono); font-size: 10px; font-weight: 650; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--faint);
+  }
+  .guide-summary { margin: 0; font-size: 12.5px; color: var(--ink); line-height: 1.48; }
+  .guide-sub { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .guide-kv { display: grid; grid-template-columns: 74px 1fr; gap: 3px 8px; font-size: 12px; margin-top: 2px; }
+  .guide-steps { margin: 2px 0 0 16px; padding: 0; font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+  .guide-ext { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500; }
+  .guide-ext:hover { text-decoration: underline; }
+  .chem-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .chem-formula { font-family: var(--mono); font-size: 15px; font-weight: 700; color: #0e7490; }
+
+  .help-dot {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 999px; border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 700;
+    cursor: pointer; padding: 0; line-height: 1;
+  }
+  .help-dot:hover, .help-dot.open { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .prop-explainer {
+    margin-top: 4px; padding: 8px 10px; border-radius: 6px;
+    background: var(--accent-bg); border: 1px solid #bfdbfe; font-size: 11.5px; color: var(--ink);
+    line-height: 1.45;
+  }
+
   .fact-row {
     padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px;
   }
@@ -240,7 +459,8 @@
   <header class="topbar">
     <div class="brand">Building Materials</div>
     <nav class="nav" id="mainNav">
-      <button class="nav-btn active" data-tab="graph">Graph</button>
+      <button class="nav-btn active" data-tab="schematic">Schematic</button>
+      <button class="nav-btn" data-tab="graph">Graph</button>
       <button class="nav-btn" data-tab="compare">Compare</button>
       <button class="nav-btn" data-tab="tables">Tables</button>
       <button class="nav-btn" data-tab="gaps">Gaps <span class="nav-count" id="gapsBadge">–</span></button>
@@ -251,15 +471,22 @@
     </div>
   </header>
 
-  <main class="main">
+  <main class="main full-bleed" id="mainLayout">
     <section class="stage" id="stage"></section>
     <aside class="inspector" id="inspector">
-      <div class="empty">Select any node or statement to inspect details and citations.</div>
+      <div class="empty">Loading building materials graph…</div>
     </aside>
   </main>
 </div>
 
-<script>
+<script type="module">
+import { SchematicStudio } from "/ui/studio.js";
+import { renderInspectorPanel, renderAnchoredCard, fmtFact, fmtQual } from "/ui/inspector.js";
+import { buildBuildingLevel } from "/ui/levels/building.js";
+import { buildWindowLevel } from "/ui/levels/window.js";
+import { buildIguLevel } from "/ui/levels/igu.js";
+import { buildAtomicLevel } from "/ui/levels/atomic.js";
+
 const KIND_STYLE = {
   referenceDesign: { color: "#1d4ed8", fill: "#eff6ff", border: "#bfdbfe", label: "Design" },
   productModel:    { color: "#4f46e5", fill: "#eef2ff", border: "#c7d2fe", label: "Model" },
@@ -287,9 +514,85 @@ const PRESETS = [
   { key: "full:", label: "Full Graph" },
 ];
 
+const LEVELS = [
+  { id: "building", label: "Building", subtitle: "Level 1 · Wall Assembly Cutaway" },
+  { id: "window",   label: "Window",   subtitle: "Level 2 · Single-Hung Unit" },
+  { id: "igu",      label: "IGU",      subtitle: "Level 3 · 1-Inch Insulating Glass Unit" },
+  { id: "atomic",   label: "Atomic",   subtitle: "Level 4 · Amorphous Silicate Network" },
+];
+
+const DRILL_FOR_NODE = {
+  "window-assembly": "window",
+  "winco-4410s-single-hung": "window",
+  "andersen-100-single-hung": "window",
+  "insulating-glass-unit": "igu",
+  "igu-gray-argon": "igu",
+  "igu-gray-air": "igu",
+  "outer-pane": "atomic",
+  "inner-pane": "atomic",
+  "soda-lime-glass": "atomic",
+};
+
+const NODE_3D_MAP = {
+  "window-assembly":            { level: "building", variant: "generic" },
+  "window-installation":        { level: "building" },
+  "window-specification":       { level: "building" },
+  "window-frame":               { level: "window", variant: "generic" },
+  "window-sash":                { level: "window", variant: "generic" },
+  "insulating-glass-unit":      { level: "window", variant: "generic" },
+  "winco-4410s-single-hung":    { level: "window", variant: "winco" },
+  "winco-4410s-frame":          { level: "window", variant: "winco" },
+  "winco-4410s-sash":           { level: "window", variant: "winco" },
+  "polyurethane-thermal-break": { level: "window", variant: "winco" },
+  "andersen-100-single-hung":   { level: "window", variant: "andersen" },
+  "andersen-100-frame":         { level: "window", variant: "andersen" },
+  "andersen-100-sash":          { level: "window", variant: "andersen" },
+  "igu-gray-argon":             { level: "igu", fill: "argon" },
+  "igu-gray-air":               { level: "igu", fill: "air" },
+  "outer-pane":                 { level: "igu" },
+  "inner-pane":                 { level: "igu" },
+  "low-e-coating":              { level: "igu" },
+  "edge-spacer":                { level: "igu" },
+  "polyisobutylene":            { level: "igu" },
+  "silicone-sealant":           { level: "igu" },
+  "argon-cavity":               { level: "igu", fill: "argon" },
+  "air-cavity":                 { level: "igu", fill: "air" },
+  "amorphous-silicate-network": { level: "atomic" },
+  "silicon":                    { level: "atomic" },
+  "oxygen":                     { level: "atomic" },
+  "sodium-ion":                 { level: "atomic" },
+  "calcium-ion":                { level: "atomic" },
+};
+
+const NODE_FIRM_HINT = {
+  "winco-4410s-single-hung": "winco",
+  "winco-4410s-frame": "winco",
+  "winco-4410s-sash": "winco",
+  "polyurethane-thermal-break": "winco",
+  "andersen-100-single-hung": "andersen",
+  "andersen-100-frame": "andersen",
+  "andersen-100-sash": "andersen",
+  "igu-gray-argon": "vitro",
+  "igu-gray-air": "vitro",
+  "outer-pane": "vitro",
+  "low-e-coating": "vitro",
+};
+
 const state = {
-  tab: "graph",
+  tab: "schematic",
   full: { nodes: [], statements: [], byId: new Map(), out: new Map(), inc: new Map() },
+  guide: { properties: {}, nodes: {} },
+  schematic: {
+    level: "building",
+    variant: "generic", // "generic" | "winco" | "andersen"
+    fill: "argon",      // "argon" | "air"
+    explode: 0,
+    studio: null,
+    cameraDefaults: null,
+    anchorHidden: false,
+    anchorTab: "overview",
+    openSlot: null,
+  },
   graph: { mode: "parts", root: "window-assembly", nodes: [], statements: [], showSources: false },
   compare: { left: "winco-4410s-single-hung", right: "andersen-100-single-hung", data: null },
   tables: { sub: "nodes", filter: "", kind: "", sql: "" },
@@ -297,6 +600,7 @@ const state = {
   selectedNodeId: "window-assembly",
   selectedStatementId: null,
   citation: null,
+  openPropHelp: new Set(),
   positions: new Map(),
   transform: { x: 40, y: 40, k: 1 },
 };
@@ -312,32 +616,25 @@ async function api(path) {
   return data;
 }
 
-function fmtQty(q) {
-  if (!q) return "";
-  const unit = q.unit === "1" ? "" : ` ${q.unit}`;
-  const val = q.value !== undefined ? `${q.value}` : `${q.min}–${q.max}`;
-  return `${val}${unit}${q.basis ? ` (${q.basis})` : ""}`;
-}
-
-function fmtFact(f) {
-  if (!f) return "—";
-  if (f.quantity) return fmtQty(f.quantity);
-  if (f.state) return f.state;
-  return String(f.value);
-}
-
-function fmtQual(q) {
-  if (!q) return "";
-  return [q.role, q.position, q.sequence !== undefined ? `#${q.sequence}` : ""].filter(Boolean).join(" · ");
+function findFirmForNode(nodeId) {
+  if (!nodeId) return null;
+  if (state.schematic.variant === "generic" && (nodeId === "outer-pane" || nodeId === "low-e-coating")) return null;
+  const direct = NODE_FIRM_HINT[nodeId];
+  if (direct) return state.full.byId.get(direct) || null;
+  const out = state.full.out.get(nodeId) || [];
+  const madeBy = out.find((s) => s.predicate === "madeBy" || s.predicate === "performedBy");
+  if (madeBy) return state.full.byId.get(madeBy.target) || null;
+  return null;
 }
 
 /* ---------- Boot & Data ---------- */
 
 async function loadInitial() {
-  const [graphData, gapsData, schemaData] = await Promise.all([
+  const [graphData, gapsData, schemaData, guideData] = await Promise.all([
     api("/api/graph"),
     api("/api/gaps"),
     api("/api/schema"),
+    api("/api/guide"),
   ]);
   state.full.nodes = graphData.nodes;
   state.full.statements = graphData.statements;
@@ -350,11 +647,14 @@ async function loadInitial() {
   }
   state.gaps.data = gapsData;
   state.tables.sql = schemaData.sql;
+  state.guide = guideData || { properties: {}, nodes: {} };
   $("gapsBadge").textContent = gapsData.summary.total;
-  await loadGraphSub("parts", "window-assembly");
+  renderAll();
 }
 
 async function loadGraphSub(mode, rootId) {
+  disposeStudio();
+  state.schematic.drawerOpen = false;
   state.graph.mode = mode;
   if (mode === "full") {
     state.graph.root = null;
@@ -373,6 +673,8 @@ async function loadGraphSub(mode, rootId) {
 }
 
 async function loadCompare(leftId, rightId) {
+  disposeStudio();
+  state.schematic.drawerOpen = false;
   state.compare.left = leftId || state.compare.left;
   state.compare.right = rightId || state.compare.right;
   state.compare.data = await api(`/api/compare/${encodeURIComponent(state.compare.left)}/${encodeURIComponent(state.compare.right)}`);
@@ -381,8 +683,22 @@ async function loadCompare(leftId, rightId) {
   renderAll();
 }
 
+function disposeStudio() {
+  if (state.schematic.studio) {
+    state.schematic.studio.dispose();
+    state.schematic.studio = null;
+  }
+}
+
 function setTab(tab) {
+  if (state.tab === tab) return;
+  if (state.tab === "schematic") disposeStudio();
+  state.schematic.drawerOpen = false;
   state.tab = tab;
+  if (tab === "graph" && !state.graph.nodes.length) {
+    loadGraphSub("parts", state.selectedNodeId || "window-assembly");
+    return;
+  }
   if (tab === "compare" && !state.compare.data) {
     loadCompare(state.compare.left, state.compare.right);
     return;
@@ -394,7 +710,11 @@ function selectNode(nodeId) {
   state.selectedNodeId = nodeId;
   state.selectedStatementId = null;
   state.citation = null;
-  renderInspector();
+  state.schematic.anchorHidden = false;
+  state.schematic.anchorTab = "overview";
+  state.schematic.studio?.setSelectedNode(nodeId);
+  if (state.tab === "schematic") renderAnchor();
+  else renderInspector();
   if (state.tab === "graph") renderSvg();
 }
 
@@ -402,26 +722,410 @@ async function inspectStatement(st) {
   state.selectedStatementId = st.id;
   if (st.subject) state.selectedNodeId = st.subject;
   state.citation = null;
-  renderInspector();
+  if (state.tab === "schematic") {
+    state.schematic.anchorHidden = false;
+    state.schematic.anchorTab = "sources";
+    renderAnchor();
+  } else {
+    renderInspector();
+  }
+  state.schematic.studio?.setSelectedNode(state.selectedNodeId);
   if (state.tab === "graph") renderSvg();
   try {
     state.citation = await api(`/api/cite/${encodeURIComponent(st.id)}`);
   } catch (err) {
     state.citation = { error: err.message };
   }
-  renderInspector();
+  if (state.tab === "schematic") renderAnchor();
+  else renderInspector();
+}
+
+function drillToLevel(levelId, { variant, fill, selectNodeId, keepCamera = false } = {}) {
+  state.schematic.level = levelId;
+  if (variant) state.schematic.variant = variant;
+  if (fill) state.schematic.fill = fill;
+  state.schematic.anchorHidden = false;
+  if (state.tab !== "schematic") {
+    state.tab = "schematic";
+    renderAll();
+    if (selectNodeId) selectNode(selectNodeId);
+    return;
+  }
+  mountSchematicLevel({ selectNodeId, keepCamera });
+  renderSchematicControls();
+  renderSpecDock();
+}
+
+function viewNodeIn3D(nodeId) {
+  const target = NODE_3D_MAP[nodeId];
+  if (!target) return;
+  state.schematic.drawerOpen = false;
+  drillToLevel(target.level, {
+    variant: target.variant,
+    fill: target.fill,
+    selectNodeId: nodeId,
+  });
 }
 
 function renderAll() {
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === state.tab));
-  if (state.tab === "graph") renderGraphTab();
+  $("mainLayout").classList.toggle("full-bleed", state.tab === "schematic");
+  if (state.tab === "schematic") renderSchematicTab();
+  else if (state.tab === "graph") renderGraphTab();
   else if (state.tab === "compare") renderCompareTab();
   else if (state.tab === "tables") renderTablesTab();
   else if (state.tab === "gaps") renderGapsTab();
   renderInspector();
 }
 
-/* ---------- Tab 1: Graph ---------- */
+/* ---------- Tab 1: 3D Schematic (Full-Bleed + Anchored HUD + Spec Dock) ---------- */
+
+function renderSchematicTab() {
+  $("stage").innerHTML = `
+    <div class="subbar" id="schematicBar"></div>
+    <div class="studio-wrap" id="studioWrap">
+      <div class="level-badge" id="levelBadge"></div>
+      <svg class="leader-svg" id="leaderSvg"></svg>
+      <div class="callout-layer" id="calloutLayer"></div>
+      <div class="anchor-card" id="anchorCard"></div>
+      <div class="atomic-legend" id="atomicLegend">
+        <span class="spec-slot-k" style="margin-bottom:2px">Soda-Lime Silicate (~1 nm)</span>
+        <button class="legend-item" data-atom="silicon"><span class="legend-dot" style="background:#475569"></span>Si⁴⁺ · Network Former</button>
+        <button class="legend-item" data-atom="oxygen"><span class="legend-dot" style="background:#dc2626"></span>O · Bridging (Si–O–Si)</button>
+        <button class="legend-item" data-atom="oxygen"><span class="legend-dot" style="background:#f97316"></span>O⁻ · Non-Bridging</button>
+        <button class="legend-item" data-atom="sodium-ion"><span class="legend-dot" style="background:#7c3aed"></span>Na⁺ · Flux Modifier</button>
+        <button class="legend-item" data-atom="calcium-ion"><span class="legend-dot" style="background:#0d9488"></span>Ca²⁺ · Stabilizer</button>
+      </div>
+      <div class="spec-dock" id="specDock"></div>
+      <div class="hover-tip" id="hoverTip"></div>
+      <div class="hint">Drag to orbit · Scroll to zoom · Double-click to drill</div>
+    </div>
+  `;
+
+  $("atomicLegend").querySelectorAll("[data-atom]").forEach((b) => {
+    b.onclick = () => selectNode(b.dataset.atom);
+  });
+
+  const wrap = $("studioWrap");
+  const tip = $("hoverTip");
+
+  state.schematic.studio = new SchematicStudio(wrap, {
+    onSelect: (nodeId) => {
+      selectNode(nodeId);
+    },
+    onDrill: (drillLevel) => {
+      drillToLevel(drillLevel);
+    },
+    onHover: (nodeId, cx, cy) => {
+      if (!nodeId) {
+        tip.style.display = "none";
+        return;
+      }
+      const node = state.full.byId.get(nodeId);
+      const drill = DRILL_FOR_NODE[nodeId];
+      const rect = wrap.getBoundingClientRect();
+      tip.textContent = `${node?.label || nodeId}${drill ? " · double-click to drill in" : ""}`;
+      tip.style.left = `${cx - rect.left + 12}px`;
+      tip.style.top = `${cy - rect.top - 10}px`;
+      tip.style.display = "block";
+    },
+  });
+  state.schematic.studio.attachCalloutLayer($("calloutLayer"), $("leaderSvg"), $("anchorCard"));
+  state.schematic.studio.setExplode(state.schematic.explode);
+
+  mountSchematicLevel({ selectNodeId: state.selectedNodeId });
+  renderSchematicControls();
+  renderSpecDock();
+}
+
+function mountSchematicLevel({ selectNodeId = null, keepCamera = false } = {}) {
+  const studio = state.schematic.studio;
+  if (!studio) return;
+
+  let built;
+  if (state.schematic.level === "building") {
+    built = buildBuildingLevel({ window: state.schematic.variant, fill: state.schematic.fill });
+  } else if (state.schematic.level === "window") {
+    built = buildWindowLevel(state.schematic.variant, state.schematic.fill);
+  } else if (state.schematic.level === "igu") {
+    built = buildIguLevel(state.schematic.fill, state.schematic.variant);
+  } else {
+    built = buildAtomicLevel();
+  }
+
+  state.schematic.cameraDefaults = { cameraPos: built.cameraPos, target: built.target };
+  studio.setContent(built.group, {
+    cameraPos: built.cameraPos,
+    target: built.target,
+    floorY: built.floorY,
+    keepCamera,
+  });
+
+  // Boot-time graph-binding validation
+  for (const part of studio.interactiveParts) {
+    const id = part.userData?.nodeId;
+    if (id && !state.full.byId.has(id)) {
+      console.warn(`[Schematic] Unbound 3D nodeId: "${id}"`);
+    }
+  }
+
+  const levelMeta = LEVELS.find((l) => l.id === state.schematic.level);
+  const badge = $("levelBadge");
+  if (badge && levelMeta) {
+    const specTxt = state.schematic.variant === "winco" ? "Winco 4410S (Aluminum)"
+      : state.schematic.variant === "andersen" ? "Andersen 100 (Fibrex)"
+      : "Generic Reference";
+    const fillTxt = state.schematic.fill === "argon" ? "Argon (U 0.24)" : "Dry Air (U 0.28)";
+    let extra = "";
+    if (state.schematic.level === "building" || state.schematic.level === "window") extra = ` · ${specTxt}`;
+    else if (state.schematic.level === "igu") extra = ` · ${fillTxt}`;
+    badge.innerHTML = `
+      <div class="level-badge-kicker">${esc(levelMeta.subtitle)}</div>
+      <div class="level-badge-title">${esc(levelMeta.label)}${esc(extra)}</div>
+    `;
+  }
+
+  if ($("atomicLegend")) {
+    $("atomicLegend").style.display = state.schematic.level === "atomic" ? "flex" : "none";
+  }
+
+  const inLevel = selectNodeId && studio.interactiveParts.some((p) => p.userData?.nodeId === selectNodeId);
+  const nextId = inLevel ? selectNodeId : built.defaultNodeId;
+  state.selectedNodeId = nextId;
+  state.selectedStatementId = null;
+  state.citation = null;
+  state.schematic.anchorTab = "overview";
+  studio.setSelectedNode(nextId);
+  renderAnchor();
+}
+
+function renderSchematicControls() {
+  const bar = $("schematicBar");
+  if (!bar) return;
+  const lv = state.schematic.level;
+  const pct = Math.round(state.schematic.explode * 100);
+
+  bar.innerHTML = `
+    <div class="subbar-group">
+      <div class="breadcrumb" id="levelCrumbs">
+        ${LEVELS.map((l, i) => `
+          ${i > 0 ? `<span class="crumb-sep">›</span>` : ""}
+          <button class="crumb-btn ${lv === l.id ? "active" : ""}" data-level="${l.id}">${esc(l.label)}</button>
+        `).join("")}
+      </div>
+    </div>
+    <div class="subbar-group">
+      <div class="explode-ctrl">
+        <span class="meta-txt">Explode</span>
+        <input type="range" id="explodeRange" min="0" max="100" value="${pct}">
+        <span class="meta-txt" id="explodePct" style="min-width:30px">${pct}%</span>
+      </div>
+      <button class="btn-sm" id="explodeToggle">${pct >= 50 ? "Assemble" : "Explode"}</button>
+      <button class="btn-sm" id="resetCam">Reset View</button>
+    </div>
+  `;
+
+  $("levelCrumbs").querySelectorAll(".crumb-btn").forEach((b) => {
+    b.onclick = () => drillToLevel(b.dataset.level);
+  });
+
+  const range = $("explodeRange");
+  const pctEl = $("explodePct");
+  const toggle = $("explodeToggle");
+  const applyExplodeUi = (val) => {
+    state.schematic.explode = val;
+    state.schematic.studio?.setExplode(val);
+    const p = Math.round(val * 100);
+    range.value = p;
+    pctEl.textContent = `${p}%`;
+    toggle.textContent = p >= 50 ? "Assemble" : "Explode";
+  };
+  range.oninput = (e) => applyExplodeUi(Number(e.target.value) / 100);
+  toggle.onclick = () => applyExplodeUi(state.schematic.explode >= 0.5 ? 0 : 0.85);
+  $("resetCam").onclick = () => {
+    const cam = state.schematic.cameraDefaults;
+    if (cam) state.schematic.studio?.tweenCamera(cam.cameraPos, cam.target);
+  };
+}
+
+function getSlotMetricSummary(nodeId) {
+  const facts = (state.full.out.get(nodeId) || []).filter((r) => "property" in r);
+  const u = facts.find((f) => f.property === "uFactor");
+  const dp = facts.find((f) => f.property === "structuralDesignPressure");
+  return [u ? `U ${fmtFact(u).split(" ")[0]}` : "", dp ? `DP ${fmtFact(dp).split(" ")[0]}` : ""].filter(Boolean).join(" · ");
+}
+
+function getWindowSlotOptions() {
+  const opts = [
+    { key: "generic", nodeId: "window-assembly", label: "Generic Reference", sub: "Neutral architectural anatomy", badge: "Reference" },
+  ];
+  // Dynamically discover all productVariants realizing window-assembly from the graph
+  const variants = state.full.statements
+    .filter((s) => s.predicate === "realizesDesign" && s.target === "window-assembly")
+    .map((s) => state.full.byId.get(s.subject))
+    .filter(Boolean);
+  for (const v of variants) {
+    const key = v.id.startsWith("winco") ? "winco" : v.id.startsWith("andersen") ? "andersen" : v.id;
+    const firm = findFirmForNode(v.id);
+    opts.push({
+      key,
+      nodeId: v.id,
+      label: v.label.replace(/\s*\([^)]*\)\s*/g, ""),
+      sub: [firm?.label, getSlotMetricSummary(v.id)].filter(Boolean).join(" · "),
+      badge: firm?.label?.split(" ")[0] || "Product",
+    });
+  }
+  return opts;
+}
+
+function getGlazingSlotOptions() {
+  const variants = state.full.statements
+    .filter((s) => s.predicate === "realizesDesign" && (s.target === "igu-gray-reference" || s.target === "insulating-glass-unit"))
+    .map((s) => state.full.byId.get(s.subject))
+    .filter(Boolean);
+  return variants.map((v) => ({
+    key: v.id.includes("air") ? "air" : "argon",
+    nodeId: v.id,
+    label: v.id.includes("air") ? "Solarban 70 + Dry Air" : "Solarban 70 + Argon",
+    sub: ["Vitro Architectural Glass", getSlotMetricSummary(v.id)].filter(Boolean).join(" · "),
+    badge: getSlotMetricSummary(v.id) || "IGU",
+  }));
+}
+
+function getFirmDirectoryOptions() {
+  return state.full.nodes
+    .filter((n) => n.kind === "actor" && state.guide?.nodes?.[n.id]?.firm)
+    .map((n) => {
+      const f = state.guide.nodes[n.id].firm;
+      return { key: n.id, nodeId: n.id, label: n.label, sub: [f.segment, f.headquarters].filter(Boolean).join(" · "), badge: f.founded ? `${f.founded}` : "Firm" };
+    });
+}
+
+function renderSpecDock() {
+  const dock = $("specDock");
+  if (!dock) return;
+  const winOpts = getWindowSlotOptions();
+  const glazeOpts = getGlazingSlotOptions();
+  const firmOpts = getFirmDirectoryOptions();
+
+  const curWin = winOpts.find((o) => o.key === state.schematic.variant) || winOpts[0];
+  const curGlaze = glazeOpts.find((o) => o.key === state.schematic.fill) || glazeOpts[0];
+  const open = state.schematic.openSlot;
+
+  const slotHtml = (id, kicker, currentLabel, opts, selectedKey, placeholder) => `
+    <div class="spec-trigger-wrap">
+      <button class="spec-trigger ${open === id ? "open" : ""}" data-slot-toggle="${id}">
+        <span class="spec-slot-k">${esc(kicker)}</span>
+        <span class="spec-slot-v">${esc(currentLabel)}</span>
+        <span style="color:var(--faint);font-size:10px">▾</span>
+      </button>
+      <div class="spec-popover ${open === id ? "open" : ""}" data-slot-pop="${id}">
+        <div class="spec-pop-search">
+          <input type="search" data-slot-search="${id}" placeholder="${esc(placeholder)}" autocomplete="off">
+        </div>
+        <div class="spec-pop-list" data-slot-list="${id}">
+          ${opts.map((o) => `
+            <button class="spec-opt ${o.key === selectedKey ? "selected" : ""}" data-slot-pick="${id}" data-pick-key="${esc(o.key)}" data-search-txt="${esc((o.label + " " + o.sub + " " + o.badge).toLowerCase())}">
+              <div class="spec-opt-top"><span>${esc(o.label)}</span><span class="meta-txt">${esc(o.badge)}</span></div>
+              <div class="meta-txt">${esc(o.sub)}</div>
+            </button>`).join("")}
+        </div>
+      </div>
+    </div>`;
+
+  dock.innerHTML = `
+    ${slotHtml("window", "Window", curWin?.label || "Generic", winOpts, state.schematic.variant, `Search ${winOpts.length} window specs...`)}
+    ${slotHtml("glazing", "Glazing", curGlaze?.label || "Argon", glazeOpts, state.schematic.fill, `Search ${glazeOpts.length} glazing packages...`)}
+    ${slotHtml("firms", "Firms", `${firmOpts.length} manufacturers`, firmOpts, null, `Search ${firmOpts.length} manufacturers...`)}
+  `;
+
+  dock.querySelectorAll("[data-slot-toggle]").forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.slotToggle;
+      state.schematic.openSlot = state.schematic.openSlot === id ? null : id;
+      renderSpecDock();
+      if (state.schematic.openSlot) {
+        dock.querySelector(`[data-slot-search="${id}"]`)?.focus();
+      }
+    };
+  });
+
+  dock.querySelectorAll("[data-slot-search]").forEach((inp) => {
+    inp.onclick = (e) => e.stopPropagation();
+    inp.oninput = (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const list = dock.querySelector(`[data-slot-list="${inp.dataset.slotSearch}"]`);
+      list?.querySelectorAll(".spec-opt").forEach((opt) => {
+        opt.style.display = !q || opt.dataset.searchTxt.includes(q) ? "flex" : "none";
+      });
+    };
+  });
+
+  dock.querySelectorAll("[data-slot-pick]").forEach((opt) => {
+    opt.onclick = (e) => {
+      e.stopPropagation();
+      const slot = opt.dataset.slotPick;
+      const key = opt.dataset.pickKey;
+      state.schematic.openSlot = null;
+      if (slot === "window") {
+        state.schematic.variant = key;
+        mountSchematicLevel({ keepCamera: true });
+      } else if (slot === "glazing") {
+        state.schematic.fill = key;
+        mountSchematicLevel({ keepCamera: true });
+      } else if (slot === "firms") {
+        selectNode(key);
+      }
+      renderSpecDock();
+    };
+  });
+}
+
+function renderAnchor() {
+  const el = $("anchorCard");
+  if (!el) return;
+  if (state.schematic.anchorHidden) {
+    el.style.display = "none";
+    return;
+  }
+  const node = state.full.byId.get(state.selectedNodeId);
+  const rawDrill = node ? DRILL_FOR_NODE[node.id] || null : null;
+  const drillLevel = rawDrill && rawDrill !== state.schematic.level ? rawDrill : null;
+  const firmNode = findFirmForNode(node?.id);
+
+  renderAnchoredCard(el, {
+    node,
+    full: state.full,
+    guide: state.guide,
+    openPropHelp: state.openPropHelp,
+    drillLevel,
+    firmNode,
+    activeTab: state.schematic.anchorTab,
+    selectedStatementId: state.selectedStatementId,
+    citation: state.citation,
+    onSelectTab: (t) => {
+      state.schematic.anchorTab = t;
+      renderAnchor();
+    },
+    onSelectNode: (id) => selectNode(id),
+    onSelectFirm: (fid) => selectNode(fid),
+    onInspectStatement: inspectStatement,
+    onTogglePropHelp: (prop) => {
+      if (state.openPropHelp.has(prop)) state.openPropHelp.delete(prop);
+      else state.openPropHelp.add(prop);
+      renderAnchor();
+    },
+    onDrill: (lvl) => drillToLevel(lvl),
+    onOpenInGraph: (id) => loadGraphSub("trace", id),
+    onClose: () => {
+      state.schematic.anchorHidden = true;
+      el.style.display = "none";
+    },
+  });
+}
+
+/* ---------- Tab 2: Graph ---------- */
 
 function visibleSubgraph() {
   const nodes = state.graph.nodes.filter((n) => state.graph.showSources || n.kind !== "source");
@@ -686,7 +1390,7 @@ function bindPanZoom() {
   }, { passive: false });
 }
 
-/* ---------- Tab 2: Compare ---------- */
+/* ---------- Tab 3: Compare ---------- */
 
 function renderCompareTab() {
   const d = state.compare.data;
@@ -696,11 +1400,20 @@ function renderCompareTab() {
 
   const factRows = d.facts.map((row) => {
     const lv = fmtFact(row.left), rv = fmtFact(row.right);
+    const pg = state.guide?.properties?.[row.property];
+    const isOpen = state.openPropHelp.has(`cmp:${row.property}`);
     const cell = (stmt) => !stmt ? `<span class="empty">—</span>` :
       `<strong>${esc(fmtFact(stmt))}</strong> <button class="cite-link" data-cite="${esc(stmt.id)}">[cite]</button>
        <div class="meta-txt">${esc(stmt.basis)}${stmt.subject !== d.left.id && stmt.subject !== d.right.id ? ` · via ${esc(stmt.subject)}` : ""}</div>`;
     return `<tr class="${lv !== rv ? "diff-row" : ""}">
-      <td><div class="mono">${esc(row.property)}</div><div class="meta-txt">${esc(row.scope || "")}</div></td>
+      <td>
+        <div style="display:inline-flex;align-items:center;gap:5px">
+          <span class="mono">${esc(row.property)}</span>
+          ${pg ? `<button class="help-dot ${isOpen ? "open" : ""}" data-cmp-help="${esc(row.property)}" title="Explain ${esc(pg.title)}">?</button>` : ""}
+        </div>
+        <div class="meta-txt">${esc(row.scope || "")}</div>
+        ${pg && isOpen ? `<div class="prop-explainer"><strong>${esc(pg.title)}:</strong> ${esc(pg.summary)}${pg.betterDirection ? ` <em>(${esc(pg.betterDirection)})</em>` : ""}</div>` : ""}
+      </td>
       <td>${cell(row.left)}</td>
       <td>${cell(row.right)}</td>
     </tr>`;
@@ -755,13 +1468,20 @@ function renderCompareTab() {
   $("cmpL").onchange = (e) => loadCompare(e.target.value, state.compare.right);
   $("cmpR").onchange = (e) => loadCompare(state.compare.left, e.target.value);
   $("stage").querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => selectNode(b.dataset.jump));
+  $("stage").querySelectorAll("[data-cmp-help]").forEach((b) => b.onclick = (e) => {
+    e.stopPropagation();
+    const k = `cmp:${b.dataset.cmpHelp}`;
+    if (state.openPropHelp.has(k)) state.openPropHelp.delete(k);
+    else state.openPropHelp.add(k);
+    renderCompareTab();
+  });
   $("stage").querySelectorAll("[data-cite]").forEach((b) => b.onclick = () => {
     const st = state.full.statements.find((s) => s.id === b.dataset.cite);
     if (st) inspectStatement(st);
   });
 }
 
-/* ---------- Tab 3: Tables & DB Schema ---------- */
+/* ---------- Tab 4: Tables & DB Schema ---------- */
 
 function renderTablesTab() {
   const sub = state.tables.sub;
@@ -845,7 +1565,7 @@ function renderTablesTab() {
   });
 }
 
-/* ---------- Tab 4: Gaps ---------- */
+/* ---------- Tab 5: Gaps ---------- */
 
 function renderGapsTab() {
   const g = state.gaps.data;
@@ -880,7 +1600,7 @@ function renderGapsTab() {
               <td>${item.nodeId ? `<div style="font-weight:550">${esc(item.label)}</div><div class="meta-txt">${esc(item.nodeId)} · ${esc(item.kind)}</div>` : `<span class="meta-txt">graph-level</span>`}</td>
               <td>${esc(item.message)}</td>
               <td style="text-align:right;white-space:nowrap">${item.nodeId ? `<button class="btn-sm" data-open-graph="${esc(item.nodeId)}">Graph →</button>` : ""}</td>
-            </tr>`).join("") : `<tr><td colspan="4" class="empty">No gaps in this category.</td></tr>`}
+            </tr>`).join("") : `<tr><td colspan="4" class="empty">Zero open gaps — every node and claim is source-backed.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -895,106 +1615,36 @@ function renderGapsTab() {
   });
 }
 
-/* ---------- Right Inspector ---------- */
+/* ---------- Right Inspector (Graph / Compare / Tables / Gaps tabs) ---------- */
 
 function renderInspector() {
-  const el = $("inspector");
+  if (state.tab === "schematic") return;
+  const aside = $("inspector");
   const node = state.full.byId.get(state.selectedNodeId);
-  if (!node) {
-    el.innerHTML = `<div class="empty">Select any node or statement to inspect.</div>`;
-    return;
-  }
+  const drillLevel = node ? DRILL_FOR_NODE[node.id] || null : null;
+  const mapEntry = node ? NODE_3D_MAP[node.id] : null;
+  const canView3D = Boolean(mapEntry);
 
-  const outAll = state.full.out.get(node.id) || [];
-  const facts = outAll.filter((r) => "property" in r);
-  const outgoing = outAll.filter((r) => "predicate" in r);
-  const incoming = state.full.inc.get(node.id) || [];
-  const nodeGaps = (state.gaps.data?.gaps || []).filter((g) => g.nodeId === node.id);
-
-  const citeHtml = (() => {
-    if (!state.selectedStatementId) return "";
-    if (!state.citation) return `<div class="cite-card"><span class="empty">Loading citation…</span></div>`;
-    if (state.citation.error) return `<div class="cite-card"><span class="empty">${esc(state.citation.error)}</span></div>`;
-    return state.citation.evidence.map((ev) => `
-      <div class="cite-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span class="mono" style="font-weight:600">${esc(state.citation.statement.id)}</span>
-          <span class="tag ${ev.capture === "saved" ? "tag-teal" : "tag-amber"}">${esc(ev.capture)}</span>
-        </div>
-        <div style="font-weight:600;font-size:12.5px">${esc(ev.source.label)}</div>
-        <div class="cite-kv">
-          ${Object.entries(ev.locator || {}).map(([k, v]) => `<span class="meta-txt">${esc(k)}</span><span>${esc(v)}</span>`).join("")}
-        </div>
-        <a class="open-btn" href="${esc(ev.webHref || ev.href)}" target="_blank" rel="noopener">
-          Open ${ev.capture === "saved" ? "archived snapshot" : "source URL"} ↗
-        </a>
-      </div>`).join("");
-  })();
-
-  const linkRow = (r, dir) => {
-    const otherId = dir === "out" ? r.target : r.subject;
-    const other = state.full.byId.get(otherId);
-    const qual = fmtQual(r.qualifiers);
-    return `<div class="link-row">
-      <div class="link-main">
-        <div class="meta-txt">${dir === "out" ? "→" : "←"} ${esc(r.predicate)}${qual ? ` · ${esc(qual)}` : ""}</div>
-        <button class="link-btn" data-jump="${esc(otherId)}">${esc(other?.label || otherId)}</button>
-      </div>
-      <button class="cite-link" data-cite="${esc(r.id)}">cite</button>
-    </div>`;
-  };
-
-  el.innerHTML = `
-    <div class="insp-head">
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <span class="tag">${esc(node.kind)}</span>
-        ${node.stage ? `<span class="tag">${esc(node.stage)}</span>` : ""}
-        ${node.scale ? `<span class="tag">${esc(node.scale)}</span>` : ""}
-        ${nodeGaps.length ? `<span class="tag tag-amber">${nodeGaps.length} gap${nodeGaps.length > 1 ? "s" : ""}</span>` : ""}
-      </div>
-      <h2 class="insp-title">${esc(node.label)}</h2>
-      <div class="meta-txt">${esc(node.id)}</div>
-      ${node.description ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(node.description)}</div>` : ""}
-      <div class="insp-actions">
-        <button class="btn-sm" data-root="parts">Parts</button>
-        <button class="btn-sm" data-root="trace">Trace</button>
-        <button class="btn-sm" data-root="used-by">Used By</button>
-      </div>
-    </div>
-    ${citeHtml}
-    ${nodeGaps.length ? `<div>
-      <div class="insp-section-title"><span>Gaps on this node</span><span>${nodeGaps.length}</span></div>
-      ${nodeGaps.map((g) => `<div style="font-size:12px;color:var(--amber);padding:3px 0">• ${esc(g.message)}</div>`).join("")}
-    </div>` : ""}
-    ${facts.length ? `<div>
-      <div class="insp-section-title"><span>Direct Facts</span><span>${facts.length}</span></div>
-      ${facts.map((f) => `<div class="fact-row">
-        <div class="fact-line">
-          <span class="mono">${esc(f.property)}</span>
-          <span class="fact-val ${f.state ? "unknown" : ""}">${esc(fmtFact(f))}</span>
-        </div>
-        <div class="fact-line">
-          <span class="meta-txt">${esc([f.basis, f.scope].filter(Boolean).join(" · "))}</span>
-          <button class="cite-link" data-cite="${esc(f.id)}">cite</button>
-        </div>
-        ${f.conditions ? `<div style="font-size:11.5px;color:var(--muted)">${esc(f.conditions)}</div>` : ""}
-      </div>`).join("")}
-    </div>` : ""}
-    <div>
-      <div class="insp-section-title"><span>Outgoing</span><span>${outgoing.length}</span></div>
-      ${outgoing.length ? outgoing.map((r) => linkRow(r, "out")).join("") : `<div class="empty">None</div>`}
-    </div>
-    <div>
-      <div class="insp-section-title"><span>Incoming</span><span>${incoming.length}</span></div>
-      ${incoming.length ? incoming.map((r) => linkRow(r, "in")).join("") : `<div class="empty">None</div>`}
-    </div>
-  `;
-
-  el.querySelectorAll("[data-root]").forEach((b) => b.onclick = () => loadGraphSub(b.dataset.root, node.id));
-  el.querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => selectNode(b.dataset.jump));
-  el.querySelectorAll("[data-cite]").forEach((b) => b.onclick = () => {
-    const st = state.full.statements.find((s) => s.id === b.dataset.cite);
-    if (st) inspectStatement(st);
+  renderInspectorPanel(aside, {
+    node,
+    full: state.full,
+    guide: state.guide,
+    gaps: state.gaps.data,
+    selectedStatementId: state.selectedStatementId,
+    citation: state.citation,
+    openPropHelp: state.openPropHelp,
+    drillLevel,
+    canView3D,
+    onSelectNode: (id) => selectNode(id),
+    onInspectStatement: inspectStatement,
+    onTogglePropHelp: (prop) => {
+      if (state.openPropHelp.has(prop)) state.openPropHelp.delete(prop);
+      else state.openPropHelp.add(prop);
+      renderInspector();
+    },
+    onDrill: (lvl) => drillToLevel(lvl),
+    onView3D: (id) => viewNodeIn3D(id),
+    onGraphMode: (mode, id) => loadGraphSub(mode, id),
   });
 }
 
@@ -1014,14 +1664,22 @@ function renderJump() {
       <span class="jump-item-sub">${esc(n.id)} · ${esc(n.kind)}</span>
     </button>`).join("") : `<div class="empty" style="padding:8px">No matches</div>`;
   jumpMenu.querySelectorAll("[data-jid]").forEach((b) => b.onclick = () => {
-    selectNode(b.dataset.jid);
+    const id = b.dataset.jid;
+    if (state.tab === "schematic" && NODE_3D_MAP[id]) viewNodeIn3D(id);
+    else selectNode(id);
     jumpMenu.classList.remove("open");
     jumpInput.value = "";
   });
 }
 jumpInput.onfocus = () => { renderJump(); jumpMenu.classList.add("open"); };
 jumpInput.oninput = () => { renderJump(); jumpMenu.classList.add("open"); };
-document.addEventListener("click", (e) => { if (!e.target.closest(".jump-wrap")) jumpMenu.classList.remove("open"); });
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".jump-wrap")) jumpMenu.classList.remove("open");
+  if (!e.target.closest(".spec-dock") && state.schematic.openSlot) {
+    state.schematic.openSlot = null;
+    renderSpecDock();
+  }
+});
 
 loadInitial();
 </script>

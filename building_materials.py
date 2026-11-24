@@ -561,6 +561,7 @@ def explain_key(graph, guide, key):
 
 def make_server(graph, assets, host="127.0.0.1", port=8000, guide=None):
     blobs_dir = (assets / "blobs").resolve()
+    ui_dir = (ROOT / "ui").resolve()
     viewer_path = ROOT / "viewer.html"
     guide_data = guide if guide is not None else {"schemaVersion": 1, "properties": {}, "nodes": {}}
 
@@ -600,6 +601,19 @@ def make_server(graph, assets, host="127.0.0.1", port=8000, guide=None):
                 return
             if path == "/api/guide":
                 self._json(200, guide_data)
+                return
+            if path.startswith("/ui/"):
+                rel = path[len("/ui/"):]
+                if not rel or "\\" in rel or ".." in Path(rel).parts:
+                    self._send(404, b"Not found", "text/plain; charset=utf-8")
+                    return
+                target = (ui_dir / rel).resolve()
+                if not target.is_relative_to(ui_dir) or not target.is_file():
+                    self._send(404, b"Not found", "text/plain; charset=utf-8")
+                    return
+                mime_map = {".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8"}
+                mime = mime_map.get(target.suffix.lower()) or mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+                self._send(200, target.read_bytes(), mime)
                 return
             if path.startswith("/assets/"):
                 name = path[len("/assets/"):]
