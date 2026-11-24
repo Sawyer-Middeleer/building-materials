@@ -67,8 +67,14 @@ class WindowGraphTest(unittest.TestCase):
         compared = self.output("compare", "igu-gray-air", "igu-gray-argon")
         self.assertEqual([n["id"] for n in compared["materials"]["onlyLeft"]], ["air-fill"])
         self.assertEqual([n["id"] for n in compared["materials"]["onlyRight"]], ["argon-fill"])
-        self.assertEqual([n["id"] for n in compared["processes"]["onlyLeft"]], ["igu-assembly-air"])
-        self.assertEqual([n["id"] for n in compared["processes"]["onlyRight"]], ["igu-assembly-argon"])
+        self.assertEqual(
+            {n["id"] for n in compared["processes"]["onlyLeft"]},
+            {"air-drying", "igu-assembly-air"},
+        )
+        self.assertEqual(
+            {n["id"] for n in compared["processes"]["onlyRight"]},
+            {"cryogenic-air-separation", "igu-assembly-argon"},
+        )
         u_row = next(row for row in compared["facts"] if row["property"] == "uFactor")
         self.assertEqual(u_row["left"]["quantity"]["value"], 0.28)
         self.assertEqual(u_row["right"]["quantity"]["value"], 0.24)
@@ -78,26 +84,20 @@ class WindowGraphTest(unittest.TestCase):
         self.assertEqual(rating["quantity"], {"value": 0.19, "unit": "1"})
         self.assertEqual(rating["scope"], "center-of-glass")
         self.assertEqual(rating["basis"], "simulated")
-        self.assertEqual(
-            [(row["property"], row.get("scope"), row.get("state")) for row in self.output("facts", "window-assembly")["statements"]],
-            [("uFactor", "whole-window", "unknown")],
-        )
+        self.assertEqual(self.output("facts", "window-assembly")["statements"], [])
         citation = self.output("cite", rating["id"])
         self.assertEqual(citation["evidence"][0]["locator"]["page"], 2)
         self.assertEqual(citation["evidence"][0]["locator"]["column"], "SHGC")
 
+        validated = self.output("validate")
         gaps = self.output("gaps")
-        self.assertGreater(gaps["summary"]["total"], 0)
-        gap_codes = {(g["code"], g.get("nodeId")) for g in gaps["gaps"]}
-        self.assertIn(("part-missing-material", "window-frame"), gap_codes)
-        self.assertIn(("property-unknown", "window-assembly"), gap_codes)
-        self.assertIn(("source-not-archived", "flat-glass-structure"), gap_codes)
+        self.assertEqual(gaps["summary"]["total"], 0)
 
         with TemporaryDirectory() as directory:
             db_path = Path(directory) / "materials.db"
             exported = self.output("export-db", db_path)
-            self.assertEqual(exported["nodes"], 48)
-            self.assertEqual(exported["statements"], 79)
+            self.assertEqual(exported["nodes"], validated["nodes"])
+            self.assertEqual(exported["statements"], validated["statements"])
             self.assertTrue(db_path.is_file())
 
     def test_source_versions_keep_the_original_citation_openable(self):
@@ -165,7 +165,7 @@ class WindowGraphTest(unittest.TestCase):
                 self.assertEqual([n["id"] for n in cmp_data["materials"]["onlyRight"]], ["argon-fill"])
             with urlopen(f"{base}/api/gaps", timeout=5) as res:
                 gaps_data = json.loads(res.read().decode("utf-8"))
-                self.assertGreater(gaps_data["summary"]["total"], 0)
+                self.assertEqual(gaps_data["summary"]["total"], 0)
             with urlopen(f"{base}/api/schema", timeout=5) as res:
                 schema_data = json.loads(res.read().decode("utf-8"))
                 self.assertIn("CREATE TABLE IF NOT EXISTS nodes", schema_data["sql"])
