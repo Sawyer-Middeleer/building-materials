@@ -1,0 +1,198 @@
+defaults:
+  basis: specification
+  evidence:
+    - source: source.standards.ua-window-guidelines
+      locator: { page: 13, section: I. Glazing }
+
+entities:
+  - id: process.extraction.raw-minerals
+    kind: process
+    label: Silica, soda ash, limestone, silver & bauxite extraction
+    stage: extraction
+    defaults:
+      basis: typical-reference
+    links:
+      - predicate: performedBy
+        target: actor.mining-supplier
+        qualifiers: { role: mineral producer }
+        evidence:
+          - source: source.usgs.silica-2025
+            locator: { page: 1, section: Domestic Production and Use }
+      - predicate: produces
+        target: material.silica-sand
+        qualifiers: { role: feedstock }
+        evidence:
+          - source: source.usgs.silica-2025
+            locator: { page: 1, section: Domestic Production and Use }
+      - predicate: produces
+        target: material.soda-ash
+        qualifiers: { role: feedstock }
+        evidence:
+          - source: source.usgs.soda-ash-2025
+            locator: { page: 1, section: Domestic Production and Use }
+      - predicate: produces
+        target: material.limestone
+        qualifiers: { role: feedstock }
+        evidence:
+          - source: source.usgs.stone-2025
+            locator: { page: 1, section: Domestic Production and Use }
+      - predicate: produces
+        target: material.aluminum-6063-t6
+        qualifiers: { role: primary metal }
+        evidence:
+          - source: source.usgs.aluminum-2025
+            locator: { page: 1, section: Domestic Production and Use }
+      - predicate: produces
+        target: chem.ag
+        qualifiers: { role: refined silver target metal }
+        evidence:
+          - source: source.usgs.silver-2025
+            locator: { page: 1, section: Domestic Production and Use }
+
+  - id: process.specification.window-spec
+    kind: process
+    label: Institutional Division 08 window design specification
+    stage: specification
+    links:
+      - predicate: performedBy
+        target: actor.ua-facilities
+        qualifiers: { role: specifying owner }
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+      - predicate: uses
+        target: envelope.openings.window
+        qualifiers: { role: specified assembly }
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+
+  - id: process.fabrication.float-glass
+    kind: process
+    label: Float glass melting & tin-bath forming
+    stage: fabrication
+    defaults:
+      basis: typical-reference
+      evidence:
+        - source: source.research.flat-glass-structure
+          locator: { page: 4, section: "2.1. Float Glass Process" }
+    links:
+      - predicate: performedBy
+        target: actor.vitro
+        qualifiers: { role: float-glass manufacturer }
+      - predicate: uses
+        target: material.silica-sand
+        qualifiers: { role: batch feedstock }
+      - predicate: uses
+        target: material.soda-ash
+        qualifiers: { role: flux feedstock }
+      - predicate: uses
+        target: material.limestone
+        qualifiers: { role: stabilizer feedstock }
+      - predicate: produces
+        target: material.soda-lime-glass
+        qualifiers: { role: flat glass ribbon }
+      - predicate: produces
+        target: envelope.openings.window.inner-pane
+        qualifiers: { role: cut clear lite }
+
+  - id: process.fabrication.sputter-coating
+    kind: process
+    label: Magnetron sputter vacuum deposition (MSVD) low-e coating
+    stage: fabrication
+    defaults:
+      basis: manufacturer-declared
+      evidence:
+        - source: source.vitro.solarban-70
+          locator: { page: 1, section: Solarban 70 Glass }
+    links:
+      - predicate: performedBy
+        target: actor.vitro
+        qualifiers: { role: coating manufacturer }
+      - predicate: uses
+        target: material.soda-lime-glass
+        qualifiers: { role: substrate }
+      - predicate: produces
+        target: material.low-e-coating
+        qualifiers: { role: deposited thin film }
+      - predicate: produces
+        target: envelope.openings.window.outer-pane
+        qualifiers: { role: coated lite }
+      - predicate: produces
+        target: product.vitro.solarban-70
+        qualifiers: { role: coated glass product line }
+
+  - id: process.fabrication.gas-and-sealants
+    kind: process
+    label: Cavity gas preparation & perimeter sealant compounding
+    stage: fabrication
+    links:
+      - predicate: performedBy
+        target: actor.gas-supplier
+        qualifiers: { role: gas and chemical supplier }
+      - predicate: produces
+        target: material.air-fill
+        qualifiers: { role: desiccated air fill }
+      - predicate: produces
+        target: material.argon-fill
+        basis: manufacturer-declared
+        qualifiers: { role: purified argon fill }
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Argon }
+      - predicate: produces
+        target: material.polyisobutylene
+        qualifiers: { role: primary sealant }
+      - predicate: produces
+        target: material.silicone-sealant
+        qualifiers: { role: secondary sealant }
+
+  - id: process.fabrication.window-assembly
+    kind: process
+    label: Factory frame, sash & IGU fabrication
+    stage: fabrication
+    links:
+      - predicate: performedBy
+        target: actor.igu-fabricator
+        qualifiers: { role: fabricator }
+      - predicate: uses
+        target: material.aluminum-6063-t6
+        qualifiers: { role: frame and spacer extrusion }
+      - predicate: produces
+        target: envelope.openings.window.frame
+        qualifiers: { role: fabricated frame }
+      - predicate: produces
+        target: envelope.openings.window.sash
+        qualifiers: { role: fabricated sash }
+      - predicate: produces
+        target: envelope.openings.window.spacer
+        qualifiers: { role: bent spacer frame }
+      - predicate: produces
+        target: envelope.openings.window.seal
+        qualifiers: { role: dual perimeter seal }
+      - predicate: produces
+        target: envelope.openings.window.igu
+        qualifiers: { role: sealed insulating glass unit }
+      - predicate: produces
+        target: envelope.openings.window
+        qualifiers: { role: glazed window unit }
+
+  - id: process.distribution.window-delivery
+    kind: process
+    label: Crated architectural window distribution to site
+    stage: distribution
+    links:
+      - predicate: performedBy
+        target: actor.window-distributor
+        qualifiers: { role: distributor }
+      - predicate: uses
+        target: envelope.openings.window
+        qualifiers: { role: crated assembly }
+
+  - id: process.installation.window-setting
+    kind: process
+    label: Field window installation, flashing & perimeter sealing
+    stage: installation
+    links:
+      - predicate: performedBy
+        target: actor.glazing-contractor
+        qualifiers: { role: glazing installer }
+      - predicate: uses
+        target: envelope.openings.window
+        qualifiers: { role: installed window }

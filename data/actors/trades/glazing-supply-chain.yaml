@@ -1,0 +1,30 @@
+entities:
+  - id: actor.mining-supplier
+    kind: actor
+    label: Industrial Minerals & Metal Extraction Suppliers
+    guide:
+      summary: Upstream quarries, mines, and chemical producers supplying silica sand, soda ash, limestone, bauxite, and silver.
+
+  - id: actor.gas-supplier
+    kind: actor
+    label: Industrial Gas & Air Separation Suppliers
+    guide:
+      summary: Air-separation plants producing high-purity dry air and argon fill gas for insulating glass units.
+
+  - id: actor.igu-fabricator
+    kind: actor
+    label: Certified Insulating Glass Fabricator
+    guide:
+      summary: Regional glazing fabricators cutting glass lites, bending spacers, filling gas cavities, and applying dual perimeter seals.
+
+  - id: actor.window-distributor
+    kind: actor
+    label: Architectural Glazing & Fenestration Distributor
+    guide:
+      summary: Logistics and supply channel crating and delivering factory-glazed window assemblies to construction sites.
+
+  - id: actor.glazing-contractor
+    kind: actor
+    label: Commercial Glazing & Fenestration Installer
+    guide:
+      summary: Field trade crew setting window frames, anchoring shims, flashing sills, and sealing perimeter joints.

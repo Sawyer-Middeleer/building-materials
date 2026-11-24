@@ -1,0 +1,10 @@
+id: source.vitro.solarban-70
+kind: source
+label: Vitro Solarban 70 product datasheet
+revision: "7097 (01/26)"
+source:
+  origin: https://vitroglazings.com/media/0wapqqqk/pds_solarban_70.pdf
+  mediaType: application/pdf
+  issuer: Vitro Architectural Glass
+  sha256: 2eb6adbb1870afdb6b5d2da57a71f9f92b4c6d0af406e8b3c649692f99759dde
+  retrievedOn: "2026-11-23"

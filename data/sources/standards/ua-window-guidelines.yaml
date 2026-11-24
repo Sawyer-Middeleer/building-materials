@@ -1,0 +1,9 @@
+id: source.standards.ua-window-guidelines
+kind: source
+label: University of Alabama Section 08 50 00 Windows
+source:
+  origin: https://constructionpublicinfo.ua.edu/wp-content/uploads/Design-Guidelines/Section-III/Division-08-Openings/08-50-00-Windows.pdf
+  mediaType: application/pdf
+  issuer: University of Alabama
+  sha256: 3c903c499596b4f5ce083191d16528e43542c6b74bcc86755c32cb287db4c7b0
+  retrievedOn: "2026-11-23"

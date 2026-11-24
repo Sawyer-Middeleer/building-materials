@@ -1,0 +1,10 @@
+id: source.usgs.soda-ash-2025
+kind: source
+label: "USGS Mineral Commodity Summaries 2025: Soda Ash"
+revision: "2025"
+source:
+  origin: https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-soda-ash.pdf
+  mediaType: application/pdf
+  issuer: U.S. Geological Survey
+  sha256: a386ee59806756e28c72f2fde95eaa3b68068e0614f1e0228fd13007be920ff5
+  retrievedOn: "2026-11-23"

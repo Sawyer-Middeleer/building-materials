@@ -1,0 +1,25 @@
+entities:
+  - id: material.air-fill
+    kind: material
+    label: Dry air cavity fill
+    defaults:
+      basis: typical-reference
+      evidence:
+        - source: source.vitro.solarban-70
+          locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Nighttime }
+    links:
+      - predicate: hasComposition
+        target: chem.n2
+      - predicate: hasComposition
+        target: chem.o
+
+  - id: material.argon-fill
+    kind: material
+    label: Argon gas cavity fill
+    links:
+      - predicate: hasComposition
+        target: chem.ar
+        basis: manufacturer-declared
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 2, table: Insulating Glass Unit Performance Comparisons, column: Winter Argon }

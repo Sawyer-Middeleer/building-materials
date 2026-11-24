@@ -1,0 +1,11 @@
+id: material.aluminum-6063-t6
+kind: material
+label: Architectural extruded aluminum alloy (6063-T6)
+links:
+  - predicate: hasComposition
+    target: chem.al
+    basis: typical-reference
+    qualifiers: { role: base metal }
+    evidence:
+      - source: source.usgs.aluminum-2025
+        locator: { page: 1, section: Tariff }

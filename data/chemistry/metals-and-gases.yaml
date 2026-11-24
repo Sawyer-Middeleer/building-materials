@@ -1,0 +1,28 @@
+entities:
+  - id: chem.ag
+    kind: chemicalEntity
+    label: Silver (Ag)
+    identifiers:
+      - namespace: cas
+        value: "7440-22-4"
+
+  - id: chem.al
+    kind: chemicalEntity
+    label: Aluminum (Al)
+    identifiers:
+      - namespace: cas
+        value: "7429-90-5"
+
+  - id: chem.n2
+    kind: chemicalEntity
+    label: Nitrogen (N2)
+    identifiers:
+      - namespace: cas
+        value: "7727-37-9"
+
+  - id: chem.ar
+    kind: chemicalEntity
+    label: Argon (Ar)
+    identifiers:
+      - namespace: cas
+        value: "7440-37-1"

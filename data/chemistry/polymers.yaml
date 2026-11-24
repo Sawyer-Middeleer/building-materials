@@ -1,0 +1,11 @@
+entities:
+  - id: chem.pib
+    kind: chemicalEntity
+    label: Polyisobutylene elastomer
+    identifiers:
+      - namespace: cas
+        value: "9003-27-4"
+
+  - id: chem.siloxane
+    kind: chemicalEntity
+    label: Polysiloxane elastomer

@@ -1,0 +1,36 @@
+entities:
+  - id: material.silica-sand
+    kind: material
+    label: Silica sand (batch feedstock)
+    links:
+      - predicate: hasComposition
+        target: chem.sio2
+        basis: typical-reference
+        qualifiers: { role: primary constituent (>=95% silica) }
+        evidence:
+          - source: source.usgs.silica-2025
+            locator: { page: 1, section: Tariff }
+
+  - id: material.soda-ash
+    kind: material
+    label: Soda ash (batch feedstock)
+    links:
+      - predicate: hasComposition
+        target: chem.na2co3
+        basis: typical-reference
+        qualifiers: { role: primary constituent }
+        evidence:
+          - source: source.usgs.soda-ash-2025
+            locator: { page: 1, section: Domestic Production and Use }
+
+  - id: material.limestone
+    kind: material
+    label: Limestone (batch feedstock)
+    links:
+      - predicate: hasComposition
+        target: chem.caco3
+        basis: typical-reference
+        qualifiers: { role: primary constituent }
+        evidence:
+          - source: source.usgs.stone-2025
+            locator: { page: 1, section: Tariff }

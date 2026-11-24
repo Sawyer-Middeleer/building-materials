@@ -187,6 +187,10 @@
         "retrievedOn": {
           "type": "string",
           "format": "date"
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date"
         }
       },
       "allOf": [
@@ -400,6 +404,29 @@
         "conditions": {
           "type": "string",
           "minLength": 1
+        },
+        "geography": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pcr": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date"
+        },
+        "plantActor": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "inheritedFrom": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "siQuantity": {
+          "$ref": "#/$defs/quantity"
         },
         "basis": {
           "enum": [

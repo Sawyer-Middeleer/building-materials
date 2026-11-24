@@ -1,0 +1,130 @@
+defaults:
+  basis: typical-reference
+  evidence:
+    - source: source.research.flat-glass-structure
+      locator:
+        page: 6
+        section: "3.1. Composition and Network Structure"
+        figure: "Figure 3"
+
+entities:
+  - id: structure.amorphous-silicate-network
+    kind: structureModel
+    label: Disordered silicate glass network
+    scale: atomic
+    links:
+      - predicate: includesChemical
+        target: chem.si
+      - predicate: includesChemical
+        target: chem.o
+      - predicate: includesChemical
+        target: chem.na-ion
+      - predicate: includesChemical
+        target: chem.ca-ion
+    guide:
+      summary: Non-crystalline 3D network of corner-sharing SiO4 tetrahedra disrupted by Na+ and stabilized by Ca2+ ions.
+      howItWorks: Rapid cooling prevents crystal nucleation, freezing a transparent amorphous silicate network.
+
+  - id: chem.sio2
+    kind: chemicalEntity
+    label: Silicon dioxide (SiO2)
+    identifiers:
+      - namespace: cas
+        value: "7631-86-9"
+    guide:
+      summary: Primary network-forming oxide in flat soda-lime glass (~72% by mass).
+      chemistry:
+        formula: SiO2
+        molarMass: 60.08 g/mol
+        category: Oxide
+        role: Glass network former
+
+  - id: chem.na2o
+    kind: chemicalEntity
+    label: Sodium oxide (Na2O), oxide basis
+    identifiers:
+      - namespace: cas
+        value: "1313-59-3"
+    guide:
+      summary: Flux oxide (~13.5% by mass) that lowers silica melting temperature by breaking Si-O-Si bridges.
+      chemistry:
+        formula: Na2O
+        molarMass: 61.98 g/mol
+        category: Alkali oxide
+        role: Flux / network modifier
+
+  - id: chem.cao
+    kind: chemicalEntity
+    label: Calcium oxide (CaO), oxide basis
+    identifiers:
+      - namespace: cas
+        value: "1305-78-8"
+    guide:
+      summary: Stabilizer oxide (~9.4% by mass) restoring chemical durability and water resistance to soda-lime glass.
+      chemistry:
+        formula: CaO
+        molarMass: 56.08 g/mol
+        category: Alkaline-earth oxide
+        role: Network stabilizer
+
+  - id: chem.na2co3
+    kind: chemicalEntity
+    label: Sodium carbonate (Na2CO3)
+    identifiers:
+      - namespace: cas
+        value: "497-19-8"
+
+  - id: chem.caco3
+    kind: chemicalEntity
+    label: Calcium carbonate (CaCO3)
+    identifiers:
+      - namespace: cas
+        value: "471-34-1"
+
+  - id: chem.si
+    kind: chemicalEntity
+    label: Silicon (Si)
+    guide:
+      summary: Tetravalent network-forming atom at the center of each SiO4 tetrahedron.
+      chemistry:
+        formula: Si
+        atomicNumber: 14
+        molarMass: 28.09 g/mol
+        category: Metalloid
+        role: Tetrahedral network center
+
+  - id: chem.o
+    kind: chemicalEntity
+    label: Oxygen (O)
+    guide:
+      summary: Bridging and non-bridging oxygen atoms linking SiO4 tetrahedra.
+      chemistry:
+        formula: O
+        atomicNumber: 8
+        molarMass: 16.00 g/mol
+        category: Nonmetal
+        role: Bridging / non-bridging anion
+
+  - id: chem.na-ion
+    kind: chemicalEntity
+    label: Sodium ion (Na+)
+    guide:
+      summary: Monovalent alkali modifier ion residing in interstitial voids of the silicate network.
+      chemistry:
+        formula: Na+
+        atomicNumber: 11
+        molarMass: 22.99 g/mol
+        category: Alkali cation
+        role: Network modifier
+
+  - id: chem.ca-ion
+    kind: chemicalEntity
+    label: Calcium ion (Ca2+)
+    guide:
+      summary: Divalent alkaline-earth cation cross-linking non-bridging oxygens to stabilize the glass.
+      chemistry:
+        formula: Ca2+
+        atomicNumber: 20
+        molarMass: 40.08 g/mol
+        category: Alkaline-earth cation
+        role: Network stabilizer

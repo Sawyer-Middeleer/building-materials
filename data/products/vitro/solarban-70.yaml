@@ -1,0 +1,82 @@
+defaults:
+  basis: manufacturer-declared
+  evidence:
+    - source: source.vitro.solarban-70
+      locator: { page: 1, section: Solarban 70 Glass }
+
+entities:
+  - id: product.vitro.solarban-70
+    kind: productModel
+    label: Vitro Solarban 70 Solar Control Low-E Glass
+    identifiers:
+      - { namespace: masterformat, value: "08 81 00" }
+      - { namespace: uniformat2, value: B2020 }
+      - { namespace: uniclass, value: Pr_25_71_33 }
+    links:
+      - predicate: manufacturedBy
+        target: actor.vitro
+      - predicate: realizesDesign
+        target: envelope.openings.window.igu
+        locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
+    properties:
+      - property: gwp
+        scope: A1-A3
+        state: unknown
+        conditions: "Datasheet references published Vitro Flat and Processed Glass EPDs without printing numeric GWP."
+        locator: { page: 2, section: Sustainability }
+    guide:
+      summary: Triple-silver magnetron-sputtered low-emissivity coated architectural glass paired in 1-inch insulating glass units.
+      howItWorks: Three ultra-thin silver layers on surface #2 reflect long-wave infrared heat while passing visible daylight.
+    variantDefaults:
+      defaults:
+        basis: manufacturer-declared
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
+      links:
+        - predicate: realizesDesign
+          target: envelope.openings.window.igu
+        - predicate: hasPart
+          target: envelope.openings.window.outer-pane
+          qualifiers: { role: pane, position: outside, sequence: 1 }
+        - predicate: hasPart
+          target: envelope.openings.window.inner-pane
+          qualifiers: { role: pane, position: inside, sequence: 2 }
+        - predicate: hasPart
+          target: envelope.openings.window.spacer
+          qualifiers: { role: spacer, position: edge, sequence: 3 }
+        - predicate: hasPart
+          target: envelope.openings.window.seal
+          qualifiers: { role: seal, position: edge, sequence: 4 }
+    variantsTable:
+      csv: solarban-70-igus.csv
+      idTemplate: "product.vitro.solarban-70.{sku}"
+      labelTemplate: "Vitro Solarban 70 {label} (1-in IGU)"
+      defaults:
+        basis: simulated
+        scope: center-of-glass
+        method: LBNL Window 7.8
+        conditions: "1-inch (25 mm) IGU, 1/2-inch (13 mm) airspace, two 1/4-inch (6 mm) lites"
+        evidence:
+          - source: source.vitro.solarban-70
+            locator:
+              page: "{page}"
+              table: Insulating Glass Unit Performance Comparisons
+              row: "{row}"
+      links:
+        - predicate: madeOf
+          target: "{cavity_material}"
+          qualifiers: { role: gas-fill }
+      columns:
+        u_factor:
+          property: uFactor
+          unit: "Btu/(h·ft²·°F)"
+          locatorColumn: "{u_col}"
+        shgc:
+          property: solarHeatGainCoefficient
+          unit: "1"
+          locatorColumn: "SHGC"
+        vlt:
+          property: visibleLightTransmittance
+          unit: "%"
+          locatorColumn: "VLT"

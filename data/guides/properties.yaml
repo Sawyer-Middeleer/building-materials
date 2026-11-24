@@ -1,0 +1,64 @@
+propertyGuides:
+  uFactor:
+    title: U-Factor (Thermal Transmittance)
+    summary: Measures how fast heat escapes through a window or glazing assembly (inverse of R-value).
+    betterDirection: Lower is better for thermal insulation.
+    typicalRange: 0.15-0.30 (high-performance glazing/composite), 0.30-0.55 (commercial aluminum).
+    whyItMatters: Always check scope—center-of-glass U-factor excludes frame and edge-spacer heat loss.
+    ucumUnit: W/(m2.K)
+    externalRefs:
+      ifcPset: Pset_WindowCommon.ThermalTransmittance
+      bsdd: https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/ThermalTransmittance
+
+  solarHeatGainCoefficient:
+    title: Solar Heat Gain Coefficient (SHGC)
+    summary: Fraction of incident solar radiation (0 to 1) transmitted through glazing as heat.
+    betterDirection: Lower reduces cooling loads in warm climates; higher aids passive solar heating.
+    typicalRange: 0.18-0.30 (solar-control low-e), 0.40-0.60 (clear dual-pane).
+    whyItMatters: Triple-silver low-e coatings cut solar heat gain while keeping high daylight.
+    ucumUnit: "1"
+    externalRefs:
+      ifcPset: Pset_DoorWindowGlazingType.SolarHeatGainTransmittance
+
+  visibleLightTransmittance:
+    title: Visible Light Transmittance (VLT)
+    summary: Share of visible daylight (380-760 nm) passing through the glazing or window.
+    betterDirection: Higher brings more natural daylight indoors (unless glare control is needed).
+    typicalRange: 30-50% (tinted solar-control), 60-75% (clear low-e center-of-glass).
+    ucumUnit: "1"
+    externalRefs:
+      ifcPset: Pset_DoorWindowGlazingType.VisibleLightTransmittance
+
+  density:
+    title: Material Density
+    summary: Mass per unit volume (kg/m3), governing dead load on sashes, hardware, and structure.
+    typicalRange: 2500 kg/m3 (soda-lime glass), 2700 kg/m3 (aluminum).
+    ucumUnit: kg/m3
+    externalRefs:
+      ifcPset: Pset_MaterialCommon.MassDensity
+
+  thermalConductivity:
+    title: Thermal Conductivity (lambda)
+    summary: Rate at which a material conducts heat (W/(m*K)).
+    betterDirection: Lower conducts less heat (better insulator).
+    typicalRange: 0.018 (argon), 0.026 (air), 1.0 (glass), ~200 (aluminum).
+    ucumUnit: W/(m.K)
+    externalRefs:
+      ifcPset: Pset_MaterialThermal.ThermalConductivity
+
+  correctedEmissivity:
+    title: Corrected Emissivity (epsilon)
+    summary: How strongly a surface radiates infrared heat (0 = mirror, 1 = blackbody).
+    betterDirection: Lower emissivity on a low-e surface reflects more room heat back inside.
+    typicalRange: 0.84 (uncoated soda-lime glass), 0.02-0.05 (triple-silver low-e).
+    ucumUnit: "1"
+
+  gwp:
+    title: Global Warming Potential (Embodied Carbon)
+    summary: Greenhouse gas emissions per declared unit across an EN 15804 / ISO 21930 lifecycle scope (e.g., A1-A3 cradle-to-gate).
+    betterDirection: Lower means less upfront or lifecycle carbon impact.
+    whyItMatters: Enables apples-to-apples carbon comparison across competing products when normalized to the same declared unit and lifecycle module scope.
+    ucumUnit: kg
+    externalRefs:
+      openepd: gwp
+      ifcPset: Pset_EnvironmentalImpactIndicators.ClimateChangePerUnit

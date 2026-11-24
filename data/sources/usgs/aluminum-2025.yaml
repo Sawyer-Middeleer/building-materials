@@ -1,0 +1,10 @@
+id: source.usgs.aluminum-2025
+kind: source
+label: "USGS Mineral Commodity Summaries 2025: Aluminum"
+revision: "2025"
+source:
+  origin: https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-aluminum.pdf
+  mediaType: application/pdf
+  issuer: U.S. Geological Survey
+  sha256: 995f59efae5fba7525c967d3b65af886cbba4faaac320cb843de9b6d84722d2b
+  retrievedOn: "2026-11-23"

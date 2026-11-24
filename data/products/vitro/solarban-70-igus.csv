@@ -1,0 +1,9 @@
+sku,label,page,row,cavity_material,u_col,u_factor,shgc,vlt
+clear-air,Clear + Clear (Air),2,Solarban 70 (2) + Clear,material.air-fill,Winter Nighttime,0.28,0.27,64
+clear-argon,Clear + Clear (Argon),2,Solarban 70 (2) + Clear,material.argon-fill,Winter Argon,0.24,0.27,64
+solexia-air,Solexia + Clear (Air),2,Solarban 70 (2) Solexia + Clear,material.air-fill,Winter Nighttime,0.28,0.26,56
+solexia-argon,Solexia + Clear (Argon),2,Solarban 70 (2) Solexia + Clear,material.argon-fill,Winter Argon,0.24,0.26,56
+azuria-air,Azuria + Clear (Air),2,Solarban 70 (2) Azuria + Clear,material.air-fill,Winter Nighttime,0.28,0.24,50
+azuria-argon,Azuria + Clear (Argon),2,Solarban 70 (2) Azuria + Clear,material.argon-fill,Winter Argon,0.24,0.24,50
+solargray-air,Solargray + Clear (Air),2,Solarban 70 (2) Solargray + Clear,material.air-fill,Winter Nighttime,0.28,0.19,32
+solargray-argon,Solargray + Clear (Argon),2,Solarban 70 (2) Solargray + Clear,material.argon-fill,Winter Argon,0.24,0.19,32

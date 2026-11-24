@@ -1,0 +1,109 @@
+defaults:
+  basis: specification
+  evidence:
+    - source: source.standards.ua-window-guidelines
+      locator: { page: 9, section: "Section 08 50 00 – Windows" }
+
+entities:
+  - id: building
+    kind: referenceDesign
+    label: Building (Whole Structure)
+    identifiers:
+      - { namespace: uniclass, value: En_00 }
+      - { namespace: nrm1, value: "0" }
+      - { namespace: ifc, value: IfcBuilding }
+    links:
+      - predicate: hasPart
+        target: substructure
+        qualifiers: { role: taxonomy-division, sequence: 1 }
+      - predicate: hasPart
+        target: superstructure
+        qualifiers: { role: taxonomy-division, sequence: 2 }
+      - predicate: hasPart
+        target: envelope
+        qualifiers: { role: taxonomy-division, sequence: 3 }
+      - predicate: hasPart
+        target: interiors
+        qualifiers: { role: taxonomy-division, sequence: 4 }
+      - predicate: hasPart
+        target: mep
+        qualifiers: { role: taxonomy-division, sequence: 5 }
+      - predicate: hasPart
+        target: siteworks
+        qualifiers: { role: taxonomy-division, sequence: 6 }
+    guide:
+      summary: Root physical element hierarchy organized by Uniformat II / IFC building divisions.
+
+  - id: substructure
+    kind: referenceDesign
+    label: Substructure & Foundations
+    identifiers:
+      - { namespace: uniformat2, value: A }
+      - { namespace: uniclass, value: Ss_20 }
+      - { namespace: masterformat, value: "03 30 00" }
+      - { namespace: nrm1, value: "1" }
+      - { namespace: ifc, value: IfcFooting }
+
+  - id: superstructure
+    kind: referenceDesign
+    label: Superstructure & Structural Frame
+    identifiers:
+      - { namespace: uniformat2, value: B10 }
+      - { namespace: uniclass, value: Ss_25 }
+      - { namespace: masterformat, value: "05 00 00" }
+      - { namespace: nrm1, value: "2" }
+      - { namespace: ifc, value: IfcBuiltElement }
+
+  - id: envelope
+    kind: referenceDesign
+    label: Building Envelope / Shell
+    identifiers:
+      - { namespace: uniformat2, value: B20 }
+      - { namespace: uniclass, value: Ss_25_30 }
+      - { namespace: masterformat, value: "07 00 00" }
+      - { namespace: nrm1, value: "2.5" }
+    links:
+      - predicate: hasPart
+        target: envelope.openings
+        qualifiers: { role: taxonomy-division, sequence: 1 }
+
+  - id: envelope.openings
+    kind: referenceDesign
+    label: Exterior Openings & Fenestration
+    identifiers:
+      - { namespace: uniformat2, value: B2020 }
+      - { namespace: uniclass, value: Ss_25_30_95 }
+      - { namespace: masterformat, value: "08 50 00" }
+      - { namespace: nrm1, value: "2.5.1" }
+    links:
+      - predicate: hasPart
+        target: envelope.openings.window
+        qualifiers: { role: fenestration, sequence: 1 }
+
+  - id: interiors
+    kind: referenceDesign
+    label: Interior Construction & Finishes
+    identifiers:
+      - { namespace: uniformat2, value: C }
+      - { namespace: uniclass, value: Ss_35 }
+      - { namespace: masterformat, value: "09 00 00" }
+      - { namespace: nrm1, value: "3" }
+
+  - id: mep
+    kind: referenceDesign
+    label: Mechanical, Electrical & Plumbing (MEP)
+    identifiers:
+      - { namespace: uniformat2, value: D }
+      - { namespace: uniclass, value: Ss_50 }
+      - { namespace: masterformat, value: "21 00 00" }
+      - { namespace: nrm1, value: "5" }
+      - { namespace: ifc, value: IfcDistributionElement }
+
+  - id: siteworks
+    kind: referenceDesign
+    label: Siteworks & External Works
+    identifiers:
+      - { namespace: uniformat2, value: G }
+      - { namespace: uniclass, value: Ss_15 }
+      - { namespace: masterformat, value: "31 00 00" }
+      - { namespace: nrm1, value: "8" }

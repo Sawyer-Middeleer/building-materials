@@ -1,0 +1,22 @@
+defaults:
+  basis: specification
+  evidence:
+    - source: source.standards.ua-window-guidelines
+      locator: { page: 13, section: I. Glazing }
+
+entities:
+  - id: material.polyisobutylene
+    kind: material
+    label: Polyisobutylene (PIB) primary sealant
+    links:
+      - predicate: hasComposition
+        target: chem.pib
+        qualifiers: { role: base elastomer }
+
+  - id: material.silicone-sealant
+    kind: material
+    label: Silicone secondary structural sealant
+    links:
+      - predicate: hasComposition
+        target: chem.siloxane
+        qualifiers: { role: base polymer }

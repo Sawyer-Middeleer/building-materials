@@ -1,0 +1,65 @@
+entities:
+  - id: material.soda-lime-glass
+    kind: material
+    label: Soda-lime silicate flat glass
+    defaults:
+      basis: typical-reference
+      evidence:
+        - source: source.research.flat-glass-structure
+          locator: { page: 6, table: Table 2 }
+    links:
+      - predicate: hasStructure
+        target: structure.amorphous-silicate-network
+        locator:
+          page: 6
+          section: "3.1. Composition and Network Structure"
+          figure: "Figure 3"
+      - predicate: hasComposition
+        target: chem.sio2
+        locator: { row: SiO2 }
+        qualifiers:
+          role: network former (oxide basis)
+          quantity: { min: 71.776, max: 72.394, unit: "%", basis: mass }
+      - predicate: hasComposition
+        target: chem.na2o
+        locator: { row: Na2O }
+        qualifiers:
+          role: flux / modifier (oxide basis)
+          quantity: { min: 13.249, max: 13.934, unit: "%", basis: mass }
+      - predicate: hasComposition
+        target: chem.cao
+        locator: { row: CaO }
+        qualifiers:
+          role: stabilizer / modifier (oxide basis)
+          quantity: { min: 8.688, max: 10.192, unit: "%", basis: mass }
+    properties:
+      - property: density
+        scope: soda-lime glass
+        method: EN 572-1
+        quantity: { value: 2500, unit: "kg/m³" }
+        locator: { page: 7, table: Table 3, row: Density }
+      - property: thermalConductivity
+        scope: soda-lime glass
+        method: EN 572-1
+        quantity: { value: 1, unit: "W/(m·°C)" }
+        locator: { page: 7, table: Table 3, row: Thermal conductivity }
+      - property: correctedEmissivity
+        scope: uncoated soda-lime glass
+        method: EN 572-1
+        quantity: { value: 0.837, unit: "1" }
+        locator: { page: 7, table: Table 3, row: Corrected emissivity }
+    guide:
+      summary: Standard architectural float glass made by melting silica sand, soda ash, and limestone on molten tin.
+
+  - id: material.low-e-coating
+    kind: material
+    label: Triple-silver solar control low-e coating
+    description: Generic triple-silver magnetron-sputtered coating family; exact proprietary dielectric stack is not disclosed.
+    links:
+      - predicate: hasComposition
+        target: chem.ag
+        basis: manufacturer-declared
+        qualifiers: { role: triple-silver IR reflective layers }
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 1, section: Solarban 70 Glass }

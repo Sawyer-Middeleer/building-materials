@@ -2,77 +2,47 @@
 
 ## Purpose
 
-Explain what goes into a building—from assemblies down to atomic structure—and how specific products, materials, and processes fit into that structure and its value chain. A reader can start at a window assembly, follow its glazing unit down through glass and atomic structure, trace the processes that make and install it, and compare alternative products or configurations (such as air-filled vs. argon-filled glazing, or slate vs. clay tile vs. concrete tile roofs) side by side.
+Explain what goes into a building—from whole-building systems and assemblies down to atomic structure—and how specific products, materials, and processes fit into that structure and its value chain.
 
-Use one graph for two traversals plus comparison. Composition follows links such as `hasPart`, `madeOf`, `hasComposition`, `hasStructure`, and `includesChemical`. The value chain follows processes that use, transform, test, specify, distribute, or install those same records. Specific products and variants realize reference designs so alternatives can be compared on material composition, properties, and supply chain.
+One graph supports two traversals plus comparison:
+- **Physical composition** follows `hasPart`, `madeOf`, `hasComposition`, `hasStructure`, `includesChemical`, `realizesDesign`, and `usesConfiguration`.
+- **Value chain** follows processes (`uses`, `produces`, `performedBy`) across `extraction`, `research`, `testing`, `design`, `specification`, `fabrication`, `distribution`, and `installation`.
+- **Comparison** diffs facts (with verbatim and SI-normalized quantities), materials, parts, and processes across competing products or variants.
 
-The first slice is a window. The fixture is plain JSON, checked by JSON Schema and graph validation. The Python CLI and local web UI are the entry points for exploring it.
+## Authoring vs. Runtime Architecture
 
-## Run v1
+- **Authoring source of truth (`data/`):** Modular entity-centric YAML files organized by domain subfolder (`systems/`, `products/`, `materials/`, `chemistry/`, `actors/`, `sources/`, `guides/`), plus tabular CSV SKU matrices (`variantsTable`) and `productModel` → `productVariant` inheritance (`variantDefaults`).
+- **Compiled IR:** `building_materials/compiler.py` lowers `data/` into canonical `nodes + statements + guide` validated against [graph.schema.json](../graph.schema.json) and [guide.schema.json](../guide.schema.json).
+- **Primary runtime store:** Lossless SQLite v2 + FTS5 database ([schema.sql](../schema.sql)) at `.materials/materials.db`, rebuilt atomically whenever `data/` changes and queried by both the CLI and headless JSON HTTP API (`serve`).
 
-From the project directory, use Python 3.11 or later. Install the validator once with `python -m pip install -r requirements.txt`.
+## Multi-Axis Taxonomy & Standards Reconciliation
 
-```text
-python -m building_materials validate
-python -m building_materials parts window-assembly
-python -m building_materials trace igu-gray-argon
-python -m building_materials used-by vitro-solarban-70
-python -m building_materials compare igu-gray-air igu-gray-argon
-python -m building_materials facts igu-gray-reference
-python -m building_materials cite igu-gray-shgc
-python -m building_materials serve --open
-python -m unittest discover -s tests -v
-```
-
-The commands default to `fixtures/building.json`. Pass `--graph` or `--assets` before the command to use a different graph or archive. Use `python -m building_materials import-source <url>` to fetch and archive a source. For a file already on disk, use `python -m building_materials import-source <path> --url <source-url>`. Every imported file keeps its original HTTP(S) URL. Local captures live under `.materials/`. When a capture is absent, citations still resolve using the source URL and locator.
+- **Primary `hasPart` spine (Uniformat II / IFC):** `building` → `substructure`, `superstructure`, `envelope`, `interiors`, `mep`, `siteworks` → assemblies → subcomponents.
+- **Cross-standard `identifiers`:** Any node can carry classification and registry codes across `uniformat2`, `omniclass`, `uniclass`, `masterformat`, `nrm1`, `icms`, `ifc`, `bsdd`, `etim`, `gtin`, `nfrc`, `astm`, `openepd`, `epd`, `hpd`, and `cas`.
+- **Property & unit crosswalks:** Canonical internal property keys live in `data/guides/properties.yaml` with optional `ucumUnit` and `externalRefs` (`ifcPset`, `bsdd`, `openepd`, `etim`). Numeric statements preserve verbatim source `quantity` for PDF `audit` and auto-compute `siQuantity` for cross-unit comparison.
+- **EPD & temporal/geographic claims:** Statements support first-class `geography`, `pcr`, `validUntil`, and `plantActor` (plus `validUntil` on `source`). Embodied-carbon properties (`gwp`, `gwpFossil`, `gwpBiogenic`, `gwpLuluc`, `embodiedCarbon`) require a valid EN 15804 `scope` (e.g. `A1-A3`) and, when quantified, a `CO2e` unit plus declared-unit `quantity.basis`.
 
 ## Record types
 
 | Record | Meaning | Key fields beyond ID and label |
 | --- | --- | --- |
-| `referenceDesign` | A reusable building system, assembly, component, or structural slot. | Revision, part relationships, governing requirements. |
-| `productModel` | A manufacturer's catalog identity, such as coated glass or a window/roofing line. | Manufacturer (`manufacturedBy`), applicable designs and variants. |
-| `productVariant` | A specific documented configuration of a product model (e.g., air vs. argon fill). | Product model (`isVariantOf`), realized design (`realizesDesign`), specific materials/parts, and performance claims. |
-| `material` | A material family, feedstock, or named formulation (e.g., soda-lime silicate glass, argon, silica sand). | Composition and structure claims where supported. |
-| `structureModel` | A description of how matter is arranged at a stated scale (e.g., atomic network, crystal lattice, grains). | `scale`, structural motif, constituent chemicals. |
-| `chemicalEntity` | An element, ion, molecule, or oxide used in a composition or structure statement. | External identifiers where available. |
-| `process` | A value-chain step that extracts, researches, tests, designs, specifies, fabricates, distributes, or installs a material or component. | `stage`, inputs (`uses`), outputs (`produces`), responsible actor (`performedBy`). |
-| `requirement` | A property limit, prescribed product, or design constraint from a published specification or standard. | Target design/product (`appliesTo`) and versioned specification source. |
-| `actor` | A manufacturer, testing lab, standard body, or trade role in the value chain. | Name and known identifiers. |
-| `source` | A specific document revision or web capture used as evidence. | Origin HTTP(S) URL, media type, issuer, capture date, and SHA-256 when archived. |
-
-## Relationships
-
-| Relationship | Allowed endpoints and meaning | Relevant qualifiers |
-| --- | --- | --- |
-| `hasPart` | Reference design or product variant → reference design or product variant. | Role, quantity, sequence or position. Use separate edges for inside and outside panes. |
-| `realizesDesign` / `isVariantOf` | Product model or variant → reference design; product variant → product model. | Role or revision where documented. |
-| `usesConfiguration` / `usesProduct` | Reference design or product variant → sub-configuration or product model. | Role or position where documented. |
-| `manufacturedBy` | Product model → actor. | — |
-| `madeOf` | Reference design or product variant → material. | Role, layer or surface (`position`), and quantities with units. |
-| `hasComposition` / `hasStructure` / `includesChemical` | Material → constituent material, chemical entity, or structure model; structure model → chemical entity. | Role, composition basis, amount or range. |
-| `uses` / `produces` | Process → input or output (materials, feedstocks, designs, products, documents). | Explicit `role` distinguishing feedstocks, substrates, coatings, specifications, and outputs. |
-| `performedBy` | Process → actor. | Role on the process. |
-| `appliesTo` | Requirement → reference design, product model, or product variant. | Revision or scope where documented. |
-| `supersedes` | A later revision → the earlier record it replaces. | — |
-
-Properties and sourced relationships are **claims**. Every claim carries a subject, a `basis` (`measured`, `simulated`, `manufacturer-declared`, `specification`, `typical-reference`, or `inferred`), and at least one source citation with a locator. Every numeric quantity requires an explicit unit (`"1"` for dimensionless quantities). Store `scope`, `method`, and `conditions` where they change interpretation (e.g., center-of-glass vs. whole-window U-factor).
-
-## Value-chain stages
-
-| Stage | Meaning |
-| --- | --- |
-| `extraction` | Mining, quarrying, or harvesting raw feedstocks (e.g., silica sand, clay, slate). |
-| `research`, `testing` | Developing materials/coatings and running physical tests or thermal simulations. |
-| `design`, `specification` | Designing assemblies and setting governing architectural/performance requirements. |
-| `fabrication` | Forming, coating, firing, cutting, and assembling materials into products and units. |
-| `distribution` | Packaging, transporting, and supplying products to site. |
-| `installation` | Placing, sealing, and integrating the product into the building structure. |
+| `referenceDesign` | Reusable building system, assembly, component, or taxonomy division. | Revision, part relationships, classification identifiers. |
+| `productModel` | Manufacturer's catalog product line. | Manufacturer (`manufacturedBy`), `variantDefaults`, `variantsTable`. |
+| `productVariant` | Specific documented SKU or configuration of a product model. | `isVariantOf`, `realizesDesign`, variant-specific materials/parts, performance/EPD claims. |
+| `material` | Material family, feedstock, or named formulation. | Composition (`hasComposition`), structure (`hasStructure`), optional `typical-reference` medians. |
+| `structureModel` | Arrangement of matter at a stated scale (atomic network, crystal lattice, grains). | `scale`, constituent `chemicalEntity` links. |
+| `chemicalEntity` | Element, ion, molecule, oxide, or polymer. | External identifiers such as `cas` RN. |
+| `process` | Value-chain step across 8 stages (`extraction` through `installation`). | `stage`, `uses`, `produces`, `performedBy`. |
+| `requirement` | Property limit or design constraint from a specification or standard. | Target (`appliesTo`) and cited specification source. |
+| `actor` | Manufacturer, plant, testing lab, standard body, or trade role. | Name, identifiers, guide metadata. |
+| `source` | Specific document revision or web capture used as evidence. | Origin HTTP(S) URL, media type, issuer, `validUntil`, SHA-256. |
 
 ## Invariants
 
+- Node IDs use lowercase dotted namespaces (`^[a-z0-9]+([.-][a-z0-9]+)*$`).
 - Composition (`hasPart`) and claim derivations (`derivedFrom`) must be acyclic.
-- A property applies strictly to its claim's subject and scope. A center-of-glass glazing rating never leaks onto a whole-window assembly.
-- Distinguish raw feedstocks (silica sand, soda ash, limestone), bulk oxide composition (`SiO₂`, `Na₂O`, `CaO`), and atomic structure (`Si`, `O`, `Na⁺`, `Ca²⁺` network).
-- Preserve competing source claims with their scopes and versions. Treat zero, `unknown`, and `withheld` as distinct states.
-- Importing a changed document at the same URL registers a new source version so existing citations keep resolving to their original archived bytes.
+- A `productVariant` may belong to at most one `productModel` via `isVariantOf`.
+- Properties apply strictly to their subject and `scope` (center-of-glass never leaks onto whole-window).
+- Distinguish zero, `unknown`, and `withheld` states; preserve competing claims with scopes, geography, and validity dates.
+- Sources are immutable: `import-source --id <slug>` refuses to overwrite an existing slug with different bytes or origin.
+- Completeness is evaluated by tier (`gaps --tier catalog|assembly|atomic`).

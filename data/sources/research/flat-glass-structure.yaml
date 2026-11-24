@@ -1,0 +1,10 @@
+id: source.research.flat-glass-structure
+kind: source
+label: "From Melt to Structure: The Science and Technology of Flat Soda-Lime-Silicate Glass for Structural Engineers"
+revision: "16(3), 506 (2026)"
+source:
+  origin: https://www.mdpi.com/2075-5309/16/3/506
+  mediaType: application/pdf
+  issuer: Buildings
+  sha256: f1018bd939279dd276e793f835653c16612617c2a51135795657b168fed5100f
+  retrievedOn: "2026-11-23"

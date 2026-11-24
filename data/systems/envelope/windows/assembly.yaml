@@ -1,0 +1,128 @@
+defaults:
+  basis: specification
+  evidence:
+    - source: source.standards.ua-window-guidelines
+      locator: { page: 13, section: I. Glazing }
+
+entities:
+  - id: envelope.openings.window
+    kind: referenceDesign
+    label: Double-glazed architectural window assembly
+    revision: "1"
+    identifiers:
+      - namespace: uniformat2
+        value: B2020
+      - namespace: masterformat
+        value: "08 50 00"
+      - namespace: ifc
+        value: IfcWindow
+    links:
+      - predicate: hasPart
+        target: envelope.openings.window.frame
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: frame, sequence: 1 }
+      - predicate: hasPart
+        target: envelope.openings.window.sash
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: sash, sequence: 2 }
+      - predicate: hasPart
+        target: envelope.openings.window.igu
+        qualifiers: { role: glazing, sequence: 3 }
+    guide:
+      summary: Complete fenestration assembly combining perimeter frame, operable sash, and factory-sealed 1-inch insulating glass unit.
+
+  - id: envelope.openings.window.frame
+    kind: referenceDesign
+    label: Window perimeter frame
+    links:
+      - predicate: madeOf
+        target: material.aluminum-6063-t6
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: primary frame extrusion }
+
+  - id: envelope.openings.window.sash
+    kind: referenceDesign
+    label: Operable window sash
+    links:
+      - predicate: madeOf
+        target: material.aluminum-6063-t6
+        locator: { page: 9, section: "Section 08 50 00 – Windows" }
+        qualifiers: { role: primary sash extrusion }
+
+  - id: envelope.openings.window.igu
+    kind: referenceDesign
+    label: 1-inch insulating glass unit (IGU)
+    links:
+      - predicate: hasPart
+        target: envelope.openings.window.outer-pane
+        basis: manufacturer-declared
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
+        qualifiers: { role: pane, position: outside, sequence: 1 }
+      - predicate: hasPart
+        target: envelope.openings.window.inner-pane
+        basis: manufacturer-declared
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 2, table: Insulating Glass Unit Performance Comparisons }
+        qualifiers: { role: pane, position: inside, sequence: 2 }
+      - predicate: hasPart
+        target: envelope.openings.window.spacer
+        qualifiers: { role: spacer, position: edge, sequence: 3 }
+      - predicate: hasPart
+        target: envelope.openings.window.seal
+        qualifiers: { role: seal, position: edge, sequence: 4 }
+
+  - id: envelope.openings.window.outer-pane
+    kind: referenceDesign
+    label: Coated outer glass pane (1/4-inch)
+    links:
+      - predicate: madeOf
+        target: material.soda-lime-glass
+        basis: typical-reference
+        evidence:
+          - source: source.research.flat-glass-structure
+            locator: { page: 5, section: "3.1. Composition and Network Structure" }
+        qualifiers: { role: substrate }
+      - predicate: madeOf
+        target: material.low-e-coating
+        basis: manufacturer-declared
+        evidence:
+          - source: source.vitro.solarban-70
+            locator: { page: 1, section: Solarban 70 Glass }
+        qualifiers: { role: coating, position: "surface #2" }
+
+  - id: envelope.openings.window.inner-pane
+    kind: referenceDesign
+    label: Clear inner glass pane (1/4-inch)
+    links:
+      - predicate: madeOf
+        target: material.soda-lime-glass
+        basis: typical-reference
+        evidence:
+          - source: source.research.flat-glass-structure
+            locator: { page: 5, section: "3.1. Composition and Network Structure" }
+        qualifiers: { role: substrate }
+
+  - id: envelope.openings.window.spacer
+    kind: referenceDesign
+    label: IGU perimeter aluminum spacer
+    links:
+      - predicate: madeOf
+        target: material.aluminum-6063-t6
+        locator: { row: "6a. Spacer, 1/2 inch Aluminum" }
+        qualifiers: { role: continuous spacer }
+
+  - id: envelope.openings.window.seal
+    kind: referenceDesign
+    label: IGU dual perimeter seal
+    links:
+      - predicate: madeOf
+        target: material.polyisobutylene
+        locator: { row: "9. Dual perimeter sealants" }
+        qualifiers: { role: primary seal }
+      - predicate: madeOf
+        target: material.silicone-sealant
+        locator: { row: "9. Dual perimeter sealants" }
+        qualifiers: { role: secondary seal }
